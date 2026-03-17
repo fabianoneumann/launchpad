@@ -42,7 +42,7 @@ apps/api/src/
 
 ### `[nome]-repository.ts` (interface)
 ```typescript
-import { Prisma, [Entidade] } from '@prisma/client';
+import { Prisma, [Entidade] } from '@/generated/prisma/client';
 
 export interface [Nome]Repository {
   findById(id: string): Promise<[Entidade] | null>;
@@ -198,8 +198,8 @@ app.register([nome]Routes);
 
 2. Se o módulo tem novo modelo Prisma, lembre de:
    - Atualizar `prisma/schema.prisma`
-   - Rodar `npx prisma migrate dev --name add-[nome]`
-   - Rodar `npx prisma generate`
+   - Rodar `pnpm --filter @eco-iguassu/api db:generate` (regenera o cliente)
+   - Rodar `pnpm --filter @eco-iguassu/api db:migrate` (aplica a migration)
 
 3. Se há novos erros de domínio, lembre de **registrá-los no error handler** do `app.ts`.
 
@@ -217,3 +217,4 @@ Antes de considerar o módulo criado, confirme mentalmente:
 - [ ] Testes E2E com supertest
 - [ ] Sem `console.log` no código de produção
 - [ ] Sem imports de `prisma` fora de `repositories/prisma/`
+- [ ] Imports de tipos do Prisma usando `'@/generated/prisma'` — nunca `'@prisma/client'`

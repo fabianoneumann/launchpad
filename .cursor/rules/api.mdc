@@ -8,13 +8,14 @@ alwaysApply: true
 
 ## Stack
 
-- **Runtime:** Node.js 22 (LTS) + TypeScript 5.7+
+- **Runtime:** Node.js 22 (LTS) + TypeScript 5.8+
+- **Módulos:** ESM (`"type": "module"` no package.json)
 - **Framework:** Fastify 5.x
-- **ORM:** Prisma 6.x
-- **Validação:** Zod (schemas e env)
+- **ORM:** Prisma 7.x (cliente gerado em `src/generated/prisma/`)
+- **Validação:** Zod 4.x (schemas e env)
 - **Auth:** @fastify/jwt + @fastify/cookie (refresh token em cookie httpOnly)
-- **Testes:** Vitest 2.x + Supertest
-- **Build:** tsup
+- **Testes:** Vitest 4.x + Supertest
+- **Build:** tsup (ESM output)
 - **Dev:** tsx watch
 
 ---
@@ -22,30 +23,36 @@ alwaysApply: true
 ## Estrutura de Pastas
 
 ```
-apps/api/src/
-├── modules/                  ← organização por domínio
-│   ├── auth/
-│   │   ├── auth.controller.ts
-│   │   ├── auth.service.ts
-│   │   ├── auth.repository.ts        ← interface
-│   │   ├── auth.service.spec.ts      ← testes unitários
-│   │   └── auth.routes.ts
-│   ├── tours/
-│   ├── bookings/
-│   └── users/
-├── repositories/
-│   ├── prisma/               ← implementações Prisma
-│   └── in-memory/            ← implementações para testes
-├── shared/
-│   ├── errors/               ← classes de erro de domínio
-│   ├── middlewares/          ← verify-jwt.ts, verify-user-role.ts, etc.
-│   └── factories/            ← factories por módulo
-├── lib/
-│   └── prisma.ts             ← singleton do PrismaClient
-├── env/
-│   └── index.ts              ← validação Zod das variáveis de ambiente
-├── app.ts                    ← configuração do Fastify (plugins, rotas, errorHandler)
-└── server.ts                 ← entry point (app.listen)
+apps/api/
+├── prisma/
+│   └── schema.prisma             ← modelos do banco de dados
+├── prisma.config.ts              ← configuração do Prisma CLI (URL de conexão)
+├── src/
+│   ├── modules/                  ← organização por domínio
+│   │   ├── auth/
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── auth.repository.ts        ← interface
+│   │   │   ├── auth.service.spec.ts      ← testes unitários
+│   │   │   └── auth.routes.ts
+│   │   ├── tours/
+│   │   ├── bookings/
+│   │   └── users/
+│   ├── repositories/
+│   │   ├── prisma/               ← implementações Prisma
+│   │   └── in-memory/            ← implementações para testes
+│   ├── shared/
+│   │   ├── errors/               ← classes de erro de domínio
+│   │   ├── middlewares/          ← verify-jwt.ts, verify-user-role.ts, etc.
+│   │   └── factories/            ← factories por módulo
+│   ├── lib/
+│   │   └── prisma.ts             ← instância do PrismaClient com driver adapter
+│   ├── generated/
+│   │   └── prisma/               ← gerado por `prisma generate` (não commitar)
+│   ├── env/
+│   │   └── index.ts              ← validação Zod das variáveis de ambiente
+│   ├── app.ts                    ← configuração do Fastify (plugins, rotas, errorHandler)
+│   └── server.ts                 ← entry point (app.listen)
 ```
 
 ---
@@ -86,17 +93,70 @@ apps/api/src/
 
 ### Repository Interface (`*.repository.ts`)
 - Define o contrato de acesso a dados com métodos tipados
-- Usa tipos do Prisma (`Prisma.XCreateInput`, etc.) quando apropriado
+- Usa tipos do Prisma Client gerado (`Prisma.XCreateInput`, etc.) quando apropriado
 - Não contém implementação
 
 ### Prisma Repository (`repositories/prisma/*.ts`)
 - Implementa a interface do repositório
 - Única camada que importa e usa o `prisma` client
+- Importa de `@/lib/prisma` — nunca instancia PrismaClient diretamente
 
 ### In-Memory Repository (`repositories/in-memory/*.ts`)
 - Implementa a mesma interface com array em memória
 - Usado **exclusivamente** em testes unitários
 - Nome do arquivo: sem typos — sempre `in-memory-{entity}-repository.ts`
+
+---
+
+## Prisma v7 — Padrões Obrigatórios
+
+### Import do cliente gerado
+```typescript
+// Repositórios Prisma importam dos tipos gerados — nunca de '@prisma/client'
+import { Prisma, User } from '@/generated/prisma/client'
+import { prisma } from '@/lib/prisma'
+```
+
+### `src/lib/prisma.ts` — instanciação com driver adapter
+```typescript
+import { PrismaClient } from '../generated/prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+})
+
+export const prisma = new PrismaClient({
+  adapter,
+  log: process.env.NODE_ENV === 'dev' ? ['query', 'info', 'warn'] : ['error'],
+})
+```
+
+### `prisma.config.ts` — configuração do CLI (na raiz de `apps/api/`)
+```typescript
+import { defineConfig, env } from 'prisma/config'
+
+type Env = { DATABASE_URL: string }
+
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
+  migrations: { path: 'prisma/migrations' },
+  datasource: { url: env<Env>('DATABASE_URL') },
+})
+```
+
+### `prisma/schema.prisma` — generator obrigatório
+```prisma
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // URL configurada em prisma.config.ts — não usar url = env() aqui
+}
+```
 
 ---
 
@@ -126,16 +186,16 @@ export class ExampleService {
 
 ## Factory Pattern — Padrão Obrigatório
 
-Toda instanciação de service deve passar por uma factory. A factory é responsável por injetar a implementação Prisma correta:
+Toda instanciação de service deve passar por uma factory:
 
 ```typescript
 // shared/factories/make-authenticate-service.ts
-import { PrismaUsersRepository } from '@/repositories/prisma/prisma-users-repository';
-import { AuthenticateService } from '@/modules/auth/authenticate.service';
+import { PrismaUsersRepository } from '@/repositories/prisma/prisma-users-repository'
+import { AuthenticateService } from '@/modules/auth/authenticate.service'
 
 export function makeAuthenticateService() {
-  const repository = new PrismaUsersRepository();
-  return new AuthenticateService(repository);
+  const repository = new PrismaUsersRepository()
+  return new AuthenticateService(repository)
 }
 ```
 
@@ -143,18 +203,26 @@ O controller sempre chama a factory — nunca instancia o service diretamente.
 
 ---
 
-## Validação de Rotas com Zod
+## Validação de Rotas com Zod v4
 
 **Toda rota** (pública ou autenticada) deve ter schema Zod para body, params e/ou query quando aplicável:
 
 ```typescript
 const bodySchema = z.object({
-  email: z.string().email(),
+  email: z.email(),         // Zod v4: z.email() em vez de z.string().email()
   password: z.string().min(6),
-});
+})
 
 // No controller:
-const { email, password } = bodySchema.parse(request.body);
+const { email, password } = bodySchema.parse(request.body)
+```
+
+**APIs Zod v4 preferidas (top-level format validators):**
+```typescript
+z.email()     // ✅ em vez de z.string().email()
+z.url()       // ✅ em vez de z.string().url()
+z.uuid()      // ✅ em vez de z.string().uuid()
+z.iso.datetime() // ✅ datas ISO
 ```
 
 ---
@@ -164,21 +232,21 @@ const { email, password } = bodySchema.parse(request.body);
 ### Rotas protegidas
 ```typescript
 // routes.ts
-app.get('/me', { onRequest: [verifyJWT] }, profileController);
+app.get('/me', { onRequest: [verifyJWT] }, profileController)
 ```
 
 ### Rotas com controle de papel (RBAC)
 ```typescript
 // Hierarquia: ADMIN > MEMBER > USER
-app.delete('/tours/:id', { onRequest: [verifyJWT, verifyUserRole('ADMIN')] }, deleteTourController);
+app.delete('/tours/:id', { onRequest: [verifyJWT, verifyUserRole('ADMIN')] }, deleteTourController)
 ```
 
 ### `verifyUserRole` — lógica de hierarquia (não igualdade estrita)
 ```typescript
-const roleHierarchy = { ADMIN: 3, MEMBER: 2, USER: 1 } as const;
+const roleHierarchy = { ADMIN: 3, MEMBER: 2, USER: 1 } as const
 
 if (roleHierarchy[role] < roleHierarchy[roleToVerify]) {
-  return reply.status(403).send({ message: 'Não autorizado.' });
+  return reply.status(403).send({ message: 'Não autorizado.' })
 }
 ```
 
@@ -188,16 +256,17 @@ Sempre usar `return` antes de `reply.send()` em middlewares.
 
 ## Validação de Variáveis de Ambiente
 
-O arquivo `src/env/index.ts` deve validar **todas** as variáveis usadas no projeto, incluindo `DATABASE_URL`:
+O arquivo `src/env/index.ts` deve validar **todas** as variáveis usadas no projeto:
 
 ```typescript
 const envSchema = z.object({
   NODE_ENV: z.enum(['dev', 'test', 'production']).default('dev'),
   PORT: z.coerce.number().default(3333),
   JWT_SECRET: z.string(),
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: z.url(),          // Zod v4: z.url()
+  CORS_ORIGIN: z.string().optional(),
   // adicionar aqui toda nova variável antes de usá-la
-});
+})
 ```
 
 ---
@@ -206,10 +275,12 @@ const envSchema = z.object({
 
 ### Classes de erro de domínio (`shared/errors/`)
 ```typescript
-// Sempre estender Error
-export class ResourceNotFoundError extends Error {
+// Sempre estender AppError (que estende Error)
+import { AppError } from './app-error'
+
+export class ResourceNotFoundError extends AppError {
   constructor() {
-    super('Resource not found.');
+    super('Resource not found.', 404)
   }
 }
 ```
@@ -218,17 +289,17 @@ export class ResourceNotFoundError extends Error {
 ```typescript
 app.setErrorHandler((error, request, reply) => {
   if (error instanceof ZodError) {
-    return reply.status(400).send({ message: 'Erro de validação.', errors: error.format() });
+    return reply.status(400).send({ message: 'Erro de validação.', errors: error.format() })
   }
-  if (error instanceof ResourceNotFoundError) {
-    return reply.status(404).send({ message: error.message });
+  if (error instanceof AppError) {
+    return reply.status(error.statusCode).send({ message: error.message })
   }
-  // ... outros erros de domínio
-  return reply.status(500).send({ message: 'Erro interno do servidor.' });
-});
+  request.log.error(error)
+  return reply.status(500).send({ message: 'Erro interno do servidor.' })
+})
 ```
 
-Novos erros de domínio devem ser registrados no error handler global — **nunca** tratados individualmente em cada controller.
+Novos erros de domínio estendem `AppError` e são tratados automaticamente pelo handler — **nunca** individualmente em cada controller.
 
 ---
 
@@ -237,15 +308,15 @@ Novos erros de domínio devem ser registrados no error handler global — **nunc
 Plugins obrigatórios no `app.ts`:
 
 ```typescript
-app.register(helmet);           // headers de segurança HTTP
-app.register(cors, {
-  origin: env.CORS_ORIGIN,     // nunca origin: true em produção
+app.register(fastifyHelmet)
+app.register(fastifyCors, {
+  origin: env.NODE_ENV === 'production' ? (env.CORS_ORIGIN ?? false) : true,
   credentials: true,
-});
-app.register(rateLimit, {
+})
+app.register(fastifyRateLimit, {
   max: 100,
   timeWindow: '1 minute',
-});
+})
 ```
 
 Rotas de autenticação (`/auth/*`) devem ter rate limit mais restrito:
@@ -258,28 +329,28 @@ Rotas de autenticação (`/auth/*`) devem ter rate limit mais restrito:
 ## Testes
 
 ### Testes unitários (service)
-- Ficam no mesmo módulo: `modules/users/authenticate.service.spec.ts`
+- Ficam no mesmo módulo: `modules/auth/authenticate.service.spec.ts`
 - Usam **sempre** o in-memory repository — nunca o Prisma
 - Seguem o padrão `beforeEach` + instanciação manual
 
 ```typescript
 describe('AuthenticateService', () => {
-  let usersRepository: InMemoryUsersRepository;
-  let sut: AuthenticateService; // sut = System Under Test
+  let usersRepository: InMemoryUsersRepository
+  let sut: AuthenticateService // sut = System Under Test
 
   beforeEach(() => {
-    usersRepository = new InMemoryUsersRepository();
-    sut = new AuthenticateService(usersRepository);
-  });
+    usersRepository = new InMemoryUsersRepository()
+    sut = new AuthenticateService(usersRepository)
+  })
 
   it('should authenticate with valid credentials', async () => {
-    // ...
-  });
-});
+    // arrange → act → assert
+  })
+})
 ```
 
 ### Testes E2E (controller)
-- Ficam no mesmo módulo: `modules/users/authenticate.e2e.spec.ts`
+- Ficam no mesmo módulo: `modules/auth/authenticate.e2e.spec.ts`
 - Usam `supertest` contra a `app` real
 - Testam o fluxo HTTP completo (status code, body, cookies)
 
@@ -293,22 +364,24 @@ describe('AuthenticateService', () => {
 ## CORS
 
 ```typescript
-// dev: aceita localhost
-// test: desativado
+// dev: aceita qualquer origem
 // production: variável de ambiente obrigatória
-origin: env.NODE_ENV === 'production' ? env.CORS_ORIGIN : true,
+origin: env.NODE_ENV === 'production' ? (env.CORS_ORIGIN ?? false) : true,
 ```
 
 ---
 
 ## O que nunca fazer
 
+- ❌ Importar de `'@prisma/client'` — use sempre `'@/generated/prisma'`
 - ❌ Importar `prisma` fora de `repositories/prisma/`
 - ❌ Lógica de negócio em controllers
 - ❌ `try/catch` em controllers para erros de domínio (use o error handler global)
 - ❌ `origin: true` em CORS de produção
-- ❌ `role !== roleToVerify` em RBAC (use hierarquia)
+- ❌ `role !== roleToVerify` em RBAC (use hierarquia numérica)
 - ❌ Fazer `reply.send()` sem `return` em middlewares
 - ❌ Variável de ambiente usada sem estar no schema Zod
-- ❌ Logs de `console.log` no código de produção (use o logger do Fastify: `request.log.info()`)
+- ❌ Logs de `console.log` no código de produção (use `request.log.info()`)
 - ❌ Arquivos de log (`.log`) ou `.env` commitados no Git
+- ❌ Commitar a pasta `src/generated/` (é gerada pelo `prisma generate`)
+- ❌ Usar `z.string().email()` ou `z.string().url()` — use `z.email()` e `z.url()` do Zod v4

@@ -5,5 +5,7 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     environment: 'node',
+    clearMocks: true,
+    restoreMocks: true,
   },
 })

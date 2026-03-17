@@ -30,3 +30,6 @@ prisma/migrations/
 
 # Design references (arquivos grandes)
 design/references/
+
+# Cursor / Agents (gerados localmente)
+skills-lock.json

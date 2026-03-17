@@ -1,0 +1,314 @@
+---
+description: Padrões de arquitetura, organização e código para o backend da API (apps/api). Aplica-se a todo desenvolvimento dentro de apps/api.
+globs: apps/api/**
+alwaysApply: true
+---
+
+# Regras do Backend — apps/api
+
+## Stack
+
+- **Runtime:** Node.js 22 (LTS) + TypeScript 5.7+
+- **Framework:** Fastify 5.x
+- **ORM:** Prisma 6.x
+- **Validação:** Zod (schemas e env)
+- **Auth:** @fastify/jwt + @fastify/cookie (refresh token em cookie httpOnly)
+- **Testes:** Vitest 2.x + Supertest
+- **Build:** tsup
+- **Dev:** tsx watch
+
+---
+
+## Estrutura de Pastas
+
+```
+apps/api/src/
+├── modules/                  ← organização por domínio
+│   ├── auth/
+│   │   ├── auth.controller.ts
+│   │   ├── auth.service.ts
+│   │   ├── auth.repository.ts        ← interface
+│   │   ├── auth.service.spec.ts      ← testes unitários
+│   │   └── auth.routes.ts
+│   ├── tours/
+│   ├── bookings/
+│   └── users/
+├── repositories/
+│   ├── prisma/               ← implementações Prisma
+│   └── in-memory/            ← implementações para testes
+├── shared/
+│   ├── errors/               ← classes de erro de domínio
+│   ├── middlewares/          ← verify-jwt.ts, verify-user-role.ts, etc.
+│   └── factories/            ← factories por módulo
+├── lib/
+│   └── prisma.ts             ← singleton do PrismaClient
+├── env/
+│   └── index.ts              ← validação Zod das variáveis de ambiente
+├── app.ts                    ← configuração do Fastify (plugins, rotas, errorHandler)
+└── server.ts                 ← entry point (app.listen)
+```
+
+---
+
+## Convenções de Nomenclatura
+
+| Artefato | Convenção | Exemplo |
+|---|---|---|
+| Arquivos | `kebab-case` | `authenticate.service.ts` |
+| Classes | `PascalCase` | `AuthenticateService` |
+| Interfaces | `PascalCase` + sufixo `Repository` | `ToursRepository` |
+| Métodos de service | `execute()` | `async execute(request): Response` |
+| Factories | sufixo `Factory` | `makeAuthenticateService()` |
+| Testes unitários | sufixo `.spec.ts` no mesmo módulo | `authenticate.service.spec.ts` |
+| Testes E2E | sufixo `.e2e.spec.ts` no controller | `authenticate.e2e.spec.ts` |
+| In-memory repos | prefixo `InMemory` | `InMemoryUsersRepository` |
+
+---
+
+## Responsabilidades por Camada
+
+### Controller (`*.controller.ts`)
+- Recebe a requisição HTTP
+- Valida o body/params/query com Zod
+- Chama a factory para obter o service
+- Chama `service.execute()`
+- Retorna a resposta HTTP
+
+**PROIBIDO no controller:** lógica de negócio, acesso ao Prisma, manipulação de senha, regras condicionais de domínio.
+
+### Service (`*.service.ts`)
+- Contém toda a lógica de negócio
+- Recebe o repositório via injeção no construtor
+- Lança erros de domínio (classes de `shared/errors/`)
+- Não sabe nada sobre HTTP, Fastify ou Prisma
+
+**PROIBIDO no service:** importar `fastify`, usar `request`/`reply`, acessar `prisma` diretamente.
+
+### Repository Interface (`*.repository.ts`)
+- Define o contrato de acesso a dados com métodos tipados
+- Usa tipos do Prisma (`Prisma.XCreateInput`, etc.) quando apropriado
+- Não contém implementação
+
+### Prisma Repository (`repositories/prisma/*.ts`)
+- Implementa a interface do repositório
+- Única camada que importa e usa o `prisma` client
+
+### In-Memory Repository (`repositories/in-memory/*.ts`)
+- Implementa a mesma interface com array em memória
+- Usado **exclusivamente** em testes unitários
+- Nome do arquivo: sem typos — sempre `in-memory-{entity}-repository.ts`
+
+---
+
+## Services — Padrão Obrigatório
+
+Todo service deve seguir este contrato:
+
+```typescript
+interface ExampleServiceRequest {
+  // campos de entrada tipados
+}
+
+interface ExampleServiceResponse {
+  // campos de saída tipados
+}
+
+export class ExampleService {
+  constructor(private repository: ExampleRepository) {}
+
+  async execute(request: ExampleServiceRequest): Promise<ExampleServiceResponse> {
+    // lógica de negócio
+  }
+}
+```
+
+---
+
+## Factory Pattern — Padrão Obrigatório
+
+Toda instanciação de service deve passar por uma factory. A factory é responsável por injetar a implementação Prisma correta:
+
+```typescript
+// shared/factories/make-authenticate-service.ts
+import { PrismaUsersRepository } from '@/repositories/prisma/prisma-users-repository';
+import { AuthenticateService } from '@/modules/auth/authenticate.service';
+
+export function makeAuthenticateService() {
+  const repository = new PrismaUsersRepository();
+  return new AuthenticateService(repository);
+}
+```
+
+O controller sempre chama a factory — nunca instancia o service diretamente.
+
+---
+
+## Validação de Rotas com Zod
+
+**Toda rota** (pública ou autenticada) deve ter schema Zod para body, params e/ou query quando aplicável:
+
+```typescript
+const bodySchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+// No controller:
+const { email, password } = bodySchema.parse(request.body);
+```
+
+---
+
+## Autenticação e Autorização
+
+### Rotas protegidas
+```typescript
+// routes.ts
+app.get('/me', { onRequest: [verifyJWT] }, profileController);
+```
+
+### Rotas com controle de papel (RBAC)
+```typescript
+// Hierarquia: ADMIN > MEMBER > USER
+app.delete('/tours/:id', { onRequest: [verifyJWT, verifyUserRole('ADMIN')] }, deleteTourController);
+```
+
+### `verifyUserRole` — lógica de hierarquia (não igualdade estrita)
+```typescript
+const roleHierarchy = { ADMIN: 3, MEMBER: 2, USER: 1 } as const;
+
+if (roleHierarchy[role] < roleHierarchy[roleToVerify]) {
+  return reply.status(403).send({ message: 'Não autorizado.' });
+}
+```
+
+Sempre usar `return` antes de `reply.send()` em middlewares.
+
+---
+
+## Validação de Variáveis de Ambiente
+
+O arquivo `src/env/index.ts` deve validar **todas** as variáveis usadas no projeto, incluindo `DATABASE_URL`:
+
+```typescript
+const envSchema = z.object({
+  NODE_ENV: z.enum(['dev', 'test', 'production']).default('dev'),
+  PORT: z.coerce.number().default(3333),
+  JWT_SECRET: z.string(),
+  DATABASE_URL: z.string().url(),
+  // adicionar aqui toda nova variável antes de usá-la
+});
+```
+
+---
+
+## Tratamento de Erros
+
+### Classes de erro de domínio (`shared/errors/`)
+```typescript
+// Sempre estender Error
+export class ResourceNotFoundError extends Error {
+  constructor() {
+    super('Resource not found.');
+  }
+}
+```
+
+### Error handler global no `app.ts`
+```typescript
+app.setErrorHandler((error, request, reply) => {
+  if (error instanceof ZodError) {
+    return reply.status(400).send({ message: 'Erro de validação.', errors: error.format() });
+  }
+  if (error instanceof ResourceNotFoundError) {
+    return reply.status(404).send({ message: error.message });
+  }
+  // ... outros erros de domínio
+  return reply.status(500).send({ message: 'Erro interno do servidor.' });
+});
+```
+
+Novos erros de domínio devem ser registrados no error handler global — **nunca** tratados individualmente em cada controller.
+
+---
+
+## Segurança
+
+Plugins obrigatórios no `app.ts`:
+
+```typescript
+app.register(helmet);           // headers de segurança HTTP
+app.register(cors, {
+  origin: env.CORS_ORIGIN,     // nunca origin: true em produção
+  credentials: true,
+});
+app.register(rateLimit, {
+  max: 100,
+  timeWindow: '1 minute',
+});
+```
+
+Rotas de autenticação (`/auth/*`) devem ter rate limit mais restrito:
+```typescript
+{ config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }
+```
+
+---
+
+## Testes
+
+### Testes unitários (service)
+- Ficam no mesmo módulo: `modules/users/authenticate.service.spec.ts`
+- Usam **sempre** o in-memory repository — nunca o Prisma
+- Seguem o padrão `beforeEach` + instanciação manual
+
+```typescript
+describe('AuthenticateService', () => {
+  let usersRepository: InMemoryUsersRepository;
+  let sut: AuthenticateService; // sut = System Under Test
+
+  beforeEach(() => {
+    usersRepository = new InMemoryUsersRepository();
+    sut = new AuthenticateService(usersRepository);
+  });
+
+  it('should authenticate with valid credentials', async () => {
+    // ...
+  });
+});
+```
+
+### Testes E2E (controller)
+- Ficam no mesmo módulo: `modules/users/authenticate.e2e.spec.ts`
+- Usam `supertest` contra a `app` real
+- Testam o fluxo HTTP completo (status code, body, cookies)
+
+### Comandos de teste
+- `vitest run --dir src/modules` → unitários
+- `vitest run --dir src/modules --reporter=verbose` → E2E
+- `vitest run --coverage` → cobertura
+
+---
+
+## CORS
+
+```typescript
+// dev: aceita localhost
+// test: desativado
+// production: variável de ambiente obrigatória
+origin: env.NODE_ENV === 'production' ? env.CORS_ORIGIN : true,
+```
+
+---
+
+## O que nunca fazer
+
+- ❌ Importar `prisma` fora de `repositories/prisma/`
+- ❌ Lógica de negócio em controllers
+- ❌ `try/catch` em controllers para erros de domínio (use o error handler global)
+- ❌ `origin: true` em CORS de produção
+- ❌ `role !== roleToVerify` em RBAC (use hierarquia)
+- ❌ Fazer `reply.send()` sem `return` em middlewares
+- ❌ Variável de ambiente usada sem estar no schema Zod
+- ❌ Logs de `console.log` no código de produção (use o logger do Fastify: `request.log.info()`)
+- ❌ Arquivos de log (`.log`) ou `.env` commitados no Git

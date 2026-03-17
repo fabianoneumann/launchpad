@@ -42,22 +42,22 @@ apps/api/src/
 
 ### `[nome]-repository.ts` (interface)
 ```typescript
-import { Prisma, [Entidade] } from '@/generated/prisma/client';
+import { Prisma, [Entidade] } from '@/generated/prisma/client'
 
 export interface [Nome]Repository {
-  findById(id: string): Promise<[Entidade] | null>;
-  findMany(): Promise<[Entidade][]>;
-  create(data: Prisma.[Entidade]CreateInput): Promise<[Entidade]>;
-  save(entity: [Entidade]): Promise<[Entidade]>;
-  delete(id: string): Promise<void>;
+  findById(id: string): Promise<[Entidade] | null>
+  findMany(): Promise<[Entidade][]>
+  create(data: Prisma.[Entidade]CreateInput): Promise<[Entidade]>
+  save(entity: [Entidade]): Promise<[Entidade]>
+  delete(id: string): Promise<void>
 }
 ```
 Inclua apenas os métodos que as operações do módulo realmente precisam.
 
 ### `prisma-[nome]-repository.ts`
 ```typescript
-import { prisma } from '@/lib/prisma';
-import { [Nome]Repository } from '@/repositories/[nome]-repository';
+import { prisma } from '@/lib/prisma'
+import { [Nome]Repository } from '@/repositories/[nome]-repository'
 
 export class Prisma[Nome]Repository implements [Nome]Repository {
   // implementações usando prisma.[entidade].findUnique, findMany, create, update, delete
@@ -66,10 +66,11 @@ export class Prisma[Nome]Repository implements [Nome]Repository {
 
 ### `in-memory-[nome]-repository.ts`
 ```typescript
-import { [Nome]Repository } from '@/repositories/[nome]-repository';
+import { [Entidade] } from '@/generated/prisma/client'
+import { [Nome]Repository } from '@/repositories/[nome]-repository'
 
 export class InMemory[Nome]Repository implements [Nome]Repository {
-  public items: [Entidade][] = [];
+  public items: [Entidade][] = []
   // implementações com operações em array em memória
 }
 ```
@@ -96,104 +97,104 @@ export class [Operacao]Service {
 
 ### `make-[operacao]-service.ts` (factory)
 ```typescript
-import { Prisma[Nome]Repository } from '@/repositories/prisma/prisma-[nome]-repository';
-import { [Operacao]Service } from '@/modules/[nome]/[operacao].service';
+import { Prisma[Nome]Repository } from '@/repositories/prisma/prisma-[nome]-repository'
+import { [Operacao]Service } from '@/modules/[nome]/[operacao].service'
 
 export function make[Operacao]Service() {
-  const repository = new Prisma[Nome]Repository();
-  return new [Operacao]Service(repository);
+  const repository = new Prisma[Nome]Repository()
+  return new [Operacao]Service(repository)
 }
 ```
 
 ### `[operacao].controller.ts`
 ```typescript
-import { FastifyRequest, FastifyReply } from 'fastify';
-import { z } from 'zod';
-import { make[Operacao]Service } from '@/shared/factories/make-[operacao]-service';
+import { FastifyRequest, FastifyReply } from 'fastify'
+import { z } from 'zod'
+import { make[Operacao]Service } from '@/shared/factories/make-[operacao]-service'
 
 export async function [operacao]Controller(request: FastifyRequest, reply: FastifyReply) {
-  const bodySchema = z.object({ /* campos */ });
-  const { campo } = bodySchema.parse(request.body); // ou params, query
+  const bodySchema = z.object({ /* campos */ })
+  const { campo } = bodySchema.parse(request.body) // ou params, query
 
-  const service = make[Operacao]Service();
-  const result = await service.execute({ campo });
+  const service = make[Operacao]Service()
+  const result = await service.execute({ campo })
 
-  return reply.status(201).send(result);
+  return reply.status(201).send(result)
 }
 ```
 Não use try/catch para erros de domínio — o error handler global do `app.ts` trata isso.
 
 ### `[nome].routes.ts`
 ```typescript
-import { FastifyInstance } from 'fastify';
-import { verifyJWT } from '@/shared/middlewares/verify-jwt';
-import { verifyUserRole } from '@/shared/middlewares/verify-user-role';
+import { FastifyInstance } from 'fastify'
+import { verifyJWT } from '@/shared/middlewares/verify-jwt'
+import { verifyUserRole } from '@/shared/middlewares/verify-user-role'
 
 export async function [nome]Routes(app: FastifyInstance) {
   // rotas públicas
-  app.get('/[nome]', list[Nome]Controller);
+  app.get('/[nome]', list[Nome]Controller)
 
   // rotas autenticadas
-  app.post('/[nome]', { onRequest: [verifyJWT] }, create[Nome]Controller);
+  app.post('/[nome]', { onRequest: [verifyJWT] }, create[Nome]Controller)
 
   // rotas restritas por papel
-  app.delete('/[nome]/:id', { onRequest: [verifyJWT, verifyUserRole('ADMIN')] }, delete[Nome]Controller);
+  app.delete('/[nome]/:id', { onRequest: [verifyJWT, verifyUserRole('ADMIN')] }, delete[Nome]Controller)
 }
 ```
 
 ### `[operacao].service.spec.ts` (teste unitário)
 ```typescript
-import { describe, it, expect, beforeEach } from 'vitest';
-import { InMemory[Nome]Repository } from '@/repositories/in-memory/in-memory-[nome]-repository';
-import { [Operacao]Service } from './[operacao].service';
+import { describe, it, expect, beforeEach } from 'vitest'
+import { InMemory[Nome]Repository } from '@/repositories/in-memory/in-memory-[nome]-repository'
+import { [Operacao]Service } from './[operacao].service'
 
 describe('[Operacao]Service', () => {
-  let repository: InMemory[Nome]Repository;
-  let sut: [Operacao]Service;
+  let repository: InMemory[Nome]Repository
+  let sut: [Operacao]Service
 
   beforeEach(() => {
-    repository = new InMemory[Nome]Repository();
-    sut = new [Operacao]Service(repository);
-  });
+    repository = new InMemory[Nome]Repository()
+    sut = new [Operacao]Service(repository)
+  })
 
   it('should [comportamento esperado]', async () => {
     // arrange → act → assert
-  });
+  })
 
   it('should throw [ErroEspecífico] when [condição de erro]', async () => {
     await expect(() => sut.execute({ /* dados inválidos */ }))
-      .rejects.toBeInstanceOf([ErroEspecífico]);
-  });
-});
+      .rejects.toBeInstanceOf([ErroEspecífico])
+  })
+})
 ```
 Cubra o caminho feliz e os principais casos de erro.
 
 ### `[operacao].e2e.spec.ts` (teste E2E)
 ```typescript
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import request from 'supertest';
-import { app } from '@/app';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import request from 'supertest'
+import { app } from '@/app'
 
 describe('[Operacao] E2E', () => {
-  beforeAll(async () => await app.ready());
-  afterAll(async () => await app.close());
+  beforeAll(async () => await app.ready())
+  afterAll(async () => await app.close())
 
   it('should return 201 when [condição de sucesso]', async () => {
     const response = await request(app.server)
       .post('/[nome]')
-      .send({ /* body */ });
+      .send({ /* body */ })
 
-    expect(response.statusCode).toBe(201);
-    expect(response.body).toMatchObject({ /* estrutura esperada */ });
-  });
-});
+    expect(response.statusCode).toBe(201)
+    expect(response.body).toMatchObject({ /* estrutura esperada */ })
+  })
+})
 ```
 
 ## Após criar os arquivos
 
 1. Lembre o usuário de **registrar as rotas** no `app.ts`:
 ```typescript
-app.register([nome]Routes);
+app.register([nome]Routes)
 ```
 
 2. Se o módulo tem novo modelo Prisma, lembre de:

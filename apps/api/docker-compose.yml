@@ -1,0 +1,14 @@
+services:
+  eco-iguassu-pg:
+    image: postgres:16
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: eco_iguassu
+    volumes:
+      - eco-iguassu-pg-data:/var/lib/postgresql/data
+
+volumes:
+  eco-iguassu-pg-data:

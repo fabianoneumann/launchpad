@@ -7,6 +7,7 @@ import fastifyRateLimit from '@fastify/rate-limit'
 import { ZodError } from 'zod'
 import { env } from '@/env'
 import { AppError } from '@/shared/errors/app-error'
+import { authRoutes } from '@/modules/auth/auth.routes'
 
 export const app = fastify({
   logger:
@@ -40,6 +41,8 @@ app.register(fastifyJwt, {
 
 app.register(fastifyCookie)
 
+app.register(authRoutes)
+
 app.get('/health', async (_, reply) => {
   return reply.send({ status: 'ok' })
 })
@@ -54,6 +57,11 @@ app.setErrorHandler((error, request, reply) => {
 
   if (error instanceof AppError) {
     return reply.status(error.statusCode).send({ message: error.message })
+  }
+
+  if ('statusCode' in error && typeof (error as { statusCode: unknown }).statusCode === 'number') {
+    const statusCode = (error as { statusCode: number }).statusCode
+    return reply.status(statusCode).send({ message: error.message })
   }
 
   request.log.error(error)

@@ -4,7 +4,9 @@ import fastifyCookie from '@fastify/cookie'
 import fastifyCors from '@fastify/cors'
 import fastifyHelmet from '@fastify/helmet'
 import fastifyRateLimit from '@fastify/rate-limit'
-import { ZodError } from 'zod'
+import fastifySwagger from '@fastify/swagger'
+import fastifySwaggerUI from '@fastify/swagger-ui'
+import { validatorCompiler, serializerCompiler, jsonSchemaTransform } from 'fastify-type-provider-zod'
 import { env } from '@/env'
 import { AppError } from '@/shared/errors/app-error'
 import { authRoutes } from '@/modules/auth/auth.routes'
@@ -16,6 +18,22 @@ export const app = fastify({
       ? { transport: { target: 'pino-pretty', options: { colorize: true } } }
       : true,
 })
+
+app.setValidatorCompiler(validatorCompiler)
+app.setSerializerCompiler(serializerCompiler)
+
+app.register(fastifySwagger, {
+  openapi: {
+    info: {
+      title: 'Eco Iguassu API',
+      description: 'API do sistema Eco Iguassu',
+      version: '1.0.0',
+    },
+  },
+  transform: jsonSchemaTransform,
+})
+
+app.register(fastifySwaggerUI, { routePrefix: '/documentation' })
 
 app.register(fastifyHelmet)
 
@@ -50,13 +68,6 @@ app.get('/health', async (_, reply) => {
 })
 
 app.setErrorHandler((error, request, reply) => {
-  if (error instanceof ZodError) {
-    return reply.status(400).send({
-      message: 'Erro de validação.',
-      errors: error.format(),
-    })
-  }
-
   if (error instanceof AppError) {
     return reply.status(error.statusCode).send({ message: error.message })
   }

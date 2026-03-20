@@ -1,17 +1,11 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
-import { z } from 'zod'
 import { makeAuthenticateService } from '@/shared/factories/make-authenticate-service'
 
 export async function authenticateController(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const bodySchema = z.object({
-    email: z.email(),
-    password: z.string().min(6),
-  })
-
-  const { email, password } = bodySchema.parse(request.body)
+  const { email, password } = request.body as { email: string; password: string }
 
   const service = makeAuthenticateService()
   const { user } = await service.execute({ email, password })

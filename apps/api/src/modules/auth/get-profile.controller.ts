@@ -8,13 +8,5 @@ export async function getProfileController(
   const service = makeGetProfileService()
   const { user } = await service.execute({ userId: request.user.sub })
 
-  return reply.status(200).send({
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      created_at: user.created_at,
-    },
-  })
+  return reply.status(200).send({ user })
 }

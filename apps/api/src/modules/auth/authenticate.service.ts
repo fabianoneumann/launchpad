@@ -1,4 +1,5 @@
-import { compare } from 'bcryptjs'
+import bcrypt from 'bcryptjs'
+const { compare } = bcrypt
 import { User } from '@/generated/prisma/client'
 import { UsersRepository } from '@/repositories/users-repository'
 import { InvalidCredentialsError } from '@/shared/errors/invalid-credentials-error'

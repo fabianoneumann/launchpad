@@ -1,4 +1,5 @@
-import { hash } from 'bcryptjs'
+import bcrypt from 'bcryptjs'
+const { hash } = bcrypt
 import { UsersRepository } from '@/repositories/users-repository'
 import { PasswordResetTokensRepository } from '@/repositories/password-reset-tokens-repository'
 import { InvalidOrExpiredTokenError } from '@/shared/errors/invalid-or-expired-token-error'

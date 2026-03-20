@@ -1,4 +1,5 @@
-import { hash } from 'bcryptjs'
+import bcrypt from 'bcryptjs'
+const { hash } = bcrypt
 import { User } from '@/generated/prisma/client'
 import { UsersRepository } from '@/repositories/users-repository'
 import { UserAlreadyExistsError } from '@/shared/errors/user-already-exists-error'

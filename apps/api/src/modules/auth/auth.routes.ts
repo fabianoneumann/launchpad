@@ -8,6 +8,7 @@ import { logoutController } from './logout.controller'
 import { getProfileController } from './get-profile.controller'
 import { forgotPasswordController } from './forgot-password.controller'
 import { resetPasswordController } from './reset-password.controller'
+import { adminAuthenticateController } from './admin-authenticate.controller'
 
 const userResponseSchema = z.object({
   id: z.string().uuid(),
@@ -111,5 +112,20 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     handler: resetPasswordController,
+  })
+
+  app.route({
+    method: 'POST',
+    url: '/auth/admin/login',
+    schema: {
+      body: z.object({
+        email: z.email(),
+        password: z.string().min(6),
+      }),
+      response: {
+        200: z.object({ token: z.string() }),
+      },
+    },
+    handler: adminAuthenticateController,
   })
 }

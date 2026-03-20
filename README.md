@@ -14,8 +14,9 @@ eco-iguassu/
 │   ├── shared-types/ ← Tipos TypeScript compartilhados
 │   └── ui/           ← Design system compartilhado
 └── design/
-    ├── brand/        ← Guia de estilos e identidade visual
-    └── ux/           ← Personas e jornada do cliente
+    ├── design-system/ ← Especificação do DS (tokens, guidelines); ver README na pasta
+    ├── brand/         ← Ativos e diretrizes de marca (logos, paleta, PDFs leves)
+    └── references/    ← Referências locais (HTML/sites); ignorada pelo Git — ver .gitignore
 ```
 
 ## Tecnologias

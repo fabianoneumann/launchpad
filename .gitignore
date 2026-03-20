@@ -34,3 +34,4 @@ design/references/
 
 # Cursor / Agents (gerados localmente)
 skills-lock.json
+.claude/

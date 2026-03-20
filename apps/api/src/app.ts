@@ -8,6 +8,7 @@ import { ZodError } from 'zod'
 import { env } from '@/env'
 import { AppError } from '@/shared/errors/app-error'
 import { authRoutes } from '@/modules/auth/auth.routes'
+import { usersRoutes } from '@/modules/users/users.routes'
 
 export const app = fastify({
   logger:
@@ -42,6 +43,7 @@ app.register(fastifyJwt, {
 app.register(fastifyCookie)
 
 app.register(authRoutes)
+app.register(usersRoutes)
 
 app.get('/health', async (_, reply) => {
   return reply.send({ status: 'ok' })

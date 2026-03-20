@@ -35,7 +35,7 @@ describe('Logout E2E', () => {
 
     expect(response.statusCode).toBe(204)
 
-    const setCookieHeader = response.headers['set-cookie'] as
+    const setCookieHeader = response.headers['set-cookie'] as unknown as
       | string[]
       | undefined
     const clearedCookie = setCookieHeader?.find((c) =>

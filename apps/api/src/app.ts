@@ -59,7 +59,11 @@ app.setErrorHandler((error, request, reply) => {
     return reply.status(error.statusCode).send({ message: error.message })
   }
 
-  if ('statusCode' in error && typeof (error as { statusCode: unknown }).statusCode === 'number') {
+  if (
+    error instanceof Error &&
+    'statusCode' in error &&
+    typeof (error as { statusCode: unknown }).statusCode === 'number'
+  ) {
     const statusCode = (error as { statusCode: number }).statusCode
     return reply.status(statusCode).send({ message: error.message })
   }

@@ -27,4 +27,20 @@ export class InMemoryUsersRepository implements UsersRepository {
     this.items.push(user)
     return user
   }
+
+  async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
+    const index = this.items.findIndex((item) => item.id === id)
+    if (index === -1) throw new Error('User not found')
+
+    const current = this.items[index]
+    this.items[index] = {
+      ...current,
+      name: typeof data.name === 'string' ? data.name : current.name,
+      email: typeof data.email === 'string' ? data.email : current.email,
+      password_hash:
+        typeof data.password_hash === 'string' ? data.password_hash : current.password_hash,
+      updated_at: new Date(),
+    }
+    return this.items[index]
+  }
 }

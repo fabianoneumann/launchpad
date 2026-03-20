@@ -15,8 +15,7 @@ eco-iguassu/
 │   └── ui/           ← Design system compartilhado
 └── design/
     ├── design-system/ ← Especificação do DS (tokens, guidelines); ver README na pasta
-    ├── brand/         ← Ativos e diretrizes de marca (logos, paleta, PDFs leves)
-    └── references/    ← Referências locais (HTML/sites); ignorada pelo Git — ver .gitignore
+    └── brand/         ← Ativos e diretrizes de marca (logos, paleta, PDFs leves)
 ```
 
 ## Tecnologias

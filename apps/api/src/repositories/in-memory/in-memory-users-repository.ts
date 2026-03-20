@@ -6,11 +6,11 @@ export class InMemoryUsersRepository implements UsersRepository {
   public items: User[] = []
 
   async findById(id: string): Promise<User | null> {
-    return this.items.find((item) => item.id === id) ?? null
+    return this.items.find((item) => item.id === id && item.deleted_at === null) ?? null
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.items.find((item) => item.email === email) ?? null
+    return this.items.find((item) => item.email === email && item.deleted_at === null) ?? null
   }
 
   async create(data: Prisma.UserCreateInput): Promise<User> {
@@ -21,6 +21,7 @@ export class InMemoryUsersRepository implements UsersRepository {
       password_hash: data.password_hash,
       role: (data.role as User['role']) ?? 'USER',
       validated_at: null,
+      deleted_at: null,
       created_at: new Date(),
       updated_at: new Date(),
     }

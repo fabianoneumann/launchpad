@@ -20,6 +20,7 @@ model User {
   password_hash String
   role          Role      @default(USER)
   validated_at  DateTime?
+  deleted_at    DateTime?
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
 

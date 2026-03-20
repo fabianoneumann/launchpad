@@ -9,6 +9,9 @@ import { getProfileController } from './get-profile.controller'
 import { forgotPasswordController } from './forgot-password.controller'
 import { resetPasswordController } from './reset-password.controller'
 import { adminAuthenticateController } from './admin-authenticate.controller'
+import { updateProfileController } from './update-profile.controller'
+import { changePasswordController } from './change-password.controller'
+import { deleteOwnAccountController } from './delete-own-account.controller'
 
 const userResponseSchema = z.object({
   id: z.string().uuid(),
@@ -112,6 +115,49 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     handler: resetPasswordController,
+  })
+
+  app.route({
+    method: 'PATCH',
+    url: '/auth/me',
+    schema: {
+      body: z.object({
+        name: z.string().min(1),
+      }),
+      response: {
+        200: z.object({ user: userResponseSchema }),
+      },
+    },
+    onRequest: [verifyJWT],
+    handler: updateProfileController,
+  })
+
+  app.route({
+    method: 'PATCH',
+    url: '/auth/me/password',
+    schema: {
+      body: z.object({
+        currentPassword: z.string().min(6),
+        newPassword: z.string().min(6),
+      }),
+      response: {
+        204: z.null(),
+      },
+    },
+    onRequest: [verifyJWT],
+    handler: changePasswordController,
+  })
+
+  app.route({
+    method: 'DELETE',
+    url: '/auth/me',
+    schema: {
+      response: {
+        204: z.null(),
+      },
+    },
+    onRequest: [verifyJWT],
+    handler: deleteOwnAccountController,
   })
 
   app.route({

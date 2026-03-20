@@ -1,0 +1,28 @@
+import { User } from '@/generated/prisma/client'
+import { UsersRepository } from '@/repositories/users-repository'
+import { ResourceNotFoundError } from '@/shared/errors/resource-not-found-error'
+
+interface UpdateProfileServiceRequest {
+  userId: string
+  name: string
+}
+
+interface UpdateProfileServiceResponse {
+  user: User
+}
+
+export class UpdateProfileService {
+  constructor(private usersRepository: UsersRepository) {}
+
+  async execute({ userId, name }: UpdateProfileServiceRequest): Promise<UpdateProfileServiceResponse> {
+    const user = await this.usersRepository.findById(userId)
+
+    if (!user) {
+      throw new ResourceNotFoundError()
+    }
+
+    const updatedUser = await this.usersRepository.update(userId, { name })
+
+    return { user: updatedUser }
+  }
+}

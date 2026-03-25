@@ -70,4 +70,29 @@ describe('Change Password E2E', () => {
 
     expect(response.statusCode).toBe(401)
   })
+
+  it('should invalidate the access token and refresh cookie after password change', async () => {
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: testEmail, password: 'new-password' })
+    const { token: oldToken } = loginResponse.body
+    const oldCookies = loginResponse.headers['set-cookie']
+
+    await request(app.server)
+      .patch('/auth/me/password')
+      .set('Authorization', `Bearer ${oldToken}`)
+      .send({ currentPassword: 'new-password', newPassword: 'another-password' })
+
+    const accessResponse = await request(app.server)
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${oldToken}`)
+
+    expect(accessResponse.statusCode).toBe(401)
+
+    const refreshResponse = await request(app.server)
+      .patch('/auth/token/refresh')
+      .set('Cookie', oldCookies)
+
+    expect(refreshResponse.statusCode).toBe(401)
+  })
 })

@@ -4,13 +4,13 @@ import { PasswordResetTokensRepository } from '@/repositories/password-reset-tok
 
 export class PrismaPasswordResetTokensRepository implements PasswordResetTokensRepository {
   async create(data: {
-    token: string
+    tokenHash: string
     userId: string
     expiresAt: Date
   }): Promise<PasswordResetToken> {
     return prisma.passwordResetToken.create({
       data: {
-        token: data.token,
+        token_hash: data.tokenHash,
         user_id: data.userId,
         expires_at: data.expiresAt,
       },
@@ -18,7 +18,7 @@ export class PrismaPasswordResetTokensRepository implements PasswordResetTokensR
   }
 
   async findByToken(token: string): Promise<PasswordResetToken | null> {
-    return prisma.passwordResetToken.findUnique({ where: { token } })
+    return prisma.passwordResetToken.findUnique({ where: { token_hash: token } })
   }
 
   async markAsUsed(id: string): Promise<void> {

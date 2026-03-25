@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs'
 const { hash } = bcrypt
+import { createHash } from 'node:crypto'
 import { UsersRepository } from '@/repositories/users-repository'
 import { PasswordResetTokensRepository } from '@/repositories/password-reset-tokens-repository'
 import { InvalidOrExpiredTokenError } from '@/shared/errors/invalid-or-expired-token-error'
@@ -16,7 +17,8 @@ export class ResetPasswordService {
   ) {}
 
   async execute({ token, newPassword }: ResetPasswordServiceRequest): Promise<void> {
-    const resetToken = await this.passwordResetTokensRepository.findByToken(token)
+    const tokenHash = createHash('sha256').update(token).digest('hex')
+    const resetToken = await this.passwordResetTokensRepository.findByToken(tokenHash)
 
     if (!resetToken || resetToken.used_at !== null || resetToken.expires_at < new Date()) {
       throw new InvalidOrExpiredTokenError()
@@ -26,5 +28,6 @@ export class ResetPasswordService {
 
     await this.usersRepository.update(resetToken.user_id, { password_hash: passwordHash })
     await this.passwordResetTokensRepository.markAsUsed(resetToken.id)
+    await this.usersRepository.incrementTokenVersion(resetToken.user_id)
   }
 }

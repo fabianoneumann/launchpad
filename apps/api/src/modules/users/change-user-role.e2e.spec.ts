@@ -67,4 +67,47 @@ describe('Change User Role E2E', () => {
 
     expect(response.statusCode).toBe(400)
   })
+
+  it('should invalidate target user token after role change', async () => {
+    const targetLogin = await request(app.server).post('/auth/login').send({ email: targetEmail, password: '123456' })
+    const targetOldToken = targetLogin.body.token
+
+    const adminLogin = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const adminToken = adminLogin.body.token
+
+    const target = await prisma.user.findUnique({ where: { email: targetEmail } })
+
+    await request(app.server)
+      .patch(`/users/${target!.id}/role`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ role: 'USER' })
+
+    const response = await request(app.server)
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${targetOldToken}`)
+
+    expect(response.statusCode).toBe(401)
+  })
+
+  it('should reflect updated role in new token after role change', async () => {
+    const adminLogin = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const adminToken = adminLogin.body.token
+
+    const target = await prisma.user.findUnique({ where: { email: targetEmail } })
+
+    await request(app.server)
+      .patch(`/users/${target!.id}/role`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ role: 'MEMBER' })
+
+    const newLogin = await request(app.server).post('/auth/login').send({ email: targetEmail, password: '123456' })
+    const newToken = newLogin.body.token
+
+    const meResponse = await request(app.server)
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${newToken}`)
+
+    expect(meResponse.statusCode).toBe(200)
+    expect(meResponse.body.user.role).toBe('MEMBER')
+  })
 })

@@ -6,13 +6,13 @@ export class InMemoryPasswordResetTokensRepository implements PasswordResetToken
   public items: PasswordResetToken[] = []
 
   async create(data: {
-    token: string
+    tokenHash: string
     userId: string
     expiresAt: Date
   }): Promise<PasswordResetToken> {
     const resetToken: PasswordResetToken = {
       id: randomUUID(),
-      token: data.token,
+      token_hash: data.tokenHash,
       user_id: data.userId,
       expires_at: data.expiresAt,
       used_at: null,
@@ -23,7 +23,7 @@ export class InMemoryPasswordResetTokensRepository implements PasswordResetToken
   }
 
   async findByToken(token: string): Promise<PasswordResetToken | null> {
-    return this.items.find((item) => item.token === token) ?? null
+    return this.items.find((item) => item.token_hash === token) ?? null
   }
 
   async markAsUsed(id: string): Promise<void> {

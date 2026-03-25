@@ -29,5 +29,6 @@ export class ChangePasswordService {
     const password_hash = await hash(newPassword, 6)
 
     await this.usersRepository.update(userId, { password_hash })
+    await this.usersRepository.incrementTokenVersion(userId)
   }
 }

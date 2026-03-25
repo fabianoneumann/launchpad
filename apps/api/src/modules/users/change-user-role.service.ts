@@ -28,6 +28,7 @@ export class ChangeUserRoleService {
     }
 
     const updatedUser = await this.usersRepository.update(userId, { role })
+    await this.usersRepository.incrementTokenVersion(userId)
 
     return { user: updatedUser }
   }

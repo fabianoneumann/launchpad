@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { UsersRepository } from '@/repositories/users-repository'
 import { PasswordResetTokensRepository } from '@/repositories/password-reset-tokens-repository'
 import { MailProvider } from '@/lib/mail/mail-provider'
@@ -23,9 +23,10 @@ export class ForgotPasswordService {
     }
 
     const token = randomBytes(32).toString('hex')
+    const tokenHash = createHash('sha256').update(token).digest('hex')
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 2)
 
-    await this.passwordResetTokensRepository.create({ token, userId: user.id, expiresAt })
+    await this.passwordResetTokensRepository.create({ tokenHash, userId: user.id, expiresAt })
 
     const resetLink = `${env.APP_URL ?? 'http://localhost:5173'}/auth/reset-password?token=${token}`
 

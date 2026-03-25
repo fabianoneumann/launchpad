@@ -57,4 +57,40 @@ describe('ChangePasswordService', () => {
       }),
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
   })
+
+  it('should increment token_version after successful password change', async () => {
+    const created = await repository.create({
+      name: 'John Doe',
+      email: 'john2@example.com',
+      password_hash: await hash('123456', 6),
+    })
+
+    await sut.execute({
+      userId: created.id,
+      currentPassword: '123456',
+      newPassword: 'new-password',
+    })
+
+    const updated = await repository.findById(created.id)
+    expect(updated!.token_version).toBe(1)
+  })
+
+  it('should not increment token_version when current password is wrong', async () => {
+    const created = await repository.create({
+      name: 'John Doe',
+      email: 'john3@example.com',
+      password_hash: await hash('123456', 6),
+    })
+
+    await expect(() =>
+      sut.execute({
+        userId: created.id,
+        currentPassword: 'wrong-password',
+        newPassword: 'new-password',
+      }),
+    ).rejects.toBeInstanceOf(InvalidCredentialsError)
+
+    const unchanged = await repository.findById(created.id)
+    expect(unchanged!.token_version).toBe(0)
+  })
 })

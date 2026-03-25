@@ -43,4 +43,24 @@ describe('Logout E2E', () => {
     )
     expect(clearedCookie).toBeDefined()
   })
+
+  it('should invalidate the access token after logout', async () => {
+    const loginResponse = await request(app.server).post('/auth/login').send({
+      email: testEmail,
+      password: '123456',
+    })
+    const { token } = loginResponse.body
+    const cookies = loginResponse.headers['set-cookie']
+
+    await request(app.server)
+      .delete('/auth/logout')
+      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
+
+    const response = await request(app.server)
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${token}`)
+
+    expect(response.statusCode).toBe(401)
+  })
 })

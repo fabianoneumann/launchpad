@@ -37,4 +37,8 @@ export class PrismaUsersRepository implements UsersRepository {
   async delete(id: string): Promise<void> {
     await prisma.user.update({ where: { id }, data: { deleted_at: new Date() } })
   }
+
+  async incrementTokenVersion(id: string): Promise<void> {
+    await prisma.user.update({ where: { id }, data: { token_version: { increment: 1 } } })
+  }
 }

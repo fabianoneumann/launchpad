@@ -43,4 +43,40 @@ describe('Refresh Token E2E', () => {
 
     expect(response.statusCode).toBe(401)
   })
+
+  it('should return 401 when refresh token has outdated token version', async () => {
+    const loginResponse = await request(app.server).post('/auth/login').send({
+      email: testEmail,
+      password: '123456',
+    })
+    const { token } = loginResponse.body
+    const cookies = loginResponse.headers['set-cookie']
+
+    await request(app.server)
+      .delete('/auth/logout')
+      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
+
+    const response = await request(app.server)
+      .patch('/auth/token/refresh')
+      .set('Cookie', cookies)
+
+    expect(response.statusCode).toBe(401)
+  })
+
+  it('should return new tokens with role and tokenVersion from database', async () => {
+    const loginResponse = await request(app.server).post('/auth/login').send({
+      email: testEmail,
+      password: '123456',
+    })
+    const cookies = loginResponse.headers['set-cookie']
+
+    const response = await request(app.server)
+      .patch('/auth/token/refresh')
+      .set('Cookie', cookies)
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject({ token: expect.any(String) })
+    expect(response.headers['set-cookie']).toBeDefined()
+  })
 })

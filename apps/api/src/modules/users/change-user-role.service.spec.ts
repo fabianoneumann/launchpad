@@ -38,4 +38,17 @@ describe('ChangeUserRoleService', () => {
       sut.execute({ adminId: admin.id, userId: 'non-existent-id', role: 'MEMBER' }),
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
   })
+
+  it('should increment token_version of the target user after role change', async () => {
+    const admin = await repository.create({ name: 'Admin', email: 'admin2@test.com', password_hash: await hash('123456', 6), role: 'ADMIN' })
+    const user = await repository.create({ name: 'User', email: 'user2@test.com', password_hash: await hash('123456', 6) })
+
+    await sut.execute({ adminId: admin.id, userId: user.id, role: 'MEMBER' })
+
+    const updatedUser = await repository.findById(user.id)
+    const unchangedAdmin = await repository.findById(admin.id)
+
+    expect(updatedUser!.token_version).toBe(1)
+    expect(unchangedAdmin!.token_version).toBe(0)
+  })
 })

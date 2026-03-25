@@ -30,6 +30,7 @@ export class InMemoryUsersRepository implements UsersRepository {
       email: data.email,
       password_hash: data.password_hash,
       role: (data.role as User['role']) ?? 'USER',
+      token_version: 0,
       validated_at: null,
       deleted_at: null,
       created_at: new Date(),
@@ -60,6 +61,13 @@ export class InMemoryUsersRepository implements UsersRepository {
     const index = this.items.findIndex((item) => item.id === id)
     if (index !== -1) {
       this.items[index].deleted_at = new Date()
+    }
+  }
+
+  async incrementTokenVersion(id: string): Promise<void> {
+    const index = this.items.findIndex((item) => item.id === id)
+    if (index !== -1) {
+      this.items[index].token_version += 1
     }
   }
 }

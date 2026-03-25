@@ -8,4 +8,5 @@ export interface UsersRepository {
   create(data: Prisma.UserCreateInput): Promise<User>
   update(id: string, data: Prisma.UserUpdateInput): Promise<User>
   delete(id: string): Promise<void>
+  incrementTokenVersion(id: string): Promise<void>
 }

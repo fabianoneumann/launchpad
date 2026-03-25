@@ -19,6 +19,7 @@ model User {
   email         String    @unique
   password_hash String
   role          Role      @default(USER)
+  token_version Int       @default(0)
   validated_at  DateTime?
   deleted_at    DateTime?
   created_at    DateTime  @default(now())
@@ -31,7 +32,7 @@ model User {
 
 model PasswordResetToken {
   id         String    @id @default(uuid())
-  token      String    @unique
+  token_hash String    @unique
   user_id    String
   user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   expires_at DateTime

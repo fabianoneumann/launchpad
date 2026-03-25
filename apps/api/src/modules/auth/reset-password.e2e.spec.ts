@@ -3,7 +3,11 @@ import request from 'supertest'
 import { app } from '@/app'
 import { prisma } from '@/lib/prisma'
 import { hash } from 'bcryptjs'
-import { randomBytes } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
+
+function sha256(value: string) {
+  return createHash('sha256').update(value).digest('hex')
+}
 
 const testEmail = 'reset-pw-test@test.com'
 
@@ -34,7 +38,7 @@ describe('Reset Password E2E', () => {
     const token = randomBytes(32).toString('hex')
     await prisma.passwordResetToken.create({
       data: {
-        token,
+        token_hash: sha256(token),
         user_id: user.id,
         expires_at: new Date(Date.now() + 1000 * 60 * 60 * 2),
       },
@@ -61,7 +65,7 @@ describe('Reset Password E2E', () => {
     const token = randomBytes(32).toString('hex')
     await prisma.passwordResetToken.create({
       data: {
-        token,
+        token_hash: sha256(token),
         user_id: user.id,
         expires_at: new Date(Date.now() - 1000),
       },
@@ -80,5 +84,32 @@ describe('Reset Password E2E', () => {
       .send({ token: 'some-token', newPassword: '123' })
 
     expect(response.statusCode).toBe(400)
+  })
+
+  it('should invalidate existing JWTs after password reset', async () => {
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: testEmail, password: 'new-password' })
+    const { token: oldToken } = loginResponse.body
+
+    const user = await prisma.user.findUniqueOrThrow({ where: { email: testEmail } })
+    const resetToken = randomBytes(32).toString('hex')
+    await prisma.passwordResetToken.create({
+      data: {
+        token_hash: sha256(resetToken),
+        user_id: user.id,
+        expires_at: new Date(Date.now() + 1000 * 60 * 60 * 2),
+      },
+    })
+
+    await request(app.server)
+      .patch('/auth/password/reset')
+      .send({ token: resetToken, newPassword: 'reset-password' })
+
+    const response = await request(app.server)
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${oldToken}`)
+
+    expect(response.statusCode).toBe(401)
   })
 })

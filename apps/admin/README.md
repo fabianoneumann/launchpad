@@ -20,8 +20,10 @@ Aplicação de administração do projeto eco-iguassu. Este README documenta dec
 | Estilização | Tailwind CSS + shadcn/ui |
 | Roteamento | TanStack Router |
 | Estado servidor | TanStack Query (React Query) |
+| Estado global cliente | Zustand |
 | Tabelas | TanStack Table |
 | Formulários | React Hook Form + Zod |
+| Requisições HTTP | Axios |
 | Testes unitários/integração | Vitest + React Testing Library |
 | Testes E2E | Playwright |
 | Mock de API em testes | MSW (Mock Service Worker) |
@@ -40,6 +42,31 @@ Racional:
 - **Devtools incluídas**
 
 O React Router v7 (evolução do Remix) seria preferível em projetos full-stack onde os loaders rodam no servidor e acessam o banco diretamente, eliminando a necessidade de uma API REST separada. Esse não é o caso aqui: o admin é um cliente da API Fastify existente, e o TanStack Query já resolve o data fetching com cache, retry e invalidation.
+
+---
+
+## Decisão: Zustand para estado global
+
+**Estado global escolhido: Zustand.**
+
+O estado verdadeiramente global do admin é pequeno — sessão do usuário autenticado e pouco mais. O Context API resolveria funcionalmente, mas tem uma limitação relevante para este projeto: hooks só funcionam dentro de componentes React, o que impede a leitura do estado de autenticação fora do React.
+
+O caso concreto é o interceptor do axios (`lib/api/client.ts`): ao capturar um 401, ele precisa ler o token, chamar o refresh e atualizar o estado — tudo fora de componentes. Com Zustand isso é direto:
+
+```ts
+// fora do React — funciona
+const { token, setToken } = useAuthStore.getState()
+```
+
+TanStack Query cuida de todo o estado do servidor. Zustand cobre apenas o estado de sessão do cliente.
+
+---
+
+## Decisão: Axios para requisições HTTP
+
+**Cliente HTTP escolhido: Axios.**
+
+O fluxo de refresh token exige interceptors — capturar o 401, tentar o refresh, e reexecutar a request original de forma transparente para o chamador. O Axios tem suporte nativo a interceptors de request e response, tornando esse padrão direto de implementar sem boilerplate extra.
 
 ---
 
@@ -90,7 +117,7 @@ apps/admin/
 │   │
 │   ├── lib/
 │   │   ├── api/
-│   │   │   └── client.ts           # instância do fetch/axios apontando para apps/api
+│   │   │   └── client.ts           # instância do axios apontando para apps/api (com interceptors de auth)
 │   │   ├── react-query/
 │   │   │   └── query-client.ts
 │   │   └── utils.ts

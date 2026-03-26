@@ -49,14 +49,17 @@ O React Router v7 (evolução do Remix) seria preferível em projetos full-stack
 apps/admin/
 ├── src/
 │   ├── app/                        # roteamento, layout raiz e providers
-│   │   ├── routes/                 # páginas organizadas por rota
-│   │   │   ├── _layout.tsx
+│   │   ├── routes/                 # páginas organizadas por rota (file-based routing)
+│   │   │   ├── __root.tsx          # rota raiz obrigatória do TanStack Router
+│   │   │   ├── _layout.tsx         # layout sem path (pathless layout route)
 │   │   │   ├── dashboard/
 │   │   │   │   ├── index.tsx
 │   │   │   │   └── dashboard.test.tsx
 │   │   │   └── users/
 │   │   │       ├── index.tsx
-│   │   │       └── [id].tsx
+│   │   │       └── $id.tsx         # param dinâmico — convenção TanStack Router
+│   │   ├── router.ts               # instância do router (createRouter)
+│   │   ├── routeTree.gen.ts        # gerado automaticamente pelo TanStack Router — não editar
 │   │   └── providers.tsx           # QueryClient, Auth, Theme...
 │   │
 │   ├── features/                   # domínios da aplicação (feature-first)

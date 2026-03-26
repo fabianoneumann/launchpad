@@ -8,7 +8,7 @@ Aplicação de administração do projeto eco-iguassu. Este README documenta dec
 
 - App ainda não iniciado — este arquivo substitui o `.gitkeep` como registro das decisões tomadas antes do kickoff.
 - O projeto é um monorepo (Turborepo + pnpm). A stack da API é Fastify + Prisma + Zod.
-- A abordagem planejada é usar o **Lovable** como ferramenta de design/prototipação — não como fonte de código. O output do Lovable (gerado com Supabase como backend) serve como referência visual e de escopo de features. O código é gerado aqui, no monorepo, conectado à API real.
+- A abordagem planejada é usar o **Lovable** como ferramenta de design/prototipação — não como fonte de código. O output do Lovable serve como referência visual e de escopo de features. O código é gerado aqui, no monorepo, conectado à API real.
 
 ---
 
@@ -18,33 +18,28 @@ Aplicação de administração do projeto eco-iguassu. Este README documenta dec
 |---|---|
 | Framework | React + Vite + TypeScript |
 | Estilização | Tailwind CSS + shadcn/ui |
-| Roteamento | **A definir** — ver seção abaixo |
+| Roteamento | TanStack Router |
 | Estado servidor | TanStack Query (React Query) |
+| Tabelas | TanStack Table |
+| Formulários | React Hook Form + Zod |
 | Testes unitários/integração | Vitest + React Testing Library |
 | Testes E2E | Playwright |
 | Mock de API em testes | MSW (Mock Service Worker) |
 
 ---
 
-## Ponto em aberto: React Router vs TanStack Router
+## Decisão: TanStack Router
 
-A decisão de roteamento está em aberto e deve ser tomada antes de iniciar o desenvolvimento.
+**Roteador escolhido: TanStack Router.**
 
-**React Router v6/v7**
-- Mais maduro e com ecossistema maior
-- v7 introduz file-based routing opcional (modo framework)
-- Documentação abundante, mais fácil de encontrar ajuda
-- Mais familiar para a maioria dos devs React
+Racional:
 
-**TanStack Router**
-- Type-safety de rotas de ponta a ponta (params, search params, loaders — tudo tipado)
-- File-based routing nativo
-- Integração natural com TanStack Query (mesmo ecossistema)
-- Mais novo, ecossistema menor, curva de aprendizado maior
+- **Type-safety de ponta a ponta** — params, search params e estado de navegação todos tipados; erro em tempo de compilação se errar um param
+- **File-based routing nativo** — estrutura de arquivos vira estrutura de rotas automaticamente
+- **Integração nativa com TanStack Query** — prefetch e loaders integrados à rota sem boilerplate manual; os dois fazem parte do mesmo ecossistema (TanStack)
+- **Devtools incluídas**
 
-**Recomendação para considerar:** Se type-safety estrita nas rotas for prioridade e o time tiver familiaridade com o ecossistema TanStack, o TanStack Router é a escolha mais coerente. Para times que priorizam velocidade de onboarding, React Router v7 é mais seguro.
-
-> **Decisão:** pendente — definir antes de iniciar o scaffold do app.
+O React Router v7 (evolução do Remix) seria preferível em projetos full-stack onde os loaders rodam no servidor e acessam o banco diretamente, eliminando a necessidade de uma API REST separada. Esse não é o caso aqui: o admin é um cliente da API Fastify existente, e o TanStack Query já resolve o data fetching com cache, retry e invalidation.
 
 ---
 
@@ -160,8 +155,7 @@ Testes co-located com o código que testam. Configuração global em `tests/setu
 
 ## Fluxo de kickoff sugerido
 
-1. Definir roteador (React Router vs TanStack Router)
-2. Usar Lovable para prototipar as telas do admin — anotar rotas, entidades, componentes por tela
-3. Gerar scaffold do app no monorepo com estrutura acima já configurada
-4. Configurar Vitest e Playwright antes de escrever a primeira feature
-5. Implementar features uma a uma, partindo da autenticação
+1. Usar Lovable para prototipar as telas do admin — anotar rotas, entidades, componentes por tela
+2. Gerar scaffold do app no monorepo com estrutura acima já configurada
+3. Configurar Vitest e Playwright antes de escrever a primeira feature
+4. Implementar features uma a uma, partindo da autenticação

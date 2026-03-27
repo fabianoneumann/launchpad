@@ -6,9 +6,18 @@ Aplicação de administração do projeto eco-iguassu. Este README documenta dec
 
 ## Contexto
 
-- App ainda não iniciado — este arquivo substitui o `.gitkeep` como registro das decisões tomadas antes do kickoff.
+- App ainda não iniciado — scaffold pendente (Issue eco-iguassu#12).
 - O projeto é um monorepo (Turborepo + pnpm). A stack da API é Fastify + Prisma + Zod.
-- A abordagem planejada é usar o **Lovable** como ferramenta de design/prototipação — não como fonte de código. O output do Lovable serve como referência visual e de escopo de features. O código é gerado aqui, no monorepo, conectado à API real.
+- O **Lovable** foi usado como ferramenta de design/prototipação — não como fonte de código. O output serve como referência visual e de escopo de features. O código é gerado aqui, no monorepo, conectado à API real.
+
+### Artefatos do processo de planejamento
+
+| Arquivo | Descrição |
+|---|---|
+| `prompt-lovable.txt` | Prompt usado para gerar o protótipo no Lovable. Inclui link para o repositório gerado ao final. |
+| `issues-plan.txt` | Plano de trabalho com todas as issues do painel admin, organizadas por milestone. Usado como rascunho antes de criar cada issue no GitHub. |
+
+**Referência visual:** [fabianoneumann/admin-compass](https://github.com/fabianoneumann/admin-compass) — projeto gerado pelo Lovable a partir do `prompt-lovable.txt`. Usado como referência de UI e escopo de features durante a implementação. O código não é compatível com a arquitetura deste projeto (usa React Router v6 e estrutura `pages/` flat).
 
 ---
 
@@ -183,9 +192,9 @@ Testes co-located com o código que testam. Configuração global em `tests/setu
 
 ---
 
-## Fluxo de kickoff sugerido
+## Fluxo de kickoff
 
-1. Usar Lovable para prototipar as telas do admin — anotar rotas, entidades, componentes por tela
-2. Gerar scaffold do app no monorepo com estrutura acima já configurada
+1. ~~Usar Lovable para prototipar as telas do admin — anotar rotas, entidades, componentes por tela~~ ✓ **Concluído** — protótipo em [fabianoneumann/admin-compass](https://github.com/fabianoneumann/admin-compass), plano de issues em `issues-plan.txt`
+2. Gerar scaffold do app no monorepo com estrutura acima já configurada (Issue eco-iguassu#12)
 3. Configurar Vitest e Playwright antes de escrever a primeira feature
 4. Implementar features uma a uma, partindo da autenticação

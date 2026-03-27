@@ -255,11 +255,35 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 ---
 
+### Issue #11 — [admin] Reset password page
+**Labels:** admin, frontend, auth, feature
+
+**User stories:**
+- Como **administrador**, quero **redefinir minha senha através do link recebido por e-mail**, para que **eu possa recuperar o acesso ao painel**.
+
+**Goal:** Page that receives the reset token from the URL and allows the admin to set a new password. Completes the forgot-password flow started in Issue #10.
+
+**Depends on:** Issue #10 (forgot password sends the email with the link pointing to this route)
+
+**Tasks:**
+- Create `src/app/routes/reset-password.tsx`
+- Extract `token` from URL search params using TanStack Router `useSearch`
+- Create `src/features/auth/components/ResetPasswordForm.tsx`:
+  - Fields: nova senha (min 6) + confirmar nova senha (Zod refine for match)
+  - On submit: `PATCH /auth/password/reset` with `{ token, newPassword }`
+  - Success state: inline confirmation + link to `/login`
+  - Error state (400): "Link inválido ou expirado" + link to `/forgot-password`
+- Add `resetPassword(token, newPassword)` to `auth.api.ts`
+- Unit test: validation errors shown, success state rendered, error state rendered on 400
+- E2E test: valid token → password changed → redirect to /login
+
+---
+
 ## MILESTONE 3 — Users Module
 
 ---
 
-### Issue #11 — [admin] Shared DataTable component
+### Issue #12 — [admin] Shared DataTable component
 **Labels:** admin, frontend, chore
 
 **Goal:** Generic, reusable paginated table using TanStack Table.
@@ -280,7 +304,7 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 ---
 
-### Issue #12 — [admin] Users list page
+### Issue #13 — [admin] Users list page
 **Labels:** admin, frontend, users, feature
 
 **User stories:**
@@ -302,13 +326,13 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
   Criado em, Ações (Ver, Editar, Excluir)
 - Filters: search input (name/email), role select, status toggle (Ativos/Deletados/Todos)
 - Deleted rows: opacity-50
-- Action button "+ Novo Usuário" → opens Create User modal (Issue #13)
+- Action button "+ Novo Usuário" → opens Create User modal (Issue #14)
 - Row actions: Ver → `/users/:id`, Editar → inline edit modal, Excluir → ConfirmDialog
 - Unit test: filters update URL search params, table renders with mocked API response (MSW)
 
 ---
 
-### Issue #13 — [admin] Create user modal
+### Issue #14 — [admin] Create user modal
 **Labels:** admin, frontend, users, feature
 
 **User stories:**
@@ -327,7 +351,7 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 ---
 
-### Issue #14 — [admin] User detail page
+### Issue #15 — [admin] User detail page
 **Labels:** admin, frontend, users, feature
 
 **User stories:**
@@ -364,7 +388,7 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 ---
 
-### Issue #15 — [admin] Profile page
+### Issue #16 — [admin] Profile page
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**
@@ -398,7 +422,7 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 ---
 
-### Issue #16 — [admin] Error pages (404 and 403)
+### Issue #17 — [admin] Error pages (404 and 403)
 **Labels:** admin, frontend, chore
 
 **Goal:** Consistent error pages for not found and forbidden routes.
@@ -413,7 +437,7 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 ---
 
-### Issue #17 — [admin] Dashboard page
+### Issue #18 — [admin] Dashboard page
 **Labels:** admin, frontend, feature
 
 **User stories:**
@@ -438,8 +462,8 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 ## Implementation order
 
-Milestone 1 (Issues #1–5) → Milestone 2 (Issues #6–10) → Milestone 3 (Issues #11–14)
-→ Milestone 4 (Issue #15) → Milestone 5 (Issues #16–17)
+Milestone 1 (Issues #1–5) → Milestone 2 (Issues #6–11) → Milestone 3 (Issues #12–15)
+→ Milestone 4 (Issue #16) → Milestone 5 (Issues #17–18)
 
 Start each issue only after the previous is merged and green on CI.
 The Lovable project (fabianoneumann/admin-compass) serves as visual reference throughout.

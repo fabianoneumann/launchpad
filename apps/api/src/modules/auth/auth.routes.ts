@@ -12,6 +12,8 @@ import { adminAuthenticateController } from './admin-authenticate.controller'
 import { updateProfileController } from './update-profile.controller'
 import { changePasswordController } from './change-password.controller'
 import { deleteOwnAccountController } from './delete-own-account.controller'
+import { verifyEmailController } from './verify-email.controller'
+import { resendVerificationEmailController } from './resend-verification-email.controller'
 
 const userResponseSchema = z.object({
   id: z.string().uuid(),
@@ -158,6 +160,30 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     onRequest: [verifyJWT],
     handler: deleteOwnAccountController,
+  })
+
+  app.route({
+    method: 'GET',
+    url: '/auth/email/verify',
+    schema: {
+      querystring: z.object({ token: z.string() }),
+      response: {
+        204: z.null(),
+      },
+    },
+    handler: verifyEmailController,
+  })
+
+  app.route({
+    method: 'POST',
+    url: '/auth/email/verify/resend',
+    schema: {
+      response: {
+        204: z.null(),
+      },
+    },
+    onRequest: [verifyJWT],
+    handler: resendVerificationEmailController,
   })
 
   app.route({

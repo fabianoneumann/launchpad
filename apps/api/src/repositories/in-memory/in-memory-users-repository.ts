@@ -52,6 +52,7 @@ export class InMemoryUsersRepository implements UsersRepository {
       password_hash:
         typeof data.password_hash === 'string' ? data.password_hash : current.password_hash,
       role: typeof data.role === 'string' ? (data.role as User['role']) : current.role,
+      validated_at: data.validated_at instanceof Date ? data.validated_at : current.validated_at,
       updated_at: new Date(),
     }
     return this.items[index]

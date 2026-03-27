@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import request from 'supertest'
 import { app } from '@/app'
 import { prisma } from '@/lib/prisma'
@@ -28,6 +28,14 @@ describe('Register E2E', () => {
       id: expect.any(String),
       email: emails[0],
     })
+  })
+
+  it('should create a verification token after registration', async () => {
+    const user = await prisma.user.findFirst({ where: { email: emails[0] } })
+    await vi.waitFor(async () => {
+      const tokens = await prisma.emailVerificationToken.findMany({ where: { user_id: user!.id } })
+      expect(tokens.length).toBeGreaterThanOrEqual(1)
+    }, { timeout: 2000 })
   })
 
   it('should return 409 when email is already taken', async () => {

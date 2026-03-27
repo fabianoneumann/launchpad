@@ -192,6 +192,26 @@ Testes co-located com o código que testam. Configuração global em `tests/setu
 
 ---
 
+## Convenção: links de e-mail transacionais
+
+Links enviados em e-mails transacionais (recuperação de senha, verificação de e-mail) **sempre apontam para o frontend** (`APP_URL`), nunca diretamente para a API.
+
+```
+E-mail → link aponta para rota do frontend
+  → frontend extrai o token da URL
+  → frontend chama o endpoint da API via axios
+  → frontend exibe o resultado ao usuário (sucesso ou erro)
+```
+
+| E-mail | Link no e-mail | Rota do frontend | Endpoint da API chamado pelo frontend |
+|---|---|---|---|
+| Recuperação de senha | `APP_URL/auth/reset-password?token=` | `reset-password.tsx` | `PATCH /auth/password/reset` |
+| Verificação de e-mail | `APP_URL/verify-email?token=` | `verify-email.tsx` (futuro) | `GET /auth/email/verify?token=` |
+
+Os endpoints de API existem para serem chamados via fetch/axios pelo frontend — não para serem acessados diretamente pelo navegador ao clicar no link. `APP_URL` é definido no backend (`apps/api/.env`) e aponta para a URL pública do frontend.
+
+---
+
 ## Fluxo de kickoff
 
 1. ~~Usar Lovable para prototipar as telas do admin — anotar rotas, entidades, componentes por tela~~ ✓ **Concluído** — protótipo em [fabianoneumann/admin-compass](https://github.com/fabianoneumann/admin-compass), plano de issues em `issues-plan.txt`

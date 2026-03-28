@@ -18,11 +18,11 @@
 # 1. Create the app inside the monorepo
 pnpm create vite apps/admin --template react-ts
 
-# 2. Install dependencies
-cd apps/admin && pnpm install
+# 2. Install dependencies (from monorepo root — installs all workspaces, including the new one)
+pnpm install
 
 # 3. Initialize shadcn/ui (sets up Tailwind + CSS variables automatically)
-pnpm dlx shadcn@latest init
+cd apps/admin && pnpm dlx shadcn@latest init
 # When prompted: New York style, zinc base color, CSS variables: yes
 ```
 

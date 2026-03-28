@@ -50,7 +50,7 @@ cd apps/admin && pnpm dlx shadcn@latest init
 **Labels:** admin, frontend, chore
 
 **Goal:** Complete what the CLI commands don't cover: monorepo wiring, path aliases,
-environment setup, shadcn components, and ThemeProvider.
+environment setup, ESLint + Prettier, shadcn components, and ThemeProvider.
 
 **Tasks:**
 
@@ -65,7 +65,25 @@ environment setup, shadcn components, and ThemeProvider.
 
 *Monorepo wiring:*
 - Add `apps/admin` entry to `pnpm-workspace.yaml` (if not already covered by glob)
-- Add `admin` pipeline to `turbo.json`: `dev`, `build`, `test`, `lint`
+- Add `admin` pipeline to `turbo.json`: `dev`, `build`, `test`, `lint`, `format`
+
+*ESLint + Prettier:*
+- O Vite react-ts já gera `eslint.config.js` com regras base — verificar e manter
+- Install `prettier` e `eslint-config-prettier` (desativa regras do ESLint que conflitam com Prettier)
+- Create `.prettierrc`:
+  ```json
+  {
+    "semi": true,
+    "singleQuote": false,
+    "trailingComma": "all",
+    "printWidth": 100,
+    "tabWidth": 2
+  }
+  ```
+- Adicionar `eslint-config-prettier` ao `eslint.config.js` (deve ser o último item da cadeia)
+- Adicionar scripts ao `package.json`:
+  - `"lint": "eslint ."`
+  - `"format": "prettier --write src/"`
 
 *shadcn components — install the base set:*
 ```bash
@@ -91,7 +109,10 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton table
 - `pnpm --filter admin dev` starts without errors
 - Path alias `@/` resolves correctly (import a file using `@/` and check no TS error)
 - `pnpm --filter admin build` completes without errors
+- `pnpm --filter admin lint` executa sem erros
+- `pnpm --filter admin format` formata arquivos sem erros
 - Dark mode CSS variables visible in browser devtools
+- `src/index.css` contém `--primary: 239 84% 57%` (não os tokens zinc padrão)
 
 ---
 
@@ -256,6 +277,8 @@ const decorativeIcons = [
 - Add `beforeLoad` guard to `_layout.tsx`: check `useAuthStore.getState().isAuthenticated`;
   redirect to `/login` if false
 - Add redirect in `login.tsx` `beforeLoad`: if already authenticated, redirect to `/dashboard`
+- Create `src/hooks/use-mobile.ts` — hook `useIsMobile()` via `window.matchMedia("(max-width: 768px)")`,
+  usado pelo AppShell para alternar entre sidebar desktop e Sheet mobile
 - Create `src/components/layout/Sidebar.tsx`
 - Create `src/components/layout/TopBar.tsx`
 - Create `src/components/layout/AppShell.tsx`

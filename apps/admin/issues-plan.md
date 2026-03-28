@@ -69,8 +69,8 @@ environment setup, shadcn components, and ThemeProvider.
 
 *shadcn components — install the base set:*
 ```bash
-pnpm dlx shadcn@latest add button input label card badge dialog
-pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
+pnpm dlx shadcn@latest add button input label card badge dialog alert-dialog
+pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton table
 ```
 
 *Dark mode:*
@@ -168,7 +168,7 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 **Goal:** Split-screen login page connected to `POST /auth/admin/login`.
 
-**UI reference:** fabianoneumann/admin-compass `src/pages/Login.tsx`
+**Referência de implementação:** `src/pages/Login.tsx` em fabianoneumann/admin-compass
 
 **Tasks:**
 - Create `src/app/routes/login.tsx`
@@ -180,13 +180,59 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 - Create `src/features/auth/api/auth.api.ts`:
   - `loginAdmin(email, password)` → `POST /auth/admin/login` → returns `{ token }`
 - On success: save session to Zustand store, redirect to `/dashboard`
-- Left panel: dark background (zinc-950) with gradient mesh blobs + large Lucide
-  icons as wallpaper (LayoutDashboard, Users, BarChart3, Shield, Settings at ~10% opacity)
-  + tagline "Gerencie com eficiência." at bottom-left
-- Right panel: form centered, "Logo" placeholder text at top
-- Responsive: left panel hidden on mobile
+- Responsive: left panel hidden on mobile (`hidden lg:flex`)
 - Unit test: LoginForm shows validation errors, calls api on valid submit
 - E2E test: successful login redirects to /dashboard
+
+**Implementação visual — replicar fielmente do admin-compass:**
+
+*Estrutura geral:*
+- `min-h-screen flex` no wrapper raiz
+- Painel esquerdo: `hidden lg:flex lg:w-[60%] relative overflow-hidden items-end p-10`
+- Painel direito: `flex-1 flex items-center justify-center p-6 lg:p-10 bg-background`
+
+*Fundo do painel esquerdo — inline style com três gradientes radiais:*
+```tsx
+style={{
+  background: `
+    radial-gradient(ellipse at 20% 50%, hsl(239 84% 67% / 0.15), transparent 50%),
+    radial-gradient(ellipse at 80% 20%, hsl(263 70% 58% / 0.12), transparent 50%),
+    radial-gradient(ellipse at 60% 80%, hsl(160 60% 45% / 0.08), transparent 50%),
+    hsl(240 10% 3.9%)
+  `,
+}}
+```
+
+*Ícones decorativos — 8 ícones Lucide com `text-white/[0.07]` e posições absolutas:*
+```tsx
+const decorativeIcons = [
+  { Icon: LayoutDashboard, className: "top-[8%] left-[12%] w-16 h-16 rotate-12" },
+  { Icon: Users,           className: "top-[22%] left-[55%] w-12 h-12 -rotate-6" },
+  { Icon: BarChart3,       className: "top-[50%] left-[18%] w-20 h-20 rotate-[30deg]" },
+  { Icon: Shield,          className: "top-[65%] left-[60%] w-14 h-14 -rotate-12" },
+  { Icon: Settings,        className: "top-[35%] left-[75%] w-10 h-10 rotate-45" },
+  { Icon: Bell,            className: "top-[80%] left-[30%] w-12 h-12 rotate-6" },
+  { Icon: LayoutDashboard, className: "top-[12%] left-[80%] w-8 h-8 -rotate-[20deg]" },
+  { Icon: Users,           className: "top-[75%] left-[78%] w-16 h-16 rotate-[15deg]" },
+]
+// Cada ícone: <Icon className={`absolute text-white/[0.07] ${className}`} />
+```
+
+*Rodapé do painel esquerdo (`relative z-10`):*
+- Logo: `text-2xl font-bold text-white/90` — usar nome do projeto
+- Tagline: `text-sm text-white/50 mt-1` — "Gerencie com eficiência."
+
+*Painel direito — container do formulário:*
+- `w-full max-w-sm space-y-8`
+- Header: nome do projeto em `text-lg font-bold text-foreground`, título `text-2xl font-bold tracking-tight`, subtítulo `text-sm text-muted-foreground`
+
+*Botão show/hide password:*
+- `absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground`
+
+*Link "Esqueci minha senha":*
+- `text-sm text-muted-foreground hover:text-primary transition-colors`
+
+*Botão submit:* `w-full` com `<Loader2 className="mr-2 h-4 w-4 animate-spin" />` quando `isSubmitting`
 
 ---
 
@@ -199,19 +245,57 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 - Add `beforeLoad` guard to `_layout.tsx`: check `useAuthStore.getState().isAuthenticated`;
   redirect to `/login` if false
 - Add redirect in `login.tsx` `beforeLoad`: if already authenticated, redirect to `/dashboard`
-- Create `src/components/layout/Sidebar.tsx`:
-  - Sections: Geral (Dashboard), Usuários, Operações (Em breve), Financeiro (Em breve),
-    Configurações (Perfil + Sair)
-  - "Em breve" items: visually disabled + badge
-  - Active link highlight
-  - Collapses to icon-only on mobile (Sheet/Drawer)
-- Create `src/components/layout/TopBar.tsx`:
-  - Page title (from route context), dark/light toggle, user avatar initials + name
-- Create `src/components/layout/AppShell.tsx`:
-  - Sidebar + TopBar + `<Outlet />`
-- Create `src/components/layout/PageLayout.tsx`:
-  - Consistent title, optional breadcrumb slot, optional action button slot
+- Create `src/components/layout/Sidebar.tsx`
+- Create `src/components/layout/TopBar.tsx`
+- Create `src/components/layout/AppShell.tsx`
+- Create `src/components/layout/PageLayout.tsx`
 - E2E test: unauthenticated access to /dashboard redirects to /login
+
+**Implementação visual — replicar fielmente do admin-compass:**
+
+*AppShell (`src/components/layout/AppShell.tsx`):*
+- Wrapper: `flex min-h-screen w-full`
+- Sidebar desktop: `w-60 border-r border-sidebar-border flex-shrink-0 sticky top-0 h-screen overflow-hidden`
+- Sidebar mobile: `<Sheet side="left" className="p-0 w-64">` — abre com `onMenuClick` da TopBar
+- Área de conteúdo: `flex-1 flex flex-col min-w-0`
+- `<main>`: `flex-1 p-4 lg:p-6`
+
+*Sidebar (`src/components/layout/Sidebar.tsx`):*
+- Container: `flex flex-col h-full bg-sidebar`
+- Cabeçalho: `p-6 pb-4` — texto "Admin Panel" em `text-lg font-bold text-sidebar-foreground tracking-tight`
+- Nav: `flex-1 px-3 space-y-6 overflow-y-auto`
+- Labels de seção: `px-3 mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground`
+- Itens: `space-y-0.5`
+- Link ativo: `bg-primary/10 text-primary font-medium`
+- Link inativo: `text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground`
+- Padding de cada link: `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors`
+- Item desabilitado: `text-muted-foreground/40 cursor-not-allowed`
+- Badge "Em breve": `variant="secondary"` com `text-[10px] px-1.5 py-0 font-normal ml-auto`
+- Seção Configurações: `px-3 pb-4 border-t border-sidebar-border pt-4 mt-2`
+- Botão Sair: mesma classe dos links, `w-full`, abre `<ConfirmDialog>` de logout
+
+*TopBar (`src/components/layout/TopBar.tsx`):*
+- `h-14 border-b border-border bg-background/80 backdrop-blur-sm`
+- `flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30`
+- Ícone menu mobile: `variant="ghost" size="icon" lg:hidden`
+- Avatar: `h-8 w-8 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-semibold`
+- Nome do usuário: `text-sm font-medium hidden sm:inline`
+- ThemeToggle: componente separado (ver abaixo)
+
+*ThemeToggle (`src/components/ThemeToggle.tsx`):*
+- `Button variant="ghost" size="icon" className="relative"`
+- Sol (light): `h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0`
+- Lua (dark): `absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100`
+
+*PageLayout (`src/components/layout/PageLayout.tsx`):*
+- Wrapper: `space-y-6`
+- Header: `flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between`
+- Breadcrumbs: `flex items-center gap-1 text-sm text-muted-foreground mb-1`
+  - Separador: `<ChevronRight className="h-3 w-3" />`
+  - Link: `hover:text-foreground transition-colors`
+  - Item atual: `text-foreground` (sem link)
+- Título da página: `text-2xl font-bold tracking-tight`
+- Slot de ações: `flex items-center gap-2`
 
 ---
 
@@ -242,7 +326,7 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 **Goal:** User can request a password reset email.
 
-**UI reference:** fabianoneumann/admin-compass `src/pages/ForgotPassword.tsx`
+**Referência de implementação:** `src/pages/ForgotPassword.tsx` em fabianoneumann/admin-compass
 
 **Tasks:**
 - Create `src/app/routes/forgot-password.tsx`
@@ -252,6 +336,24 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
   - Success state: inline confirmation message (API always returns 204)
   - Link back to `/login`
 - Unit test: form shows validation error, renders success state after submit
+
+**Implementação visual — replicar fielmente do admin-compass:**
+
+*Layout da página:*
+- `min-h-screen flex items-center justify-center p-6 bg-background`
+- `<Card className="w-full max-w-md">`
+- `<CardHeader className="text-center">` com `<CardTitle className="text-2xl">`
+- `<CardDescription>` muda dinamicamente: formulário vs. estado de sucesso
+
+*Estado de sucesso (após submit):*
+- `flex flex-col items-center gap-4 py-4`
+- Ícone: `<CheckCircle2 className="h-12 w-12 text-emerald-500" />`
+- Mensagem: `text-sm text-muted-foreground text-center`
+- Botão "Voltar ao login": `variant="outline"`
+
+*Estado de formulário:*
+- Botão submit: `w-full` com `<Loader2 className="mr-2 h-4 w-4 animate-spin" />` quando `isSubmitting`
+- Link "Voltar ao login" (abaixo do botão): `text-sm text-muted-foreground hover:text-primary transition-colors`
 
 ---
 
@@ -277,6 +379,11 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 - Unit test: validation errors shown, success state rendered, error state rendered on 400
 - E2E test: valid token → password changed → redirect to /login
 
+**Implementação visual:**
+- Seguir o mesmo padrão visual de ForgotPassword (Issue #10): `Card w-full max-w-md`, `CardHeader text-center`, estados inline de sucesso e erro
+- Estado de sucesso: mesmo padrão — `CheckCircle2 h-12 w-12 text-emerald-500` + mensagem + link ao `/login`
+- Estado de erro (400): usar `XCircle h-12 w-12 text-destructive` + mensagem "Link inválido ou expirado." + link ao `/forgot-password`
+
 ---
 
 ## MILESTONE 3 — Users Module
@@ -288,19 +395,70 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 **Goal:** Generic, reusable paginated table using TanStack Table.
 
-**UI reference:** fabianoneumann/admin-compass `src/components/DataTable.tsx`
+**Referência de implementação:**
+- `src/components/DataTable.tsx`
+- `src/components/EmptyState.tsx`
+- `src/components/LoadingSkeleton.tsx`
+- `src/components/RoleBadge.tsx`
+- `src/components/StatusBadge.tsx`
+- `src/components/ConfirmDialog.tsx`
+
+em fabianoneumann/admin-compass
 
 **Tasks:**
 - Install `@tanstack/react-table`
-- Create `src/components/shared/DataTable/DataTable.tsx`:
-  - Accepts `columns`, `data`, `isLoading`, `pagination` props
-  - Loading: skeleton rows (use `src/components/shared/LoadingSkeleton.tsx`)
-  - Empty state: `src/components/shared/EmptyState.tsx`
-  - Pagination controls: previous/next, page count, items per page
-- Create `src/components/shared/RoleBadge.tsx` (ADMIN=red, MEMBER=blue, USER=gray)
-- Create `src/components/shared/StatusBadge.tsx` (Ativo=green, Deletado=red)
-- Create `src/components/shared/ConfirmDialog.tsx` (reusable confirmation modal)
+- Create `src/components/shared/DataTable/DataTable.tsx`
+- Create `src/components/shared/EmptyState.tsx`
+- Create `src/components/shared/LoadingSkeleton.tsx`
+- Create `src/components/shared/RoleBadge.tsx`
+- Create `src/components/shared/StatusBadge.tsx`
+- Create `src/components/shared/ConfirmDialog.tsx`
 - Unit tests for DataTable: renders data, shows skeleton on loading, shows empty state
+
+**Implementação visual — replicar fielmente do admin-compass:**
+
+*DataTable:*
+- Wrapper da tabela: `rounded-md border` (usa o componente `<Table>` do shadcn)
+- Paginação (aparece apenas quando `totalPages > 1`):
+  - `flex items-center justify-between mt-4 px-1`
+  - Contador: `text-sm text-muted-foreground` — "Página X de Y"
+  - Botões Anterior/Próxima: `variant="outline" size="sm"`
+- Props: `columns`, `data`, `isLoading`, `pagination`, `rowClassName`, `emptyState`
+- `rowClassName`: função `(row) => string` aplicada a cada `<TableRow>` — usada para `opacity-50` em linhas deletadas
+
+*RoleBadge — `Badge variant="outline"` com classes específicas por role:*
+```tsx
+const roleConfig = {
+  ADMIN:  "bg-red-500/15 text-red-500 border-red-500/20",
+  MEMBER: "bg-blue-500/15 text-blue-500 border-blue-500/20",
+  USER:   "bg-muted text-muted-foreground border-border",
+}
+// Labels: "Admin" | "Member" | "User"
+// className base: "text-xs font-medium"
+```
+
+*StatusBadge — `Badge variant="outline"`:*
+```tsx
+// Ativo:   "bg-emerald-500/15 text-emerald-500 border-emerald-500/20"
+// Deletado:"bg-red-500/15 text-red-400 border-red-500/20"
+// Labels: "Ativo" | "Deletado"
+// className base: "text-xs font-medium"
+```
+
+*ConfirmDialog — usa `AlertDialog` (não `Dialog`) do shadcn:*
+- Props: `open`, `onOpenChange`, `title`, `description`, `confirmLabel`, `cancelLabel`, `onConfirm`, `variant`
+- Variante destructive: botão de confirmação com `bg-destructive text-destructive-foreground hover:bg-destructive/90`
+
+*EmptyState:*
+- `flex flex-col items-center justify-center py-16 text-center`
+- Ícone padrão: `SearchX` — `h-12 w-12 text-muted-foreground/50 mb-4`
+- Título: `text-lg font-semibold text-foreground mb-1`
+- Descrição: `text-sm text-muted-foreground max-w-sm mb-4`
+- Botão de ação (opcional): `size="sm"`
+
+*LoadingSkeleton — dois componentes exportados:*
+- `TableSkeleton({ rows, cols })`: linha de header + linhas de dados com `Skeleton h-8/h-10 flex-1` em `flex gap-4`
+- `CardSkeleton()`: `rounded-lg border bg-card p-6 space-y-3` com dois Skeletons internos
 
 ---
 
@@ -312,7 +470,7 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 **Goal:** Paginated, filterable users table connected to `GET /users`.
 
-**UI reference:** fabianoneumann/admin-compass `src/pages/Users.tsx`
+**Referência de implementação:** `src/pages/Users.tsx` em fabianoneumann/admin-compass
 
 **Tasks:**
 - Create `src/app/routes/_layout/users/index.tsx`
@@ -329,6 +487,25 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 - Action button "+ Novo Usuário" → opens Create User modal (Issue #14)
 - Row actions: Ver → `/users/:id`, Editar → inline edit modal, Excluir → ConfirmDialog
 - Unit test: filters update URL search params, table renders with mocked API response (MSW)
+
+**Implementação visual — replicar fielmente do admin-compass:**
+
+*Área de filtros:*
+- `flex flex-col sm:flex-row gap-3`
+- Input de busca: `sm:max-w-xs` — placeholder "Buscar por nome ou email..."
+- Selects de perfil e status: `sm:w-40`
+
+*Coluna "Validado":*
+- Validado: `<CheckCircle2 className="h-4 w-4 text-emerald-500" />`
+- Não validado: `<XCircle className="h-4 w-4 text-muted-foreground/40" />`
+
+*Botões de ação por linha:*
+- Ver e Editar: `variant="ghost" size="icon" className="h-8 w-8"`
+- Excluir: `variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"` — oculto se `row.deletedAt`
+
+*DataTable:*
+- `rowClassName={(row) => row.deletedAt ? "opacity-50" : ""}` para linhas deletadas
+- `emptyState={<EmptyState title="..." description="..." actionLabel="Novo Usuário" onAction={...} />}`
 
 ---
 
@@ -349,6 +526,12 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
   - Error: show error toast, keep modal open
 - Unit test: validation errors shown, modal closes on success
 
+**Implementação visual:**
+- Usa `<Dialog>` do shadcn (não AlertDialog)
+- `<DialogContent>` → `<DialogHeader>` → `<DialogTitle>` "Novo Usuário"
+- Campos em `space-y-4`, labels + inputs + mensagens de erro `text-xs text-destructive`
+- `<DialogFooter>`: botão "Cancelar" `variant="outline"` + botão "Criar Usuário" com `<Loader2 animate-spin>` enquanto submete
+
 ---
 
 ### Issue #15 — [admin] User detail page
@@ -361,7 +544,7 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 **Goal:** Full user detail view with edit, role change and delete actions.
 
-**UI reference:** fabianoneumann/admin-compass `src/pages/UserDetail.tsx`
+**Referência de implementação:** `src/pages/UserDetail.tsx` em fabianoneumann/admin-compass
 
 **Tasks:**
 - Create `src/app/routes/_layout/users/$id.tsx`
@@ -372,15 +555,38 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
   - `deleteUser(id)` → `DELETE /users/:id`
 - Create `src/features/users/hooks/`:
   - `useUser(id)` — TanStack Query useQuery
-  - `useUpdateUser()`, `useChangeUserRole()`, `useDeleteUser()` — useMutation with
-    query invalidation and toast feedback
-- Page sections:
-  - User detail card: all fields
-  - Breadcrumb: Usuários > [Nome]
-  - Edit button → inline form (name, email) with save/cancel
-  - Change Role button → modal with role selector + ConfirmDialog
-  - Delete button → ConfirmDialog → soft delete → redirect to /users
+  - `useUpdateUser()`, `useChangeUserRole()`, `useDeleteUser()` — useMutation com
+    query invalidation e toast feedback
 - Unit test: page renders user data, delete triggers confirmation
+
+**Implementação visual — replicar fielmente do admin-compass:**
+
+*Layout da página:*
+- `PageLayout` com `title={user.name}`, `breadcrumbs={[{label:"Usuários", href:"/users"}, {label:user.name}]}` e botão "Voltar" `variant="outline" size="sm"` como `actions`
+- Grid: `grid gap-6 lg:grid-cols-2` — card "Informações" + card "Datas"
+
+*Card "Informações" (modo visualização):*
+- `<CardHeader className="flex flex-row items-center justify-between">`
+- Botões: "Editar" `variant="outline" size="sm"` com `<Pencil h-3.5 w-3.5 mr-1>`, "Alterar Perfil" com `<ShieldCheck>`, "Excluir" com `text-destructive hover:text-destructive` (oculto se `deletedAt`)
+- `<dl className="space-y-3 text-sm">` com itens `flex justify-between`
+- Labels: `<dt className="text-muted-foreground">`, valores: `<dd>`
+- ID: `<dd className="font-mono text-xs">`
+- Perfil e Status: `<dd>` com os componentes RoleBadge e StatusBadge
+
+*Card "Informações" (modo edição — inline no mesmo card):*
+- Form em `space-y-4` com inputs de Nome e Email
+- Botão "Salvar" `size="sm"` com Loader2
+
+*Card "Datas":*
+- Mesmo padrão `<dl>` com Criado em, Atualizado em, Validado em, Excluído em
+- Datas nulas exibidas como `"—"`
+
+*Modal de alteração de perfil:*
+- `<Dialog>` com `<Select>` para escolher o novo perfil
+- `<DialogFooter>`: botão "Cancelar" + botão "Confirmar"
+
+*Diálogo de exclusão:*
+- `<ConfirmDialog variant="destructive">` — mensagem cita o nome do usuário
 
 ---
 
@@ -397,7 +603,7 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 **Goal:** Logged-in admin can view and update their own profile.
 
-**UI reference:** fabianoneumann/admin-compass `src/pages/Profile.tsx`
+**Referência de implementação:** `src/pages/Profile.tsx` em fabianoneumann/admin-compass
 
 **Tasks:**
 - Create `src/app/routes/_layout/profile.tsx`
@@ -408,13 +614,26 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 - Create `src/features/auth/hooks/`:
   - `useProfile()` — TanStack Query useQuery
   - `useUpdateProfile()`, `useChangePassword()` — useMutation with toast feedback
-- Page sections:
-  - Profile card with avatar initials, name, email, role, account status
-  - Edit name form (React Hook Form + Zod)
-  - Change password form (currentPassword + newPassword + confirm, Zod refine for match)
 - On password change success: clear session and redirect to `/login`
   (API invalidates token_version — all sessions revoked)
 - Unit test: name update calls API, password mismatch shows inline error
+
+**Implementação visual — replicar fielmente do admin-compass:**
+
+*Layout da página:*
+- `PageLayout title="Meu Perfil"`
+- Wrapper dos cards: `max-w-2xl space-y-6`
+
+*Card "Informações pessoais":*
+- `<CardTitle className="text-base">` + `<CardDescription>`
+- Campos em `space-y-4`
+- Campo Email: `disabled` com nota abaixo `text-xs text-muted-foreground` — "O e-mail não pode ser alterado"
+- Botão "Salvar": `size="sm"` com Loader2
+
+*Card "Alterar senha":*
+- `<CardTitle className="text-base">` + `<CardDescription>`
+- Três campos: senha atual, nova senha, confirmar nova senha — todos `type="password"`
+- Botão "Alterar senha": `size="sm"` com Loader2
 
 ---
 
@@ -427,13 +646,27 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 **Goal:** Consistent error pages for not found and forbidden routes.
 
-**UI reference:** fabianoneumann/admin-compass `src/pages/NotFound.tsx` and `Forbidden.tsx`
+**Referência de implementação:**
+- `src/pages/Forbidden.tsx` em fabianoneumann/admin-compass — referência primária para ambas as páginas
+- `src/pages/NotFound.tsx` no admin-compass é minimalista e em inglês; **não replicar** — usar o padrão do Forbidden
 
 **Tasks:**
 - Create `src/app/routes/$.tsx` (TanStack Router catch-all → 404 page)
 - Create `src/app/routes/403.tsx`
-- Both pages: large error code in accent color, message in Portuguese, button back to /dashboard
 - Wire 403 redirect in route guards for future role-restricted routes
+
+**Implementação visual — replicar o padrão de Forbidden.tsx para ambas as páginas:**
+
+*Estrutura comum (403 e 404):*
+- `min-h-screen flex items-center justify-center bg-background`
+- `<div className="text-center space-y-4">`
+- Código de erro: `text-7xl font-bold text-primary`
+- Mensagem: `text-xl text-muted-foreground` — em português
+- Botão "Voltar ao painel": `<Button>` apontando para `/dashboard`
+
+*Textos:*
+- 404: "Página não encontrada"
+- 403: "Você não tem permissão para acessar esta página"
 
 ---
 
@@ -445,7 +678,7 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 
 **Goal:** Summary cards and recent users chart connected to real data.
 
-**UI reference:** fabianoneumann/admin-compass `src/pages/Dashboard.tsx`
+**Referência de implementação:** `src/pages/Dashboard.tsx` em fabianoneumann/admin-compass
 
 **Tasks:**
 - Create `src/app/routes/_layout/dashboard/index.tsx`
@@ -458,6 +691,34 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton
 - Recent users table: last 5 users from the list (reuse DataTable)
 - Unit test: stats derived correctly from mock user list
 
+**Implementação visual — replicar fielmente do admin-compass:**
+
+*Cards de resumo:*
+- Grid: `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4`
+- `<CardHeader className="flex flex-row items-center justify-between pb-2">`
+- Label: `<CardTitle className="text-sm font-medium text-muted-foreground">`
+- Ícone: `h-4 w-4 text-muted-foreground` (Users, UserCheck, UserX, ShieldCheck)
+- Valor: `<p className="text-3xl font-bold">`
+
+*Gráfico de barras (Recharts — `BarChart`):*
+- `<ResponsiveContainer width="100%" height={280}>`
+- `<CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />`
+- Eixos: `stroke="hsl(var(--muted-foreground))" fontSize={12}`
+- Tooltip customizado:
+  ```tsx
+  contentStyle={{
+    background: "hsl(var(--card))",
+    border: "1px solid hsl(var(--border))",
+    borderRadius: "6px",
+    color: "hsl(var(--foreground))",
+  }}
+  ```
+- Barras: `fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}`
+
+*Card de usuários recentes:*
+- `<CardTitle className="text-base">` "Usuários Recentes"
+- Colunas: Nome, Email, Perfil (RoleBadge), Criado em — reutilizar DataTable com `pageSize={5}`
+
 ---
 
 ## Implementation order
@@ -466,4 +727,7 @@ Milestone 1 (Issues #1–5) → Milestone 2 (Issues #6–11) → Milestone 3 (Is
 → Milestone 4 (Issue #16) → Milestone 5 (Issues #17–18)
 
 Start each issue only after the previous is merged and green on CI.
-The Lovable project (fabianoneumann/admin-compass) serves as visual reference throughout.
+The Lovable project (fabianoneumann/admin-compass) serves as visual and implementation reference throughout.
+Each issue with UI lists a **"Referência de implementação"** pointing to the exact file(s) in admin-compass.
+The **"Implementação visual"** section in each issue contains the CSS classes, tokens, and patterns
+extracted directly from the admin-compass source code — replicar fielmente garante fidelidade visual total.

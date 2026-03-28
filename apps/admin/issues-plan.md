@@ -78,6 +78,15 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton table
 - Create `src/app/providers.tsx` with `ThemeProvider` (defaultTheme="dark", storageKey="admin-theme")
 - Update `src/main.tsx` to wrap app with `ThemeProvider`
 
+*CSS tokens — substituir `src/index.css` após o shadcn init:*
+- O shadcn init com `zinc` gera tokens de cor neutros (cinza) — incompatíveis com o design do admin-compass
+- Após o init, **substituir o conteúdo completo de `src/index.css`** pelos tokens do admin-compass
+- Referência: `src/index.css` em fabianoneumann/admin-compass — contém:
+  - `--primary: 239 84% 57%` (light) / `239 84% 67%` (dark) — índigo, não zinc
+  - Tokens de sidebar: `--sidebar-background`, `--sidebar-accent`, `--sidebar-border`, etc.
+  - Tokens de chart: `--chart-1` a `--chart-5` com as cores usadas no Dashboard
+- Estes tokens são referenciados diretamente em componentes (`bg-primary/10`, `hsl(var(--primary))`, `hsl(var(--border))`) — sem essa substituição o visual diverge do admin-compass
+
 **Validate:**
 - `pnpm --filter admin dev` starts without errors
 - Path alias `@/` resolves correctly (import a file using `@/` and check no TS error)
@@ -97,7 +106,9 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton table
 - Create `src/app/routes/__root.tsx` (root route with Outlet + Providers)
 - Create `src/app/routes/_layout.tsx` (pathless layout route — protected shell)
 - Create `src/app/router.ts` (createRouter instance)
-- Create `src/app/providers.tsx` (QueryClientProvider, ThemeProvider)
+- Create `src/app/providers.tsx` (QueryClientProvider, ThemeProvider, TooltipProvider)
+  - `<TooltipProvider>` do shadcn é necessário para todos os componentes `<Tooltip>` da aplicação —
+    deve envolver a árvore inteira, conforme padrão do admin-compass (`src/App.tsx`)
 - Update `src/main.tsx` to use RouterProvider
 - Add redirect from `/` → `/dashboard`
 - Validate: router devtools visible, routing works between placeholder pages

@@ -11,6 +11,7 @@ import { env } from '@/env'
 import { AppError } from '@/shared/errors/app-error'
 import { authRoutes } from '@/modules/auth/auth.routes'
 import { usersRoutes } from '@/modules/users/users.routes'
+import { PrismaUsersRepository } from '@/repositories/prisma/prisma-users-repository'
 
 export const app = fastify({
   logger:
@@ -59,6 +60,8 @@ app.register(fastifyJwt, {
 })
 
 app.register(fastifyCookie)
+
+app.decorate('usersRepository', new PrismaUsersRepository())
 
 app.register(authRoutes)
 app.register(usersRoutes)

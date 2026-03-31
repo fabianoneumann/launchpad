@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyRequest, FastifyReply } from 'fastify'
 import { makeChangePasswordService } from '@/shared/factories/make-change-password-service'
 
 export async function changePasswordController(request: FastifyRequest, reply: FastifyReply) {

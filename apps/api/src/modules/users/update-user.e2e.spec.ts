@@ -11,9 +11,16 @@ const otherEmail = 'update-other@test.com'
 describe('Update User E2E', () => {
   beforeAll(async () => {
     await app.ready()
-    await prisma.user.deleteMany({ where: { email: { in: [adminEmail, targetEmail, otherEmail] } } })
+    await prisma.user.deleteMany({
+      where: { email: { in: [adminEmail, targetEmail, otherEmail] } },
+    })
     await prisma.user.create({
-      data: { name: 'Admin', email: adminEmail, password_hash: await hash('123456', 6), role: 'ADMIN' },
+      data: {
+        name: 'Admin',
+        email: adminEmail,
+        password_hash: await hash('123456', 6),
+        role: 'ADMIN',
+      },
     })
     await prisma.user.create({
       data: { name: 'Target', email: targetEmail, password_hash: await hash('123456', 6) },
@@ -30,7 +37,9 @@ describe('Update User E2E', () => {
   })
 
   it('should return 200 when admin updates a user', async () => {
-    const loginResponse = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
     const token = loginResponse.body.token
 
     const target = await prisma.user.findUnique({ where: { email: targetEmail } })
@@ -41,12 +50,17 @@ describe('Update User E2E', () => {
       .send({ name: 'Target Updated', email: 'updated-target@test.com' })
 
     expect(response.statusCode).toBe(200)
-    expect(response.body.user).toMatchObject({ name: 'Target Updated', email: 'updated-target@test.com' })
+    expect(response.body.user).toMatchObject({
+      name: 'Target Updated',
+      email: 'updated-target@test.com',
+    })
     expect(response.body.user).not.toHaveProperty('password_hash')
   })
 
   it('should return 409 when email is already taken', async () => {
-    const loginResponse = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
     const token = loginResponse.body.token
 
     const admin = await prisma.user.findUnique({ where: { email: adminEmail } })

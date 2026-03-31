@@ -1,7 +1,10 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyRequest, FastifyReply } from 'fastify'
 import { makeResendVerificationEmailService } from '@/shared/factories/make-resend-verification-email-service'
 
-export async function resendVerificationEmailController(request: FastifyRequest, reply: FastifyReply) {
+export async function resendVerificationEmailController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   const { sub: userId } = request.user as { sub: string }
 
   const service = makeResendVerificationEmailService()

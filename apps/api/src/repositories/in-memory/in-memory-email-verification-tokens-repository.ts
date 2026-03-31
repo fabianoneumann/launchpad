@@ -1,11 +1,15 @@
 import { randomUUID } from 'node:crypto'
-import { EmailVerificationToken } from '@/generated/prisma/client'
-import { EmailVerificationTokensRepository } from '@/repositories/email-verification-tokens-repository'
+import type { EmailVerificationToken } from '@/generated/prisma/client'
+import type { EmailVerificationTokensRepository } from '@/repositories/email-verification-tokens-repository'
 
 export class InMemoryEmailVerificationTokensRepository implements EmailVerificationTokensRepository {
   public items: EmailVerificationToken[] = []
 
-  async create(data: { tokenHash: string; userId: string; expiresAt: Date }): Promise<EmailVerificationToken> {
+  async create(data: {
+    tokenHash: string
+    userId: string
+    expiresAt: Date
+  }): Promise<EmailVerificationToken> {
     const token: EmailVerificationToken = {
       id: randomUUID(),
       token_hash: data.tokenHash,

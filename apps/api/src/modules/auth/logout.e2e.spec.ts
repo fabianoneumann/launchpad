@@ -29,18 +29,12 @@ describe('Logout E2E', () => {
 
     const cookies = loginResponse.headers['set-cookie']
 
-    const response = await request(app.server)
-      .delete('/auth/logout')
-      .set('Cookie', cookies)
+    const response = await request(app.server).delete('/auth/logout').set('Cookie', cookies)
 
     expect(response.statusCode).toBe(204)
 
-    const setCookieHeader = response.headers['set-cookie'] as unknown as
-      | string[]
-      | undefined
-    const clearedCookie = setCookieHeader?.find((c) =>
-      c.includes('refreshToken=;'),
-    )
+    const setCookieHeader = response.headers['set-cookie'] as unknown as string[] | undefined
+    const clearedCookie = setCookieHeader?.find((c) => c.includes('refreshToken=;'))
     expect(clearedCookie).toBeDefined()
   })
 

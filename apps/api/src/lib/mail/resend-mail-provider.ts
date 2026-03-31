@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
 import { env } from '@/env'
-import { MailProvider } from './mail-provider'
+import type { MailProvider } from './mail-provider'
 
 export class ResendMailProvider implements MailProvider {
   private client: Resend

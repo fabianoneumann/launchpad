@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { verifyJWT } from '@/shared/middlewares/verify-jwt'
 import { verifyUserRole } from '@/shared/middlewares/verify-user-role'
 import { listUsersController } from './list-users.controller'

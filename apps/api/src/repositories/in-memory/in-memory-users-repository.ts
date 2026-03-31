@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
-import { Prisma, Role, User } from '@/generated/prisma/client'
-import { UsersRepository } from '@/repositories/users-repository'
+import type { Prisma, Role, User } from '@/generated/prisma/client'
+import type { UsersRepository } from '@/repositories/users-repository'
 
 export class InMemoryUsersRepository implements UsersRepository {
   public items: User[] = []
@@ -13,14 +13,24 @@ export class InMemoryUsersRepository implements UsersRepository {
     return this.items.find((item) => item.email === email && item.deleted_at === null) ?? null
   }
 
-  async findMany({ page, perPage, role }: { page: number; perPage: number; role?: Role }): Promise<User[]> {
+  async findMany({
+    page,
+    perPage,
+    role,
+  }: {
+    page: number
+    perPage: number
+    role?: Role
+  }): Promise<User[]> {
     return this.items
       .filter((item) => item.deleted_at === null && (role ? item.role === role : true))
       .slice((page - 1) * perPage, page * perPage)
   }
 
   async count({ role }: { role?: Role }): Promise<number> {
-    return this.items.filter((item) => item.deleted_at === null && (role ? item.role === role : true)).length
+    return this.items.filter(
+      (item) => item.deleted_at === null && (role ? item.role === role : true),
+    ).length
   }
 
   async create(data: Prisma.UserCreateInput): Promise<User> {

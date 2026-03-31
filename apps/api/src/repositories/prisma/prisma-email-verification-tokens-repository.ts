@@ -1,9 +1,13 @@
-import { EmailVerificationToken } from '@/generated/prisma/client'
+import type { EmailVerificationToken } from '@/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
-import { EmailVerificationTokensRepository } from '@/repositories/email-verification-tokens-repository'
+import type { EmailVerificationTokensRepository } from '@/repositories/email-verification-tokens-repository'
 
 export class PrismaEmailVerificationTokensRepository implements EmailVerificationTokensRepository {
-  async create(data: { tokenHash: string; userId: string; expiresAt: Date }): Promise<EmailVerificationToken> {
+  async create(data: {
+    tokenHash: string
+    userId: string
+    expiresAt: Date
+  }): Promise<EmailVerificationToken> {
     return prisma.emailVerificationToken.create({
       data: {
         token_hash: data.tokenHash,

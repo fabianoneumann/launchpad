@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
-import { UsersRepository } from '@/repositories/users-repository'
-import { EmailVerificationTokensRepository } from '@/repositories/email-verification-tokens-repository'
+import type { UsersRepository } from '@/repositories/users-repository'
+import type { EmailVerificationTokensRepository } from '@/repositories/email-verification-tokens-repository'
 import { InvalidOrExpiredTokenError } from '@/shared/errors/invalid-or-expired-token-error'
 
 interface VerifyEmailServiceRequest {
@@ -17,7 +17,11 @@ export class VerifyEmailService {
     const tokenHash = createHash('sha256').update(token).digest('hex')
     const verificationToken = await this.emailVerificationTokensRepository.findByToken(tokenHash)
 
-    if (!verificationToken || verificationToken.used_at !== null || verificationToken.expires_at < new Date()) {
+    if (
+      !verificationToken ||
+      verificationToken.used_at !== null ||
+      verificationToken.expires_at < new Date()
+    ) {
       throw new InvalidOrExpiredTokenError()
     }
 

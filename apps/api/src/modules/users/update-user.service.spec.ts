@@ -21,15 +21,27 @@ describe('UpdateUserService', () => {
       password_hash: await hash('123456', 6),
     })
 
-    const { user } = await sut.execute({ userId: created.id, name: 'John Updated', email: 'john-updated@test.com' })
+    const { user } = await sut.execute({
+      userId: created.id,
+      name: 'John Updated',
+      email: 'john-updated@test.com',
+    })
 
     expect(user.name).toBe('John Updated')
     expect(user.email).toBe('john-updated@test.com')
   })
 
   it('should throw UserAlreadyExistsError when email is taken by another user', async () => {
-    await repository.create({ name: 'Other', email: 'other@test.com', password_hash: await hash('123456', 6) })
-    const user = await repository.create({ name: 'John', email: 'john@test.com', password_hash: await hash('123456', 6) })
+    await repository.create({
+      name: 'Other',
+      email: 'other@test.com',
+      password_hash: await hash('123456', 6),
+    })
+    const user = await repository.create({
+      name: 'John',
+      email: 'john@test.com',
+      password_hash: await hash('123456', 6),
+    })
 
     await expect(() =>
       sut.execute({ userId: user.id, name: 'John', email: 'other@test.com' }),
@@ -43,9 +55,17 @@ describe('UpdateUserService', () => {
   })
 
   it('should allow updating to the same email', async () => {
-    const created = await repository.create({ name: 'John', email: 'john@test.com', password_hash: await hash('123456', 6) })
+    const created = await repository.create({
+      name: 'John',
+      email: 'john@test.com',
+      password_hash: await hash('123456', 6),
+    })
 
-    const { user } = await sut.execute({ userId: created.id, name: 'John Updated', email: 'john@test.com' })
+    const { user } = await sut.execute({
+      userId: created.id,
+      name: 'John Updated',
+      email: 'john@test.com',
+    })
 
     expect(user.name).toBe('John Updated')
     expect(user.email).toBe('john@test.com')

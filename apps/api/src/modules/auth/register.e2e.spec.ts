@@ -32,10 +32,15 @@ describe('Register E2E', () => {
 
   it('should create a verification token after registration', async () => {
     const user = await prisma.user.findFirst({ where: { email: emails[0] } })
-    await vi.waitFor(async () => {
-      const tokens = await prisma.emailVerificationToken.findMany({ where: { user_id: user!.id } })
-      expect(tokens.length).toBeGreaterThanOrEqual(1)
-    }, { timeout: 2000 })
+    await vi.waitFor(
+      async () => {
+        const tokens = await prisma.emailVerificationToken.findMany({
+          where: { user_id: user!.id },
+        })
+        expect(tokens.length).toBeGreaterThanOrEqual(1)
+      },
+      { timeout: 2000 },
+    )
   })
 
   it('should return 409 when email is already taken', async () => {

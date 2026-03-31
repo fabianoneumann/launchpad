@@ -12,7 +12,12 @@ describe('Change User Role E2E', () => {
     await app.ready()
     await prisma.user.deleteMany({ where: { email: { in: [adminEmail, targetEmail] } } })
     await prisma.user.create({
-      data: { name: 'Admin', email: adminEmail, password_hash: await hash('123456', 6), role: 'ADMIN' },
+      data: {
+        name: 'Admin',
+        email: adminEmail,
+        password_hash: await hash('123456', 6),
+        role: 'ADMIN',
+      },
     })
     await prisma.user.create({
       data: { name: 'Target', email: targetEmail, password_hash: await hash('123456', 6) },
@@ -25,7 +30,9 @@ describe('Change User Role E2E', () => {
   })
 
   it('should return 200 when admin changes a user role', async () => {
-    const loginResponse = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
     const token = loginResponse.body.token
 
     const target = await prisma.user.findUnique({ where: { email: targetEmail } })
@@ -41,7 +48,9 @@ describe('Change User Role E2E', () => {
   })
 
   it('should return 400 when admin tries to change own role', async () => {
-    const loginResponse = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
     const token = loginResponse.body.token
 
     const admin = await prisma.user.findUnique({ where: { email: adminEmail } })
@@ -55,7 +64,9 @@ describe('Change User Role E2E', () => {
   })
 
   it('should return 400 when role is invalid', async () => {
-    const loginResponse = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
     const token = loginResponse.body.token
 
     const target = await prisma.user.findUnique({ where: { email: targetEmail } })
@@ -69,10 +80,14 @@ describe('Change User Role E2E', () => {
   })
 
   it('should invalidate target user token after role change', async () => {
-    const targetLogin = await request(app.server).post('/auth/login').send({ email: targetEmail, password: '123456' })
+    const targetLogin = await request(app.server)
+      .post('/auth/login')
+      .send({ email: targetEmail, password: '123456' })
     const targetOldToken = targetLogin.body.token
 
-    const adminLogin = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const adminLogin = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
     const adminToken = adminLogin.body.token
 
     const target = await prisma.user.findUnique({ where: { email: targetEmail } })
@@ -90,7 +105,9 @@ describe('Change User Role E2E', () => {
   })
 
   it('should reflect updated role in new token after role change', async () => {
-    const adminLogin = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const adminLogin = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
     const adminToken = adminLogin.body.token
 
     const target = await prisma.user.findUnique({ where: { email: targetEmail } })
@@ -100,7 +117,9 @@ describe('Change User Role E2E', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ role: 'MEMBER' })
 
-    const newLogin = await request(app.server).post('/auth/login').send({ email: targetEmail, password: '123456' })
+    const newLogin = await request(app.server)
+      .post('/auth/login')
+      .send({ email: targetEmail, password: '123456' })
     const newToken = newLogin.body.token
 
     const meResponse = await request(app.server)

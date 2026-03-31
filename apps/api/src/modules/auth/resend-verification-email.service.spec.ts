@@ -20,7 +20,11 @@ describe('ResendVerificationEmailService', () => {
     usersRepository = new InMemoryUsersRepository()
     emailVerificationTokensRepository = new InMemoryEmailVerificationTokensRepository()
     mailProvider = new FakeMailProvider()
-    sut = new ResendVerificationEmailService(usersRepository, emailVerificationTokensRepository, mailProvider)
+    sut = new ResendVerificationEmailService(
+      usersRepository,
+      emailVerificationTokensRepository,
+      mailProvider,
+    )
   })
 
   it('should invalidate previous token and send a new verification email', async () => {

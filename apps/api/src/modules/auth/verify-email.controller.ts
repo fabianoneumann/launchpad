@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyRequest, FastifyReply } from 'fastify'
 import { makeVerifyEmailService } from '@/shared/factories/make-verify-email-service'
 
 export async function verifyEmailController(request: FastifyRequest, reply: FastifyReply) {

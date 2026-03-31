@@ -12,7 +12,12 @@ describe('List Users E2E', () => {
     await app.ready()
     await prisma.user.deleteMany({ where: { email: { in: [adminEmail, userEmail] } } })
     await prisma.user.create({
-      data: { name: 'Admin', email: adminEmail, password_hash: await hash('123456', 6), role: 'ADMIN' },
+      data: {
+        name: 'Admin',
+        email: adminEmail,
+        password_hash: await hash('123456', 6),
+        role: 'ADMIN',
+      },
     })
     await prisma.user.create({
       data: { name: 'User', email: userEmail, password_hash: await hash('123456', 6) },
@@ -25,7 +30,9 @@ describe('List Users E2E', () => {
   })
 
   it('should return 200 with user list when admin is authenticated', async () => {
-    const loginResponse = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
     const token = loginResponse.body.token
 
     const response = await request(app.server).get('/users').set('Authorization', `Bearer ${token}`)
@@ -42,7 +49,9 @@ describe('List Users E2E', () => {
   })
 
   it('should return 403 when authenticated as non-admin', async () => {
-    const loginResponse = await request(app.server).post('/auth/login').send({ email: userEmail, password: '123456' })
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: userEmail, password: '123456' })
     const token = loginResponse.body.token
 
     const response = await request(app.server).get('/users').set('Authorization', `Bearer ${token}`)
@@ -51,10 +60,14 @@ describe('List Users E2E', () => {
   })
 
   it('should filter users by role', async () => {
-    const loginResponse = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
     const token = loginResponse.body.token
 
-    const response = await request(app.server).get('/users?role=ADMIN').set('Authorization', `Bearer ${token}`)
+    const response = await request(app.server)
+      .get('/users?role=ADMIN')
+      .set('Authorization', `Bearer ${token}`)
 
     expect(response.statusCode).toBe(200)
     expect(response.body.users.every((u: { role: string }) => u.role === 'ADMIN')).toBe(true)

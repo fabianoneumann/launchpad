@@ -1,4 +1,4 @@
-import { PasswordResetToken } from '@/generated/prisma/client'
+import type { PasswordResetToken } from '@/generated/prisma/client'
 
 export interface PasswordResetTokensRepository {
   create(data: { tokenHash: string; userId: string; expiresAt: Date }): Promise<PasswordResetToken>

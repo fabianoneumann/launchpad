@@ -29,9 +29,7 @@ describe('Refresh Token E2E', () => {
 
     const cookies = loginResponse.headers['set-cookie']
 
-    const response = await request(app.server)
-      .patch('/auth/token/refresh')
-      .set('Cookie', cookies)
+    const response = await request(app.server).patch('/auth/token/refresh').set('Cookie', cookies)
 
     expect(response.statusCode).toBe(200)
     expect(response.body).toMatchObject({ token: expect.any(String) })
@@ -57,9 +55,7 @@ describe('Refresh Token E2E', () => {
       .set('Authorization', `Bearer ${token}`)
       .set('Cookie', cookies)
 
-    const response = await request(app.server)
-      .patch('/auth/token/refresh')
-      .set('Cookie', cookies)
+    const response = await request(app.server).patch('/auth/token/refresh').set('Cookie', cookies)
 
     expect(response.statusCode).toBe(401)
   })
@@ -71,9 +67,7 @@ describe('Refresh Token E2E', () => {
     })
     const cookies = loginResponse.headers['set-cookie']
 
-    const response = await request(app.server)
-      .patch('/auth/token/refresh')
-      .set('Cookie', cookies)
+    const response = await request(app.server).patch('/auth/token/refresh').set('Cookie', cookies)
 
     expect(response.statusCode).toBe(200)
     expect(response.body).toMatchObject({ token: expect.any(String) })

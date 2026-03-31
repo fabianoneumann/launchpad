@@ -1,5 +1,5 @@
-import { Role, User } from '@/generated/prisma/client'
-import { UsersRepository } from '@/repositories/users-repository'
+import type { Role, User } from '@/generated/prisma/client'
+import type { UsersRepository } from '@/repositories/users-repository'
 
 interface ListUsersServiceRequest {
   page: number
@@ -15,7 +15,11 @@ interface ListUsersServiceResponse {
 export class ListUsersService {
   constructor(private usersRepository: UsersRepository) {}
 
-  async execute({ page, perPage, role }: ListUsersServiceRequest): Promise<ListUsersServiceResponse> {
+  async execute({
+    page,
+    perPage,
+    role,
+  }: ListUsersServiceRequest): Promise<ListUsersServiceResponse> {
     const [users, total] = await Promise.all([
       this.usersRepository.findMany({ page, perPage, role }),
       this.usersRepository.count({ role }),

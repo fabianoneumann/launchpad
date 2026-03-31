@@ -1,4 +1,4 @@
-import { UsersRepository } from '@/repositories/users-repository'
+import type { UsersRepository } from '@/repositories/users-repository'
 import { CannotTargetSelfError } from '@/shared/errors/cannot-target-self-error'
 import { ResourceNotFoundError } from '@/shared/errors/resource-not-found-error'
 

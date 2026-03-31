@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyRequest, FastifyReply } from 'fastify'
 import { makeUpdateUserService } from '@/shared/factories/make-update-user-service'
 
 export async function updateUserController(request: FastifyRequest, reply: FastifyReply) {

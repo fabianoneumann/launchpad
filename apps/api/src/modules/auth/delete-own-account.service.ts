@@ -1,4 +1,4 @@
-import { UsersRepository } from '@/repositories/users-repository'
+import type { UsersRepository } from '@/repositories/users-repository'
 import { ResourceNotFoundError } from '@/shared/errors/resource-not-found-error'
 
 interface DeleteOwnAccountServiceRequest {

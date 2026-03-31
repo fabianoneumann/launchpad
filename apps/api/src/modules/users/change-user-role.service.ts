@@ -1,5 +1,5 @@
-import { Role, User } from '@/generated/prisma/client'
-import { UsersRepository } from '@/repositories/users-repository'
+import type { Role, User } from '@/generated/prisma/client'
+import type { UsersRepository } from '@/repositories/users-repository'
 import { CannotTargetSelfError } from '@/shared/errors/cannot-target-self-error'
 import { ResourceNotFoundError } from '@/shared/errors/resource-not-found-error'
 
@@ -16,7 +16,11 @@ interface ChangeUserRoleServiceResponse {
 export class ChangeUserRoleService {
   constructor(private usersRepository: UsersRepository) {}
 
-  async execute({ adminId, userId, role }: ChangeUserRoleServiceRequest): Promise<ChangeUserRoleServiceResponse> {
+  async execute({
+    adminId,
+    userId,
+    role,
+  }: ChangeUserRoleServiceRequest): Promise<ChangeUserRoleServiceResponse> {
     if (adminId === userId) {
       throw new CannotTargetSelfError()
     }

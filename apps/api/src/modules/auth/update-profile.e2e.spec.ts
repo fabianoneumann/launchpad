@@ -52,9 +52,7 @@ describe('Update Profile E2E', () => {
   })
 
   it('should return 401 when not authenticated', async () => {
-    const response = await request(app.server)
-      .patch('/auth/me')
-      .send({ name: 'John Updated' })
+    const response = await request(app.server).patch('/auth/me').send({ name: 'John Updated' })
 
     expect(response.statusCode).toBe(401)
   })

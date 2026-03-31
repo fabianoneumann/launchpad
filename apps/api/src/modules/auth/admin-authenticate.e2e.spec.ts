@@ -17,7 +17,12 @@ describe('Admin Authenticate E2E', () => {
     await prisma.user.createMany({
       data: [
         { name: 'Admin', email: adminEmail, password_hash: await hash('123456', 6), role: 'ADMIN' },
-        { name: 'Member', email: memberEmail, password_hash: await hash('123456', 6), role: 'MEMBER' },
+        {
+          name: 'Member',
+          email: memberEmail,
+          password_hash: await hash('123456', 6),
+          role: 'MEMBER',
+        },
         { name: 'User', email: userEmail, password_hash: await hash('123456', 6), role: 'USER' },
       ],
     })

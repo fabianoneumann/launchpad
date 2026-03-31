@@ -55,11 +55,15 @@ describe('VerifyEmailService', () => {
 
     await sut.execute({ token: 'valid-token' })
 
-    await expect(sut.execute({ token: 'valid-token' })).rejects.toBeInstanceOf(InvalidOrExpiredTokenError)
+    await expect(sut.execute({ token: 'valid-token' })).rejects.toBeInstanceOf(
+      InvalidOrExpiredTokenError,
+    )
   })
 
   it('should throw InvalidOrExpiredTokenError for an invalid token', async () => {
-    await expect(sut.execute({ token: 'invalid-token' })).rejects.toBeInstanceOf(InvalidOrExpiredTokenError)
+    await expect(sut.execute({ token: 'invalid-token' })).rejects.toBeInstanceOf(
+      InvalidOrExpiredTokenError,
+    )
   })
 
   it('should throw InvalidOrExpiredTokenError for an expired token', async () => {
@@ -75,6 +79,8 @@ describe('VerifyEmailService', () => {
       expiresAt: new Date(Date.now() - 1000),
     })
 
-    await expect(sut.execute({ token: 'expired-token' })).rejects.toBeInstanceOf(InvalidOrExpiredTokenError)
+    await expect(sut.execute({ token: 'expired-token' })).rejects.toBeInstanceOf(
+      InvalidOrExpiredTokenError,
+    )
   })
 })

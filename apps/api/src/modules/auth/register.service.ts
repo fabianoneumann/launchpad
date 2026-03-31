@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs'
 const { hash } = bcrypt
 import { render } from '@react-email/render'
-import { User } from '@/generated/prisma/client'
-import { UsersRepository } from '@/repositories/users-repository'
-import { MailProvider } from '@/lib/mail/mail-provider'
+import type { User } from '@/generated/prisma/client'
+import type { UsersRepository } from '@/repositories/users-repository'
+import type { MailProvider } from '@/lib/mail/mail-provider'
 import { WelcomeEmail } from '@/lib/mail/emails/welcome'
 import { getWelcomeEmailContent } from '@/lib/mail/content/welcome-content'
 import { UserAlreadyExistsError } from '@/shared/errors/user-already-exists-error'
@@ -45,9 +45,7 @@ export class RegisterService {
 
     const content = getWelcomeEmailContent()
     render(WelcomeEmail({ name: user.name, content }))
-      .then((html) =>
-        this.mailProvider.send({ to: user.email, subject: content.subject, html }),
-      )
+      .then((html) => this.mailProvider.send({ to: user.email, subject: content.subject, html }))
       .catch(() => {})
 
     return { user }

@@ -1,5 +1,5 @@
 import { Html, Head, Body, Container, Text, Button, Hr } from '@react-email/components'
-import { VerifyEmailContent } from '@/lib/mail/content/verify-email-content'
+import type { VerifyEmailContent } from '@/lib/mail/content/verify-email-content'
 
 interface VerifyEmailProps {
   name: string
@@ -14,7 +14,14 @@ export function VerifyEmail({ name, verificationLink, content }: VerifyEmailProp
     <Html>
       <Head />
       <Body style={{ fontFamily: 'sans-serif', backgroundColor: '#f9f9f9', padding: '24px' }}>
-        <Container style={{ backgroundColor: '#ffffff', padding: '32px', borderRadius: '8px', maxWidth: '520px' }}>
+        <Container
+          style={{
+            backgroundColor: '#ffffff',
+            padding: '32px',
+            borderRadius: '8px',
+            maxWidth: '520px',
+          }}
+        >
           <Text style={{ fontSize: '18px', fontWeight: 'bold', color: '#111' }}>{greeting}</Text>
           <Text style={{ fontSize: '15px', color: '#444' }}>{content.body}</Text>
           <Button
@@ -32,7 +39,9 @@ export function VerifyEmail({ name, verificationLink, content }: VerifyEmailProp
           >
             {content.ctaLabel}
           </Button>
-          <Text style={{ fontSize: '13px', color: '#999', marginTop: '16px' }}>{content.expiry}</Text>
+          <Text style={{ fontSize: '13px', color: '#999', marginTop: '16px' }}>
+            {content.expiry}
+          </Text>
           <Hr style={{ borderColor: '#eee', margin: '24px 0' }} />
           <Text style={{ fontSize: '13px', color: '#999' }}>{content.footer}</Text>
         </Container>

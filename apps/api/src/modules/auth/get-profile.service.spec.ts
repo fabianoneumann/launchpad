@@ -27,8 +27,8 @@ describe('GetProfileService', () => {
   })
 
   it('should throw ResourceNotFoundError when user does not exist', async () => {
-    await expect(() =>
-      sut.execute({ userId: 'non-existent-id' }),
-    ).rejects.toBeInstanceOf(ResourceNotFoundError)
+    await expect(() => sut.execute({ userId: 'non-existent-id' })).rejects.toBeInstanceOf(
+      ResourceNotFoundError,
+    )
   })
 })

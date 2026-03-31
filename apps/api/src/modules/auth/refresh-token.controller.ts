@@ -1,10 +1,7 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyRequest, FastifyReply } from 'fastify'
 import { PrismaUsersRepository } from '@/repositories/prisma/prisma-users-repository'
 
-export async function refreshTokenController(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function refreshTokenController(request: FastifyRequest, reply: FastifyReply) {
   await request.jwtVerify({ onlyCookie: true })
 
   const { sub, tokenVersion } = request.user

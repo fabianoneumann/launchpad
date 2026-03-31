@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 const { compare, hash } = bcrypt
-import { UsersRepository } from '@/repositories/users-repository'
+import type { UsersRepository } from '@/repositories/users-repository'
 import { ResourceNotFoundError } from '@/shared/errors/resource-not-found-error'
 import { InvalidCredentialsError } from '@/shared/errors/invalid-credentials-error'
 
@@ -13,7 +13,11 @@ interface ChangePasswordServiceRequest {
 export class ChangePasswordService {
   constructor(private usersRepository: UsersRepository) {}
 
-  async execute({ userId, currentPassword, newPassword }: ChangePasswordServiceRequest): Promise<void> {
+  async execute({
+    userId,
+    currentPassword,
+    newPassword,
+  }: ChangePasswordServiceRequest): Promise<void> {
     const user = await this.usersRepository.findById(userId)
 
     if (!user) {

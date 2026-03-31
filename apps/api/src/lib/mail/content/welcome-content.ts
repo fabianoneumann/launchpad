@@ -5,7 +5,7 @@ export interface WelcomeEmailContent {
   footer: string
 }
 
-export function getWelcomeEmailContent(locale?: string): WelcomeEmailContent {
+export function getWelcomeEmailContent(_locale?: string): WelcomeEmailContent {
   return {
     subject: 'Bem-vindo ao Eco Iguaçu!',
     greeting: 'Olá, {{name}}!',

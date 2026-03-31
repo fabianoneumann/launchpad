@@ -28,8 +28,17 @@ describe('ListUsersService', () => {
   })
 
   it('should filter users by role', async () => {
-    await repository.create({ name: 'Admin', email: 'admin@test.com', password_hash: await hash('123456', 6), role: 'ADMIN' })
-    await repository.create({ name: 'User', email: 'user@test.com', password_hash: await hash('123456', 6) })
+    await repository.create({
+      name: 'Admin',
+      email: 'admin@test.com',
+      password_hash: await hash('123456', 6),
+      role: 'ADMIN',
+    })
+    await repository.create({
+      name: 'User',
+      email: 'user@test.com',
+      password_hash: await hash('123456', 6),
+    })
 
     const { users, total } = await sut.execute({ page: 1, perPage: 20, role: 'ADMIN' })
 
@@ -46,7 +55,11 @@ describe('ListUsersService', () => {
   })
 
   it('should not return soft-deleted users', async () => {
-    const user = await repository.create({ name: 'User', email: 'user@test.com', password_hash: await hash('123456', 6) })
+    const user = await repository.create({
+      name: 'User',
+      email: 'user@test.com',
+      password_hash: await hash('123456', 6),
+    })
     await repository.delete(user.id)
 
     const { users, total } = await sut.execute({ page: 1, perPage: 20 })

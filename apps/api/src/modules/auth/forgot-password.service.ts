@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto'
-import { UsersRepository } from '@/repositories/users-repository'
-import { PasswordResetTokensRepository } from '@/repositories/password-reset-tokens-repository'
-import { MailProvider } from '@/lib/mail/mail-provider'
+import type { UsersRepository } from '@/repositories/users-repository'
+import type { PasswordResetTokensRepository } from '@/repositories/password-reset-tokens-repository'
+import type { MailProvider } from '@/lib/mail/mail-provider'
 import { env } from '@/env'
 
 interface ForgotPasswordServiceRequest {

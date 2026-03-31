@@ -1,5 +1,5 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
-import { Role } from '@/generated/prisma/client'
+import type { FastifyRequest, FastifyReply } from 'fastify'
+import type { Role } from '@/generated/prisma/client'
 import { makeChangeUserRoleService } from '@/shared/factories/make-change-user-role-service'
 
 export async function changeUserRoleController(request: FastifyRequest, reply: FastifyReply) {

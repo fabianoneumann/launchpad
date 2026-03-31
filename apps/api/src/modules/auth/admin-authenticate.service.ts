@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs'
 const { compare } = bcrypt
-import { User } from '@/generated/prisma/client'
-import { UsersRepository } from '@/repositories/users-repository'
+import type { User } from '@/generated/prisma/client'
+import type { UsersRepository } from '@/repositories/users-repository'
 import { InvalidCredentialsError } from '@/shared/errors/invalid-credentials-error'
 import { InsufficientRoleError } from '@/shared/errors/insufficient-role-error'
 

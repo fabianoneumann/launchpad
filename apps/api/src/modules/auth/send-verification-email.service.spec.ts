@@ -15,7 +15,11 @@ describe('SendVerificationEmailService', () => {
     usersRepository = new InMemoryUsersRepository()
     emailVerificationTokensRepository = new InMemoryEmailVerificationTokensRepository()
     mailProvider = new FakeMailProvider()
-    sut = new SendVerificationEmailService(usersRepository, emailVerificationTokensRepository, mailProvider)
+    sut = new SendVerificationEmailService(
+      usersRepository,
+      emailVerificationTokensRepository,
+      mailProvider,
+    )
   })
 
   it('should create a verification token and send an email', async () => {

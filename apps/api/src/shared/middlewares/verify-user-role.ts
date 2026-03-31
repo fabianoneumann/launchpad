@@ -1,4 +1,4 @@
-import { FastifyReply, FastifyRequest } from 'fastify'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 
 const roleHierarchy = { ADMIN: 3, MEMBER: 2, USER: 1 } as const
 

@@ -9,5 +9,9 @@ export function makeResendVerificationEmailService() {
   const usersRepository = new PrismaUsersRepository()
   const emailVerificationTokensRepository = new PrismaEmailVerificationTokensRepository()
   const mailProvider = env.NODE_ENV === 'test' ? new FakeMailProvider() : new ResendMailProvider()
-  return new ResendVerificationEmailService(usersRepository, emailVerificationTokensRepository, mailProvider)
+  return new ResendVerificationEmailService(
+    usersRepository,
+    emailVerificationTokensRepository,
+    mailProvider,
+  )
 }

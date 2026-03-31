@@ -1,6 +1,6 @@
-import { Prisma, Role, User } from '@/generated/prisma/client'
+import type { Prisma, Role, User } from '@/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
-import { UsersRepository } from '@/repositories/users-repository'
+import type { UsersRepository } from '@/repositories/users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
   async findById(id: string): Promise<User | null> {
@@ -11,7 +11,15 @@ export class PrismaUsersRepository implements UsersRepository {
     return prisma.user.findFirst({ where: { email, deleted_at: null } })
   }
 
-  async findMany({ page, perPage, role }: { page: number; perPage: number; role?: Role }): Promise<User[]> {
+  async findMany({
+    page,
+    perPage,
+    role,
+  }: {
+    page: number
+    perPage: number
+    role?: Role
+  }): Promise<User[]> {
     return prisma.user.findMany({
       where: { deleted_at: null, ...(role ? { role } : {}) },
       skip: (page - 1) * perPage,

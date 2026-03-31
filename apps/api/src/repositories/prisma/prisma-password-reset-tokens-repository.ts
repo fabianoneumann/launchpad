@@ -1,6 +1,6 @@
-import { PasswordResetToken } from '@/generated/prisma/client'
+import type { PasswordResetToken } from '@/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
-import { PasswordResetTokensRepository } from '@/repositories/password-reset-tokens-repository'
+import type { PasswordResetTokensRepository } from '@/repositories/password-reset-tokens-repository'
 
 export class PrismaPasswordResetTokensRepository implements PasswordResetTokensRepository {
   async create(data: {

@@ -7,7 +7,7 @@ export interface VerifyEmailContent {
   footer: string
 }
 
-export function getVerifyEmailContent(locale?: string): VerifyEmailContent {
+export function getVerifyEmailContent(_locale?: string): VerifyEmailContent {
   return {
     subject: 'Confirme seu e-mail — Eco Iguaçu',
     greeting: 'Olá, {{name}}!',

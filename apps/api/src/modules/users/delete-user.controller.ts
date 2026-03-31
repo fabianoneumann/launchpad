@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyRequest, FastifyReply } from 'fastify'
 import { makeDeleteUserService } from '@/shared/factories/make-delete-user-service'
 
 export async function deleteUserController(request: FastifyRequest, reply: FastifyReply) {

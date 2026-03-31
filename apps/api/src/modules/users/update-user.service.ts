@@ -1,5 +1,5 @@
-import { User } from '@/generated/prisma/client'
-import { UsersRepository } from '@/repositories/users-repository'
+import type { User } from '@/generated/prisma/client'
+import type { UsersRepository } from '@/repositories/users-repository'
 import { ResourceNotFoundError } from '@/shared/errors/resource-not-found-error'
 import { UserAlreadyExistsError } from '@/shared/errors/user-already-exists-error'
 
@@ -16,7 +16,11 @@ interface UpdateUserServiceResponse {
 export class UpdateUserService {
   constructor(private usersRepository: UsersRepository) {}
 
-  async execute({ userId, name, email }: UpdateUserServiceRequest): Promise<UpdateUserServiceResponse> {
+  async execute({
+    userId,
+    name,
+    email,
+  }: UpdateUserServiceRequest): Promise<UpdateUserServiceResponse> {
     const user = await this.usersRepository.findById(userId)
 
     if (!user) {

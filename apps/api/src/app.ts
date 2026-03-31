@@ -6,7 +6,11 @@ import fastifyHelmet from '@fastify/helmet'
 import fastifyRateLimit from '@fastify/rate-limit'
 import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUI from '@fastify/swagger-ui'
-import { validatorCompiler, serializerCompiler, jsonSchemaTransform } from 'fastify-type-provider-zod'
+import {
+  validatorCompiler,
+  serializerCompiler,
+  jsonSchemaTransform,
+} from 'fastify-type-provider-zod'
 import { env } from '@/env'
 import { AppError } from '@/shared/errors/app-error'
 import { authRoutes } from '@/modules/auth/auth.routes'

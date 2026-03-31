@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs'
 const { hash } = bcrypt
 import { createHash } from 'node:crypto'
-import { UsersRepository } from '@/repositories/users-repository'
-import { PasswordResetTokensRepository } from '@/repositories/password-reset-tokens-repository'
+import type { UsersRepository } from '@/repositories/users-repository'
+import type { PasswordResetTokensRepository } from '@/repositories/password-reset-tokens-repository'
 import { InvalidOrExpiredTokenError } from '@/shared/errors/invalid-or-expired-token-error'
 
 interface ResetPasswordServiceRequest {

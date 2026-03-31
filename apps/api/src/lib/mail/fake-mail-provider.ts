@@ -1,4 +1,4 @@
-import { MailProvider } from './mail-provider'
+import type { MailProvider } from './mail-provider'
 
 interface SentEmail {
   to: string

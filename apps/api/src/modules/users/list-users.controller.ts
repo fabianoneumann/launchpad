@@ -1,5 +1,5 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
-import { Role } from '@/generated/prisma/client'
+import type { FastifyRequest, FastifyReply } from 'fastify'
+import type { Role } from '@/generated/prisma/client'
 import { makeListUsersService } from '@/shared/factories/make-list-users-service'
 
 export async function listUsersController(request: FastifyRequest, reply: FastifyReply) {

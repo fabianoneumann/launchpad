@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyRequest, FastifyReply } from 'fastify'
 import { makeUpdateProfileService } from '@/shared/factories/make-update-profile-service'
 
 export async function updateProfileController(request: FastifyRequest, reply: FastifyReply) {

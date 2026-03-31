@@ -15,8 +15,17 @@ describe('DeleteUserService', () => {
   })
 
   it('should soft-delete a user', async () => {
-    const admin = await repository.create({ name: 'Admin', email: 'admin@test.com', password_hash: await hash('123456', 6), role: 'ADMIN' })
-    const user = await repository.create({ name: 'User', email: 'user@test.com', password_hash: await hash('123456', 6) })
+    const admin = await repository.create({
+      name: 'Admin',
+      email: 'admin@test.com',
+      password_hash: await hash('123456', 6),
+      role: 'ADMIN',
+    })
+    const user = await repository.create({
+      name: 'User',
+      email: 'user@test.com',
+      password_hash: await hash('123456', 6),
+    })
 
     await sut.execute({ adminId: admin.id, userId: user.id })
 
@@ -25,15 +34,25 @@ describe('DeleteUserService', () => {
   })
 
   it('should throw CannotTargetSelfError when admin targets itself', async () => {
-    const admin = await repository.create({ name: 'Admin', email: 'admin@test.com', password_hash: await hash('123456', 6), role: 'ADMIN' })
+    const admin = await repository.create({
+      name: 'Admin',
+      email: 'admin@test.com',
+      password_hash: await hash('123456', 6),
+      role: 'ADMIN',
+    })
 
-    await expect(() =>
-      sut.execute({ adminId: admin.id, userId: admin.id }),
-    ).rejects.toBeInstanceOf(CannotTargetSelfError)
+    await expect(() => sut.execute({ adminId: admin.id, userId: admin.id })).rejects.toBeInstanceOf(
+      CannotTargetSelfError,
+    )
   })
 
   it('should throw ResourceNotFoundError when user does not exist', async () => {
-    const admin = await repository.create({ name: 'Admin', email: 'admin@test.com', password_hash: await hash('123456', 6), role: 'ADMIN' })
+    const admin = await repository.create({
+      name: 'Admin',
+      email: 'admin@test.com',
+      password_hash: await hash('123456', 6),
+      role: 'ADMIN',
+    })
 
     await expect(() =>
       sut.execute({ adminId: admin.id, userId: 'non-existent-id' }),

@@ -1,5 +1,5 @@
 import 'fastify'
-import { UsersRepository } from '@/repositories/users-repository'
+import type { UsersRepository } from '@/repositories/users-repository'
 
 declare module 'fastify' {
   interface FastifyInstance {

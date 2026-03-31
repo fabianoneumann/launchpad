@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
-import { PasswordResetToken } from '@/generated/prisma/client'
-import { PasswordResetTokensRepository } from '@/repositories/password-reset-tokens-repository'
+import type { PasswordResetToken } from '@/generated/prisma/client'
+import type { PasswordResetTokensRepository } from '@/repositories/password-reset-tokens-repository'
 
 export class InMemoryPasswordResetTokensRepository implements PasswordResetTokensRepository {
   public items: PasswordResetToken[] = []

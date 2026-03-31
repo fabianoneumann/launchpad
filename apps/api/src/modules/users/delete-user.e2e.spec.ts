@@ -12,7 +12,12 @@ describe('Delete User E2E', () => {
     await app.ready()
     await prisma.user.deleteMany({ where: { email: { in: [adminEmail, targetEmail] } } })
     await prisma.user.create({
-      data: { name: 'Admin', email: adminEmail, password_hash: await hash('123456', 6), role: 'ADMIN' },
+      data: {
+        name: 'Admin',
+        email: adminEmail,
+        password_hash: await hash('123456', 6),
+        role: 'ADMIN',
+      },
     })
     await prisma.user.create({
       data: { name: 'Target', email: targetEmail, password_hash: await hash('123456', 6) },
@@ -25,7 +30,9 @@ describe('Delete User E2E', () => {
   })
 
   it('should return 204 when admin deletes a user', async () => {
-    const loginResponse = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
     const token = loginResponse.body.token
 
     const target = await prisma.user.findUnique({ where: { email: targetEmail } })
@@ -38,7 +45,9 @@ describe('Delete User E2E', () => {
   })
 
   it('should return 400 when admin tries to delete own account', async () => {
-    const loginResponse = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
     const token = loginResponse.body.token
 
     const admin = await prisma.user.findUnique({ where: { email: adminEmail } })
@@ -51,7 +60,9 @@ describe('Delete User E2E', () => {
   })
 
   it('should return 404 when user id does not exist', async () => {
-    const loginResponse = await request(app.server).post('/auth/login').send({ email: adminEmail, password: '123456' })
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
     const token = loginResponse.body.token
 
     const response = await request(app.server)

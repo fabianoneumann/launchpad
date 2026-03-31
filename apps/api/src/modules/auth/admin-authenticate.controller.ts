@@ -1,10 +1,7 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyRequest, FastifyReply } from 'fastify'
 import { makeAdminAuthenticateService } from '@/shared/factories/make-admin-authenticate-service'
 
-export async function adminAuthenticateController(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function adminAuthenticateController(request: FastifyRequest, reply: FastifyReply) {
   const { email, password } = request.body as { email: string; password: string }
 
   const service = makeAdminAuthenticateService()

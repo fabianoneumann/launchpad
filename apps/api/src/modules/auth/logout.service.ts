@@ -1,4 +1,4 @@
-import { UsersRepository } from '@/repositories/users-repository'
+import type { UsersRepository } from '@/repositories/users-repository'
 
 interface LogoutServiceRequest {
   userId: string

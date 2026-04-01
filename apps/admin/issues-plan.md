@@ -8,93 +8,82 @@
 ---
 
 ### Issue #1 — [admin] Project scaffold via CLI commands
-# GitHub: already created as eco-iguassu#12 in fabianoneumann/eco-iguassu
+# GitHub: eco-iguassu#12 ✅ CONCLUÍDA
 **Labels:** admin, frontend, chore
 
-**Goal:** Bootstrap the admin app using Vite and shadcn CLI, avoiding manual boilerplate.
+**O que foi feito (resumo):**
+- Scaffold via `pnpm create vite apps/admin --template react-ts`
+- Tailwind v4 instalado (`tailwindcss` + `@tailwindcss/vite`) antes do shadcn init — exigido pelo shadcn atual
+- `shadcn@latest init` executado com preset Nova; `components.json` editado para `style: "new-york"` e `baseColor: "zinc"`
+- Path alias `@/` → `src/` configurado em `tsconfig.json`, `tsconfig.app.json` e `vite.config.ts` — foi necessário antes do shadcn init, que valida o alias
+- `src/App.tsx`, `src/App.css`, `src/assets/` deletados; `src/main.tsx` substituído por placeholder
+- ESLint migrado de `tseslint.config()` para `defineConfig()` em `packages/eslint-config` e `apps/api`; `react.js` corrigido para usar `reactHooks.configs.flat['recommended-latest']`
+- Todos os checks passam: `dev`, `build`, `lint`, `format:check`
 
-**Commands to run (in order):**
-```bash
-# 1. Create the app inside the monorepo
-pnpm create vite apps/admin --template react-ts
-
-# 2. Install dependencies (from monorepo root — installs all workspaces, including the new one)
-pnpm install
-
-# 3. Initialize shadcn/ui (sets up Tailwind + CSS variables automatically)
-cd apps/admin && pnpm dlx shadcn@latest init
-# When prompted: New York style, zinc base color, CSS variables: yes
-```
-
-**After running the commands — cleanup:**
-- Delete `src/App.tsx`, `src/App.css` (will be rewritten from scratch)
-- Delete `public/vite.svg` and `src/assets/` (unused)
-- Keep `src/index.css` — shadcn overwrites it with CSS variables (do not delete)
-- Keep `src/main.tsx` — will be updated in Issue #2
-
-**Validate:**
-- `pnpm --filter admin dev` starts without errors
-- Browser shows a blank page (no errors in console)
-
-**What these commands handle automatically:**
-- `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`
-- `vite.config.ts` base configuration
-- `package.json` with React + TypeScript deps
-- Tailwind CSS installation and `tailwind.config.ts`
-- `components.json` (shadcn config)
-- `src/index.css` with full dark/light CSS variable tokens
+**Nota sobre Tailwind v4:** O shadcn atual usa Tailwind v4 (sem `tailwind.config.ts`, configurado via plugin Vite). Os tokens CSS gerados usam formato `oklch()` em vez do `hsl` bare do Tailwind v3. Isso impacta a substituição dos tokens na Issue #2 — ver nota específica lá.
 
 ---
 
 ### Issue #2 — [admin] Post-scaffold configuration
+# GitHub: eco-iguassu#17
 **Labels:** admin, frontend, chore
 
-**Goal:** Complete what the CLI commands don't cover: monorepo wiring, path aliases,
-environment setup, shadcn components, and ThemeProvider.
+**Goal:** Complete post-scaffold setup: environment, shadcn component base set,
+dark mode (ThemeProvider), and CSS token replacement with project colors.
 
-> **Nota:** ESLint + Prettier já foram tratados na Issue #12 (scaffold), que configura o `eslint.config.js` estendendo `@eco-iguassu/eslint-config/react` e adiciona os scripts `lint`, `format` e `format:check`. **Não reconfigurar aqui.** Esta seção foi atualizada para remover as tasks de ESLint que estavam descritas com a abordagem antiga (pré-Issue #15).
+> **Já feito na Issue #12 — não refazer:**
+> - Path aliases `@/` → `src/` (tsconfig.json, tsconfig.app.json, vite.config.ts) ✅
+> - `@types/node` instalado ✅
+> - `pnpm-workspace.yaml` — glob `apps/*` já cobre admin ✅
+> - `turbo.json` — tasks globais (`dev`, `build`, `test`, `lint`, `format:check`) já cobrem admin ✅
+> - `.env.local` no `.gitignore` raiz ✅
+> - ESLint + Prettier configurados ✅
 
 **Tasks:**
 
-*Path aliases (needed for `@/` imports):*
-- Add to `tsconfig.app.json` paths: `"@/*": ["./src/*"]`
-- Add to `vite.config.ts` resolve alias: `'@': '/src'`
-- Install `@types/node` (required for `path.resolve` in vite config)
-
 *Environment:*
 - Add `.env.example` with `VITE_API_URL=http://localhost:3333`
-- Add `.env.local` to `.gitignore` (if not already present)
-
-*Monorepo wiring:*
-- Add `apps/admin` entry to `pnpm-workspace.yaml` (if not already covered by glob)
-- Add `admin` pipeline to `turbo.json`: `dev`, `build`, `test`, `lint`, `format`
 
 *shadcn components — install the base set:*
+
+`button` já foi instalado pelo shadcn init. Instalar os restantes:
 ```bash
-pnpm dlx shadcn@latest add button input label card badge dialog alert-dialog
+cd apps/admin
+pnpm dlx shadcn@latest add input label card badge dialog alert-dialog
 pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton table
 ```
+Após instalar: `pnpm --filter admin format` para formatar os arquivos gerados.
 
 *Dark mode:*
 - Install `next-themes`
-- Create `src/app/providers.tsx` with `ThemeProvider` (defaultTheme="dark", storageKey="admin-theme")
-- Update `src/main.tsx` to wrap app with `ThemeProvider`
+- Wrap `src/main.tsx` diretamente com `ThemeProvider` (defaultTheme="dark", storageKey="admin-theme")
+  — **não criar `src/app/providers.tsx` aqui**; o diretório `src/app/` e o `providers.tsx` definitivo
+  são criados na Issue #3 junto com o TanStack Router. Na Issue #3, o ThemeProvider migra para lá.
 
-*CSS tokens — substituir `src/index.css` após o shadcn init:*
-- O shadcn init com `zinc` gera tokens de cor neutros (cinza) — incompatíveis com o design do admin-compass
-- Após o init, **substituir o conteúdo completo de `src/index.css`** pelos tokens do admin-compass
-- Referência: `src/index.css` em fabianoneumann/admin-compass — contém:
-  - `--primary: 239 84% 57%` (light) / `239 84% 67%` (dark) — índigo, não zinc
-  - Tokens de sidebar: `--sidebar-background`, `--sidebar-accent`, `--sidebar-border`, etc.
-  - Tokens de chart: `--chart-1` a `--chart-5` com as cores usadas no Dashboard
-- Estes tokens são referenciados diretamente em componentes (`bg-primary/10`, `hsl(var(--primary))`, `hsl(var(--border))`) — sem essa substituição o visual diverge do admin-compass
+*CSS tokens — substituir tokens em `src/index.css`:*
+
+> **⚠️ Mudança de formato — Tailwind v4 vs v3:**
+> O admin-compass (referência visual) foi construído com Tailwind v3, onde tokens são valores bare:
+> `--primary: 239 84% 67%` para uso com `hsl(var(--primary))`.
+> O setup atual usa Tailwind v4 com `oklch()` full: `--primary: oklch(0.205 0 0)`.
+> Os tokens do admin-compass **não podem ser copiados diretamente** — precisam ser convertidos
+> para `oklch()`. Usar uma ferramenta de conversão hsl→oklch (ex: oklch.com) para cada valor.
+
+Valores de referência do admin-compass e seus equivalentes oklch aproximados:
+- `--primary` light: `hsl(239 84% 57%)` → `oklch(0.452 0.245 264.4)`
+- `--primary` dark: `hsl(239 84% 67%)` → `oklch(0.537 0.245 264.4)`
+- Tokens de sidebar: `--sidebar`, `--sidebar-foreground`, `--sidebar-primary`, `--sidebar-accent`, `--sidebar-border`, `--sidebar-ring`
+- Tokens de chart: `--chart-1` a `--chart-5`
+
+A substituição deve manter a estrutura gerada pelo shadcn (`:root {}` e `.dark {}` com variáveis `oklch()`
+e o bloco `@theme inline` que mapeia as variáveis para o sistema de classes do Tailwind v4).
 
 **Validate:**
-- `pnpm --filter admin dev` starts without errors
-- Path alias `@/` resolves correctly (import a file using `@/` and check no TS error)
-- `pnpm --filter admin build` completes without errors
-- Dark mode CSS variables visible in browser devtools
-- `src/index.css` contém `--primary: 239 84% 57%` (não os tokens zinc padrão)
+- `pnpm --filter admin dev` inicia sem erros
+- `pnpm --filter admin build` completa sem erros
+- Dark mode funciona: classe `.dark` no `<html>` altera as variáveis CSS no devtools
+- `src/index.css` contém `--primary: oklch(0.452 0.245 264.4)` (índigo, não neutral cinza)
+- Todos os componentes shadcn renderizam sem erros no browser
 
 ---
 

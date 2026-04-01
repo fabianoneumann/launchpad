@@ -14,4 +14,12 @@ export default defineConfig(
       },
     },
   },
+  {
+    // shadcn components intentionally export both the component and variant
+    // utilities (e.g. buttonVariants) for use in other components.
+    files: ['src/components/ui/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 )

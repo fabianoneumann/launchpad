@@ -42,47 +42,102 @@ dark mode (ThemeProvider), and CSS token replacement with project colors.
 **Tasks:**
 
 *Environment:*
-- Add `.env.example` with `VITE_API_URL=http://localhost:3333`
+- Criar `.env.example` com `VITE_API_URL=http://localhost:3333`
 
 *shadcn components — install the base set:*
 
-`button` já foi instalado pelo shadcn init. Instalar os restantes:
+`button` já foi instalado pelo shadcn init. Instalar os restantes a partir de `apps/admin`:
 ```bash
-cd apps/admin
 pnpm dlx shadcn@latest add input label card badge dialog alert-dialog
 pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton table
+pnpm dlx shadcn@latest add sidebar dropdown-menu popover
 ```
+> `sidebar` — os tokens `--sidebar-*` já estão no `@theme inline` do `index.css` (gerados pelo preset Nova) especificamente para este componente. Instalar agora junto com o restante da base.
+>
+> `dropdown-menu` e `popover` — dependências diretas de vários outros componentes (menus de usuário, select interno, etc.). Melhor ser explícito.
+
 Após instalar: `pnpm --filter admin format` para formatar os arquivos gerados.
 
 *Dark mode:*
-- Install `next-themes`
-- Wrap `src/main.tsx` diretamente com `ThemeProvider` (defaultTheme="dark", storageKey="admin-theme")
-  — **não criar `src/app/providers.tsx` aqui**; o diretório `src/app/` e o `providers.tsx` definitivo
-  são criados na Issue #3 junto com o TanStack Router. Na Issue #3, o ThemeProvider migra para lá.
+- Instalar `next-themes`
+- Envolver `src/main.tsx` com `ThemeProvider` usando `attribute="class"` explícito:
+
+```tsx
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { ThemeProvider } from 'next-themes'
+import './index.css'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <ThemeProvider attribute="class" defaultTheme="dark" storageKey="admin-theme">
+      <div />
+    </ThemeProvider>
+  </StrictMode>,
+)
+```
+
+> `attribute="class"` é necessário e deve ser explícito: o `index.css` usa `@custom-variant dark (&:is(.dark *))`, que exige a classe `.dark` no `<html>`. O `next-themes` usa `attribute="class"` como default, mas declarar explicitamente evita surpresas.
+>
+> **Não criar `src/app/providers.tsx` aqui.** O diretório `src/app/` e o `providers.tsx` definitivo (com QueryClientProvider + ThemeProvider + TooltipProvider) são criados na Issue #3 junto com o TanStack Router. O ThemeProvider migra para lá nessa issue.
 
 *CSS tokens — substituir tokens em `src/index.css`:*
 
-> **⚠️ Mudança de formato — Tailwind v4 vs v3:**
-> O admin-compass (referência visual) foi construído com Tailwind v3, onde tokens são valores bare:
-> `--primary: 239 84% 67%` para uso com `hsl(var(--primary))`.
-> O setup atual usa Tailwind v4 com `oklch()` full: `--primary: oklch(0.205 0 0)`.
-> Os tokens do admin-compass **não podem ser copiados diretamente** — precisam ser convertidos
-> para `oklch()`. Usar uma ferramenta de conversão hsl→oklch (ex: oklch.com) para cada valor.
+Substituir apenas os valores de cor dentro de `:root {}` e `.dark {}`.
+**Preservar integralmente:** os imports (`tw-animate-css`, `shadcn/tailwind.css`, Geist), o `@custom-variant dark`, o `@theme inline` e o `@layer base`.
 
-Valores de referência do admin-compass e seus equivalentes oklch aproximados:
-- `--primary` light: `hsl(239 84% 57%)` → `oklch(0.452 0.245 264.4)`
-- `--primary` dark: `hsl(239 84% 67%)` → `oklch(0.537 0.245 264.4)`
-- Tokens de sidebar: `--sidebar`, `--sidebar-foreground`, `--sidebar-primary`, `--sidebar-accent`, `--sidebar-border`, `--sidebar-ring`
-- Tokens de chart: `--chart-1` a `--chart-5`
+**Referência:** `src/index.css` em fabianoneumann/admin-compass — usa Tailwind v3 com valores HSL bare. O setup atual usa Tailwind v4 com `oklch()`. Os valores abaixo são as conversões HSL→oklch dos tokens do admin-compass.
 
-A substituição deve manter a estrutura gerada pelo shadcn (`:root {}` e `.dark {}` com variáveis `oklch()`
-e o bloco `@theme inline` que mapeia as variáveis para o sistema de classes do Tailwind v4).
+> **Nota sobre naming:** admin-compass usa `--sidebar-background`; o shadcn atual usa `--sidebar`. São o mesmo token — o nome mudou entre versões. Usar o naming atual (`--sidebar`).
+
+**Tokens que precisam mudar (`:root` — light mode):**
+
+| Token | HSL (admin-compass) | oklch |
+|---|---|---|
+| `--primary` | `239 84% 57%` | ~`oklch(0.452 0.245 264)` |
+| `--primary-foreground` | `0 0% 100%` | `oklch(1 0 0)` |
+| `--ring` | `239 84% 57%` | ~`oklch(0.452 0.245 264)` |
+| `--radius` | `0.5rem` | `0.5rem` (sem conversão) |
+| `--sidebar` | `240 5% 97%` | ~`oklch(0.984 0 0)` |
+| `--sidebar-primary` | `239 84% 57%` | ~`oklch(0.452 0.245 264)` |
+| `--sidebar-primary-foreground` | `0 0% 100%` | `oklch(1 0 0)` |
+| `--sidebar-accent` | `240 5% 93%` | ~`oklch(0.943 0 0)` |
+| `--sidebar-ring` | `239 84% 57%` | ~`oklch(0.452 0.245 264)` |
+| `--chart-1` | `239 84% 57%` | ~`oklch(0.452 0.245 264)` |
+| `--chart-2` | `263 70% 58%` | ~`oklch(0.470 0.190 285)` |
+| `--chart-3` | `160 60% 45%` | ~`oklch(0.569 0.140 162)` |
+| `--chart-4` | `36 80% 56%` | ~`oklch(0.660 0.160 57)` |
+| `--chart-5` | `0 72% 58%` | ~`oklch(0.565 0.215 25)` |
+
+**Tokens que precisam mudar (`.dark` — dark mode):**
+
+| Token | HSL (admin-compass) | oklch |
+|---|---|---|
+| `--primary` | `239 84% 67%` | ~`oklch(0.537 0.245 264)` |
+| `--primary-foreground` | `0 0% 100%` | `oklch(1 0 0)` |
+| `--ring` | `239 84% 67%` | ~`oklch(0.537 0.245 264)` |
+| `--destructive` | `0 63% 31%` | ~`oklch(0.396 0.141 25)` |
+| `--sidebar` | `240 10% 5.5%` | ~`oklch(0.162 0 0)` |
+| `--sidebar-primary` | `239 84% 67%` | ~`oklch(0.537 0.245 264)` |
+| `--sidebar-primary-foreground` | `0 0% 100%` | `oklch(1 0 0)` |
+| `--sidebar-accent` | `240 4% 12%` | ~`oklch(0.193 0 0)` |
+| `--sidebar-border` | `240 4% 14%` | ~`oklch(0.226 0 0)` |
+| `--sidebar-ring` | `239 84% 67%` | ~`oklch(0.537 0.245 264)` |
+| `--chart-1` | `239 84% 67%` | ~`oklch(0.537 0.245 264)` |
+| `--chart-2` | `263 70% 68%` | ~`oklch(0.572 0.175 285)` |
+| `--chart-3` | `160 60% 55%` | ~`oklch(0.651 0.137 162)` |
+| `--chart-4` | `36 80% 66%` | ~`oklch(0.740 0.137 59)` |
+| `--chart-5` | `0 72% 65%` | ~`oklch(0.635 0.174 25)` |
+
+> Os valores oklch marcados com `~` são aproximações. Usar oklch.com para converter os valores HSL do admin-compass e obter os valores exatos antes de commitar.
 
 **Validate:**
 - `pnpm --filter admin dev` inicia sem erros
 - `pnpm --filter admin build` completa sem erros
+- `pnpm --filter admin lint` sem erros
+- `pnpm --filter admin format:check` sem erros
 - Dark mode funciona: classe `.dark` no `<html>` altera as variáveis CSS no devtools
-- `src/index.css` contém `--primary: oklch(0.452 0.245 264.4)` (índigo, não neutral cinza)
+- `src/index.css` contém `--primary: oklch(0.452 0.245 264)` (índigo, não neutral cinza)
 - Todos os componentes shadcn renderizam sem erros no browser
 
 ---

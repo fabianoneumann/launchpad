@@ -1,4 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
+import { resolveLocale } from '@/lib/locale/resolve-locale'
 import { makeRegisterService } from '@/shared/factories/make-register-service'
 import { makeSendVerificationEmailService } from '@/shared/factories/make-send-verification-email-service'
 
@@ -9,8 +10,10 @@ export async function registerController(request: FastifyRequest, reply: Fastify
     password: string
   }
 
+  const locale = resolveLocale(request.headers['accept-language'])
+
   const service = makeRegisterService()
-  const { user } = await service.execute({ name, email, password })
+  const { user } = await service.execute({ name, email, password, locale })
 
   makeSendVerificationEmailService()
     .execute({ userId: user.id })

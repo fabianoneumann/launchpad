@@ -21,6 +21,7 @@ describe('RegisterService', () => {
       name: 'John Doe',
       email: 'john@example.com',
       password: '123456',
+      locale: 'pt-BR',
     })
 
     expect(user.id).toEqual(expect.any(String))
@@ -32,6 +33,7 @@ describe('RegisterService', () => {
       name: 'John Doe',
       email: 'john@example.com',
       password: '123456',
+      locale: 'pt-BR',
     })
 
     const isPasswordHashed = await compare('123456', user.password_hash)
@@ -43,6 +45,7 @@ describe('RegisterService', () => {
       name: 'John Doe',
       email: 'john@example.com',
       password: '123456',
+      locale: 'pt-BR',
     })
 
     await expect(() =>
@@ -50,8 +53,31 @@ describe('RegisterService', () => {
         name: 'Another User',
         email: 'john@example.com',
         password: '123456',
+        locale: 'pt-BR',
       }),
     ).rejects.toBeInstanceOf(UserAlreadyExistsError)
+  })
+
+  it('should persist the locale passed to the service', async () => {
+    const { user } = await sut.execute({
+      name: 'John Doe',
+      email: 'john-locale@example.com',
+      password: '123456',
+      locale: 'en',
+    })
+
+    expect(user.locale).toBe('en')
+  })
+
+  it('should default to pt-BR when no locale is provided', async () => {
+    const { user } = await sut.execute({
+      name: 'John Doe',
+      email: 'john-default@example.com',
+      password: '123456',
+      locale: 'pt-BR',
+    })
+
+    expect(user.locale).toBe('pt-BR')
   })
 
   it('should send a welcome email after registration', async () => {
@@ -59,6 +85,7 @@ describe('RegisterService', () => {
       name: 'John Doe',
       email: 'john@example.com',
       password: '123456',
+      locale: 'pt-BR',
     })
 
     await vi.waitFor(() => {

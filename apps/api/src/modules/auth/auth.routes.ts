@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import { SUPPORTED_LOCALES } from '@eco-iguassu/shared-types'
 import { verifyJWT } from '@/shared/middlewares/verify-jwt'
 import { registerController } from './register.controller'
 import { authenticateController } from './authenticate.controller'
@@ -20,6 +21,7 @@ const userResponseSchema = z.object({
   name: z.string(),
   email: z.string(),
   role: z.enum(['ADMIN', 'MEMBER', 'USER']),
+  locale: z.string(),
   created_at: z.date(),
 })
 
@@ -123,9 +125,14 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     method: 'PATCH',
     url: '/auth/me',
     schema: {
-      body: z.object({
-        name: z.string().min(1),
-      }),
+      body: z
+        .object({
+          name: z.string().min(1).optional(),
+          locale: z.enum(SUPPORTED_LOCALES).optional(),
+        })
+        .refine((data) => data.name !== undefined || data.locale !== undefined, {
+          message: 'Pelo menos um campo deve ser fornecido',
+        }),
       response: {
         200: z.object({ user: userResponseSchema }),
       },

@@ -3,7 +3,14 @@ import request from 'supertest'
 import { app } from '@/app'
 import { prisma } from '@/lib/prisma'
 
-const emails = ['reg-john@test.com', 'reg-duplicate@test.com']
+const emails = [
+  'reg-john@test.com',
+  'reg-duplicate@test.com',
+  'reg-locale-en@test.com',
+  'reg-locale-en-us@test.com',
+  'reg-locale-fallback@test.com',
+  'reg-locale-fr@test.com',
+]
 
 describe('Register E2E', () => {
   beforeAll(async () => {
@@ -57,6 +64,83 @@ describe('Register E2E', () => {
     })
 
     expect(response.statusCode).toBe(409)
+  })
+
+  it('should detect locale from Accept-Language header', async () => {
+    await request(app.server)
+      .post('/auth/register')
+      .send({
+        name: 'John Doe',
+        email: emails[2],
+        password: '123456',
+      })
+      .set('Accept-Language', 'en')
+
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: emails[2], password: '123456' })
+    const meResponse = await request(app.server)
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${loginResponse.body.token}`)
+
+    expect(meResponse.body.user.locale).toBe('en')
+  })
+
+  it('should normalize Accept-Language by language base (en-US → en)', async () => {
+    await request(app.server)
+      .post('/auth/register')
+      .send({
+        name: 'John Doe',
+        email: emails[3],
+        password: '123456',
+      })
+      .set('Accept-Language', 'en-US')
+
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: emails[3], password: '123456' })
+    const meResponse = await request(app.server)
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${loginResponse.body.token}`)
+
+    expect(meResponse.body.user.locale).toBe('en')
+  })
+
+  it('should fallback to pt-BR when Accept-Language header is absent', async () => {
+    await request(app.server).post('/auth/register').send({
+      name: 'John Doe',
+      email: emails[4],
+      password: '123456',
+    })
+
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: emails[4], password: '123456' })
+    const meResponse = await request(app.server)
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${loginResponse.body.token}`)
+
+    expect(meResponse.body.user.locale).toBe('pt-BR')
+  })
+
+  it('should fallback to pt-BR when Accept-Language is unsupported (fr)', async () => {
+    await request(app.server)
+      .post('/auth/register')
+      .send({
+        name: 'John Doe',
+        email: emails[5],
+        password: '123456',
+      })
+      .set('Accept-Language', 'fr')
+
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: emails[5], password: '123456' })
+    const meResponse = await request(app.server)
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${loginResponse.body.token}`)
+
+    expect(meResponse.body.user.locale).toBe('pt-BR')
   })
 
   it('should return 400 when body is invalid', async () => {

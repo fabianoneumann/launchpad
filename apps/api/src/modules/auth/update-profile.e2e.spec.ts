@@ -51,6 +51,35 @@ describe('Update Profile E2E', () => {
     expect(response.statusCode).toBe(400)
   })
 
+  it('should return 200 with updated locale', async () => {
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: testEmail, password: '123456' })
+    const { token } = loginResponse.body
+
+    const response = await request(app.server)
+      .patch('/auth/me')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ locale: 'en' })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body.user.locale).toBe('en')
+  })
+
+  it('should return 400 when locale is invalid', async () => {
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: testEmail, password: '123456' })
+    const { token } = loginResponse.body
+
+    const response = await request(app.server)
+      .patch('/auth/me')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ locale: 'fr' })
+
+    expect(response.statusCode).toBe(400)
+  })
+
   it('should return 401 when not authenticated', async () => {
     const response = await request(app.server).patch('/auth/me').send({ name: 'John Updated' })
 

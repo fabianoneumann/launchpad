@@ -20,6 +20,7 @@ model User {
   password_hash String
   role          Role      @default(USER)
   token_version Int       @default(0)
+  locale        String    @default("pt-BR")
   validated_at  DateTime?
   deleted_at    DateTime?
   created_at    DateTime  @default(now())

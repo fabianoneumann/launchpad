@@ -2,10 +2,10 @@ import type { FastifyRequest, FastifyReply } from 'fastify'
 import { makeUpdateProfileService } from '@/shared/factories/make-update-profile-service'
 
 export async function updateProfileController(request: FastifyRequest, reply: FastifyReply) {
-  const { name } = request.body as { name: string }
+  const { name, locale } = request.body as { name?: string; locale?: string }
 
   const service = makeUpdateProfileService()
-  const { user } = await service.execute({ userId: request.user.sub, name })
+  const { user } = await service.execute({ userId: request.user.sub, name, locale })
 
   return reply.status(200).send({ user })
 }

@@ -17,6 +17,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@eco-iguassu/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
       '@fastify/cookie':
         specifier: ^11.0.0
         version: 11.0.2
@@ -150,6 +153,8 @@ importers:
       typescript-eslint:
         specifier: ^8.58.0
         version: 8.58.0(eslint@10.1.0(jiti@2.6.1))(typescript@5.9.3)
+
+  packages/shared-types: {}
 
 packages:
 

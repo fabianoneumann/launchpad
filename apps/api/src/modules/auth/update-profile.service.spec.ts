@@ -26,6 +26,19 @@ describe('UpdateProfileService', () => {
     expect(user.email).toBe('john@example.com')
   })
 
+  it('should update the user locale', async () => {
+    const created = await repository.create({
+      name: 'John Doe',
+      email: 'john-locale@example.com',
+      password_hash: await hash('123456', 6),
+    })
+
+    const { user } = await sut.execute({ userId: created.id, locale: 'en' })
+
+    expect(user.locale).toBe('en')
+    expect(user.name).toBe('John Doe')
+  })
+
   it('should throw ResourceNotFoundError when user does not exist', async () => {
     await expect(() =>
       sut.execute({ userId: 'non-existent-id', name: 'John' }),

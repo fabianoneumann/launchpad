@@ -12,6 +12,7 @@ interface RegisterServiceRequest {
   name: string
   email: string
   password: string
+  locale: string
 }
 
 interface RegisterServiceResponse {
@@ -28,6 +29,7 @@ export class RegisterService {
     name,
     email,
     password,
+    locale,
   }: RegisterServiceRequest): Promise<RegisterServiceResponse> {
     const userWithSameEmail = await this.usersRepository.findByEmail(email)
 
@@ -41,6 +43,7 @@ export class RegisterService {
       name,
       email,
       password_hash: passwordHash,
+      locale,
     })
 
     const content = getWelcomeEmailContent()

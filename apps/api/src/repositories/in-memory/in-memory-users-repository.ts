@@ -41,6 +41,7 @@ export class InMemoryUsersRepository implements UsersRepository {
       password_hash: data.password_hash,
       role: (data.role as User['role']) ?? 'USER',
       token_version: 0,
+      locale: typeof data.locale === 'string' ? data.locale : 'pt-BR',
       validated_at: null,
       deleted_at: null,
       created_at: new Date(),
@@ -62,6 +63,7 @@ export class InMemoryUsersRepository implements UsersRepository {
       password_hash:
         typeof data.password_hash === 'string' ? data.password_hash : current.password_hash,
       role: typeof data.role === 'string' ? (data.role as User['role']) : current.role,
+      locale: typeof data.locale === 'string' ? data.locale : current.locale,
       validated_at: data.validated_at instanceof Date ? data.validated_at : current.validated_at,
       updated_at: new Date(),
     }

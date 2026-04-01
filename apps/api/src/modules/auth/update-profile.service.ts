@@ -4,7 +4,8 @@ import { ResourceNotFoundError } from '@/shared/errors/resource-not-found-error'
 
 interface UpdateProfileServiceRequest {
   userId: string
-  name: string
+  name?: string
+  locale?: string
 }
 
 interface UpdateProfileServiceResponse {
@@ -17,6 +18,7 @@ export class UpdateProfileService {
   async execute({
     userId,
     name,
+    locale,
   }: UpdateProfileServiceRequest): Promise<UpdateProfileServiceResponse> {
     const user = await this.usersRepository.findById(userId)
 
@@ -24,7 +26,10 @@ export class UpdateProfileService {
       throw new ResourceNotFoundError()
     }
 
-    const updatedUser = await this.usersRepository.update(userId, { name })
+    const updatedUser = await this.usersRepository.update(userId, {
+      ...(name !== undefined && { name }),
+      ...(locale !== undefined && { locale }),
+    })
 
     return { user: updatedUser }
   }

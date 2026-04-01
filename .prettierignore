@@ -3,3 +3,4 @@ dist
 build
 src/generated
 pnpm-lock.yaml
+**/routeTree.gen.ts

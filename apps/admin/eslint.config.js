@@ -3,7 +3,7 @@ import baseConfig from '@eco-iguassu/eslint-config'
 import reactConfig from '@eco-iguassu/eslint-config/react'
 
 export default defineConfig(
-  { ignores: ['dist/**', 'build/**'] },
+  { ignores: ['dist/**', 'build/**', 'src/app/routeTree.gen.ts'] },
   ...baseConfig,
   ...reactConfig,
   {

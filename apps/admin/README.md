@@ -87,13 +87,16 @@ apps/admin/
 │   ├── app/                        # roteamento, layout raiz e providers
 │   │   ├── routes/                 # páginas organizadas por rota (file-based routing)
 │   │   │   ├── __root.tsx          # rota raiz obrigatória do TanStack Router
-│   │   │   ├── _layout.tsx         # layout sem path (pathless layout route)
-│   │   │   ├── dashboard/
-│   │   │   │   ├── index.tsx
-│   │   │   │   └── dashboard.test.tsx
-│   │   │   └── users/
-│   │   │       ├── index.tsx
-│   │   │       └── $id.tsx         # param dinâmico — convenção TanStack Router
+│   │   │   ├── index.tsx           # redirect / → /dashboard
+│   │   │   ├── login.tsx           # rota pública (fora do _layout — não protegida pelo auth guard)
+│   │   │   ├── _layout.tsx         # pathless layout route — auth guard (prefixo _ = sem segmento na URL)
+│   │   │   └── _layout/            # rotas protegidas: filhas do _layout ficam neste subdiretório
+│   │   │       ├── dashboard/      # URL: /dashboard  (o _layout não contribui com segmento)
+│   │   │       │   ├── index.tsx
+│   │   │       │   └── dashboard.test.tsx
+│   │   │       └── users/          # URL: /users
+│   │   │           ├── index.tsx
+│   │   │           └── $id.tsx     # param dinâmico — convenção TanStack Router
 │   │   ├── router.ts               # instância do router (createRouter)
 │   │   ├── routeTree.gen.ts        # gerado automaticamente pelo TanStack Router — não editar
 │   │   └── providers.tsx           # QueryClient, Auth, Theme...
@@ -155,6 +158,8 @@ apps/admin/
 **Testes co-located.** `LoginForm.test.tsx` fica ao lado de `LoginForm.tsx`. Quando o componente é movido ou deletado, o teste vai junto.
 
 **Separação `app/` vs `features/`.** `app/` cuida de roteamento e providers. `features/` cuida de lógica de negócio. O Lovable mistura tudo em `pages/` — aqui há separação explícita de responsabilidades.
+
+**Convenção de rotas protegidas no TanStack Router.** Rotas com prefixo `_` são pathless layouts — não contribuem com segmento na URL. Para que uma rota seja filha de `_layout.tsx` (e portanto protegida pelo auth guard), ela deve estar dentro do subdiretório `_layout/`. Ex: `routes/_layout/dashboard/index.tsx` → URL `/dashboard`. Rotas públicas (como `login.tsx`) ficam fora do `_layout/`.
 
 **Barrel exports.** Cada feature tem um `index.ts` que expõe apenas a interface pública da feature. Detalhes internos ficam encapsulados.
 

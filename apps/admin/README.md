@@ -134,6 +134,10 @@ apps/admin/
 │   │   │   └── query-client.ts
 │   │   └── utils.ts
 │   │
+│   ├── mocks/                      # MSW — handlers globais e server Node.js (Vitest)
+│   │   ├── handlers.ts             # array de handlers (preenchido por feature)
+│   │   └── node.ts                 # setupServer — importado em tests/setup.ts
+│   │
 │   ├── hooks/                      # hooks globais (tema, media query, etc.)
 │   └── types/                      # tipos locais do admin, complementares ao shared-types
 │

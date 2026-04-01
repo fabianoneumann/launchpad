@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { render } from '@react-email/render'
 import type { User } from '@/generated/prisma/client'
+import type { Locale } from '@eco-iguassu/shared-types'
 import type { EmailVerificationTokensRepository } from '@/repositories/email-verification-tokens-repository'
 import type { MailProvider } from '@/lib/mail/mail-provider'
 import { VerifyEmail } from '@/lib/mail/emails/verify-email'
@@ -19,7 +20,7 @@ export async function generateAndSendVerificationEmail(
   await emailVerificationTokensRepository.create({ tokenHash, userId: user.id, expiresAt })
 
   const verificationLink = `${env.APP_URL ?? 'http://localhost:5173'}/verify-email?token=${token}`
-  const content = getVerifyEmailContent()
+  const content = getVerifyEmailContent(user.locale as Locale)
   const html = await render(VerifyEmail({ name: user.name, verificationLink, content }))
 
   await mailProvider.send({ to: user.email, subject: content.subject, html })

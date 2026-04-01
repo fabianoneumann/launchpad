@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 const { hash } = bcrypt
 import { render } from '@react-email/render'
 import type { User } from '@/generated/prisma/client'
+import type { Locale } from '@eco-iguassu/shared-types'
 import type { UsersRepository } from '@/repositories/users-repository'
 import type { MailProvider } from '@/lib/mail/mail-provider'
 import { WelcomeEmail } from '@/lib/mail/emails/welcome'
@@ -46,7 +47,7 @@ export class RegisterService {
       locale,
     })
 
-    const content = getWelcomeEmailContent()
+    const content = getWelcomeEmailContent(user.locale as Locale)
     render(WelcomeEmail({ name: user.name, content }))
       .then((html) => this.mailProvider.send({ to: user.email, subject: content.subject, html }))
       .catch(() => {})

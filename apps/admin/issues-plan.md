@@ -25,140 +25,140 @@
 ---
 
 ### Issue #2 — [admin] Post-scaffold configuration
-# GitHub: eco-iguassu#17
-**Labels:** admin, frontend, chore
+# GitHub: eco-iguassu#17 ✅ CONCLUÍDA
 
-**Goal:** Complete post-scaffold setup: environment, shadcn component base set,
-dark mode (ThemeProvider), and CSS token replacement with project colors.
-
-> **Já feito na Issue #12 — não refazer:**
-> - Path aliases `@/` → `src/` (tsconfig.json, tsconfig.app.json, vite.config.ts) ✅
-> - `@types/node` instalado ✅
-> - `pnpm-workspace.yaml` — glob `apps/*` já cobre admin ✅
-> - `turbo.json` — tasks globais (`dev`, `build`, `test`, `lint`, `format:check`) já cobrem admin ✅
-> - `.env.local` no `.gitignore` raiz ✅
-> - ESLint + Prettier configurados ✅
-
-**Tasks:**
-
-*Environment:*
-- Criar `.env.example` com `VITE_API_URL=http://localhost:3333`
-
-*shadcn components — install the base set:*
-
-`button` já foi instalado pelo shadcn init. Instalar os restantes a partir de `apps/admin`:
-```bash
-pnpm dlx shadcn@latest add input label card badge dialog alert-dialog
-pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton table
-pnpm dlx shadcn@latest add sidebar dropdown-menu popover
-```
-> `sidebar` — os tokens `--sidebar-*` já estão no `@theme inline` do `index.css` (gerados pelo preset Nova) especificamente para este componente. Instalar agora junto com o restante da base.
->
-> `dropdown-menu` e `popover` — dependências diretas de vários outros componentes (menus de usuário, select interno, etc.). Melhor ser explícito.
-
-Após instalar: `pnpm --filter admin format` para formatar os arquivos gerados.
-
-*Dark mode:*
-- Instalar `next-themes`
-- Envolver `src/main.tsx` com `ThemeProvider` usando `attribute="class"` explícito:
-
-```tsx
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { ThemeProvider } from 'next-themes'
-import './index.css'
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ThemeProvider attribute="class" defaultTheme="dark" storageKey="admin-theme">
-      <div />
-    </ThemeProvider>
-  </StrictMode>,
-)
-```
-
-> `attribute="class"` é necessário e deve ser explícito: o `index.css` usa `@custom-variant dark (&:is(.dark *))`, que exige a classe `.dark` no `<html>`. O `next-themes` usa `attribute="class"` como default, mas declarar explicitamente evita surpresas.
->
-> **Não criar `src/app/providers.tsx` aqui.** O diretório `src/app/` e o `providers.tsx` definitivo (com QueryClientProvider + ThemeProvider + TooltipProvider) são criados na Issue #3 junto com o TanStack Router. O ThemeProvider migra para lá nessa issue.
-
-*CSS tokens — substituir tokens em `src/index.css`:*
-
-Substituir apenas os valores de cor dentro de `:root {}` e `.dark {}`.
-**Preservar integralmente:** os imports (`tw-animate-css`, `shadcn/tailwind.css`, Geist), o `@custom-variant dark`, o `@theme inline` e o `@layer base`.
-
-**Referência:** `src/index.css` em fabianoneumann/admin-compass — usa Tailwind v3 com valores HSL bare. O setup atual usa Tailwind v4 com `oklch()`. Os valores abaixo são as conversões HSL→oklch dos tokens do admin-compass.
-
-> **Nota sobre naming:** admin-compass usa `--sidebar-background`; o shadcn atual usa `--sidebar`. São o mesmo token — o nome mudou entre versões. Usar o naming atual (`--sidebar`).
-
-**Tokens que precisam mudar (`:root` — light mode):**
-
-| Token | HSL (admin-compass) | oklch |
-|---|---|---|
-| `--primary` | `239 84% 57%` | ~`oklch(0.452 0.245 264)` |
-| `--primary-foreground` | `0 0% 100%` | `oklch(1 0 0)` |
-| `--ring` | `239 84% 57%` | ~`oklch(0.452 0.245 264)` |
-| `--radius` | `0.5rem` | `0.5rem` (sem conversão) |
-| `--sidebar` | `240 5% 97%` | ~`oklch(0.984 0 0)` |
-| `--sidebar-primary` | `239 84% 57%` | ~`oklch(0.452 0.245 264)` |
-| `--sidebar-primary-foreground` | `0 0% 100%` | `oklch(1 0 0)` |
-| `--sidebar-accent` | `240 5% 93%` | ~`oklch(0.943 0 0)` |
-| `--sidebar-ring` | `239 84% 57%` | ~`oklch(0.452 0.245 264)` |
-| `--chart-1` | `239 84% 57%` | ~`oklch(0.452 0.245 264)` |
-| `--chart-2` | `263 70% 58%` | ~`oklch(0.470 0.190 285)` |
-| `--chart-3` | `160 60% 45%` | ~`oklch(0.569 0.140 162)` |
-| `--chart-4` | `36 80% 56%` | ~`oklch(0.660 0.160 57)` |
-| `--chart-5` | `0 72% 58%` | ~`oklch(0.565 0.215 25)` |
-
-**Tokens que precisam mudar (`.dark` — dark mode):**
-
-| Token | HSL (admin-compass) | oklch |
-|---|---|---|
-| `--primary` | `239 84% 67%` | ~`oklch(0.537 0.245 264)` |
-| `--primary-foreground` | `0 0% 100%` | `oklch(1 0 0)` |
-| `--ring` | `239 84% 67%` | ~`oklch(0.537 0.245 264)` |
-| `--destructive` | `0 63% 31%` | ~`oklch(0.396 0.141 25)` |
-| `--sidebar` | `240 10% 5.5%` | ~`oklch(0.162 0 0)` |
-| `--sidebar-primary` | `239 84% 67%` | ~`oklch(0.537 0.245 264)` |
-| `--sidebar-primary-foreground` | `0 0% 100%` | `oklch(1 0 0)` |
-| `--sidebar-accent` | `240 4% 12%` | ~`oklch(0.193 0 0)` |
-| `--sidebar-border` | `240 4% 14%` | ~`oklch(0.226 0 0)` |
-| `--sidebar-ring` | `239 84% 67%` | ~`oklch(0.537 0.245 264)` |
-| `--chart-1` | `239 84% 67%` | ~`oklch(0.537 0.245 264)` |
-| `--chart-2` | `263 70% 68%` | ~`oklch(0.572 0.175 285)` |
-| `--chart-3` | `160 60% 55%` | ~`oklch(0.651 0.137 162)` |
-| `--chart-4` | `36 80% 66%` | ~`oklch(0.740 0.137 59)` |
-| `--chart-5` | `0 72% 65%` | ~`oklch(0.635 0.174 25)` |
-
-> Os valores oklch marcados com `~` são aproximações. Usar oklch.com para converter os valores HSL do admin-compass e obter os valores exatos antes de commitar.
-
-**Validate:**
-- `pnpm --filter admin dev` inicia sem erros
-- `pnpm --filter admin build` completa sem erros
-- `pnpm --filter admin lint` sem erros
-- `pnpm --filter admin format:check` sem erros
-- Dark mode funciona: classe `.dark` no `<html>` altera as variáveis CSS no devtools
-- `src/index.css` contém `--primary: oklch(0.452 0.245 264)` (índigo, não neutral cinza)
-- Todos os componentes shadcn renderizam sem erros no browser
+**O que foi feito (resumo):**
+- `.env.example` criado com `VITE_API_URL=http://localhost:3333`
+- 17 componentes shadcn instalados (button já existia): input, label, card, badge, dialog,
+  alert-dialog, select, separator, avatar, tooltip, sonner, skeleton, table, sidebar,
+  dropdown-menu, popover — mais `sheet.tsx` e `use-mobile.ts` como dependências transitivas do sidebar
+- `next-themes` instalado; `src/main.tsx` envolto com `ThemeProvider attribute="class" defaultTheme="dark" storageKey="admin-theme"`
+- Tokens CSS substituídos em `src/index.css`: neutral cinza → índigo oklch (`--primary`, `--ring`, `--chart-*`, `--sidebar-*`, `--radius: 0.5rem`)
+- `eslint.config.js` atualizado: `react-hooks/purity: 'off'` adicionado ao override de `src/components/ui/**` — o `sidebar.tsx` gerado pelo shadcn usa `Math.random()` dentro de `useMemo([])` para gerar larguras de skeleton; a regra flageia como impure mas o uso é intencional (executa uma vez no mount)
 
 ---
 
 ### Issue #3 — [admin] TanStack Router setup with file-based routing
 **Labels:** admin, frontend, chore
 
-**Goal:** Wire up routing with the planned `app/routes/` structure.
+**Goal:** Wire up TanStack Router with file-based routing, criar a estrutura `src/app/` e o
+`providers.tsx` definitivo. Migrar o ThemeProvider de `src/main.tsx` para `providers.tsx`.
 
 **Tasks:**
-- Install `@tanstack/react-router` and `@tanstack/router-vite-plugin`
-- Configure Vite plugin for file-based route generation
-- Create `src/app/routes/__root.tsx` (root route with Outlet + Providers)
-- Create `src/app/routes/_layout.tsx` (pathless layout route — protected shell)
-- Create `src/app/router.ts` (createRouter instance)
-- Create `src/app/providers.tsx` (QueryClientProvider, ThemeProvider, TooltipProvider)
-  - `<TooltipProvider>` do shadcn é necessário para todos os componentes `<Tooltip>` da aplicação —
-    deve envolver a árvore inteira, conforme padrão do admin-compass (`src/App.tsx`)
-- Update `src/main.tsx` to use RouterProvider
-- Add redirect from `/` → `/dashboard`
-- Validate: router devtools visible, routing works between placeholder pages
+
+*Instalar dependências:*
+- `@tanstack/react-router` — router principal
+- `@tanstack/router-plugin` — geração automática do `routeTree.gen.ts` a cada save (devDependency)
+- `@tanstack/react-router-devtools` — devtools (devDependency; import lazy/condicional: só em dev)
+- `@tanstack/react-query` — necessário para `QueryClientProvider` em `providers.tsx`
+  (a configuração do `QueryClient` e o `query-client.ts` são escopo da Issue #5;
+  aqui usar `new QueryClient()` inline como placeholder)
+
+*Configurar Vite plugin em `vite.config.ts`:*
+```ts
+import { tanstackRouter } from '@tanstack/router-plugin/vite'
+// IMPORTANTE: tanstackRouter() deve vir ANTES do react() nos plugins
+export default defineConfig({
+  plugins: [
+    tanstackRouter({
+      target: 'react',
+      autoCodeSplitting: true,
+      routesDirectory: './src/app/routes',        // default seria ./src/routes
+      generatedRouteTree: './src/app/routeTree.gen.ts',
+    }),
+    react(),
+    tailwindcss(),
+  ],
+  // ...
+})
+```
+> `routesDirectory` e `generatedRouteTree` são obrigatórios aqui — o default do plugin aponta para
+> `./src/routes`, mas o projeto usa `./src/app/routes/` conforme a estrutura planejada no README.
+> `routeTree.gen.ts` **não** deve ser adicionado ao `.gitignore` — deve ser commitado
+> (requerido para builds CI/CD).
+
+*Criar estrutura `src/app/`:*
+- `src/app/router.ts` — instância do router:
+  ```ts
+  import { createRouter } from '@tanstack/react-router'
+  import { routeTree } from './routeTree.gen'
+  export const router = createRouter({ routeTree })
+  declare module '@tanstack/react-router' {
+    interface Register { router: typeof router }
+  }
+  ```
+- `src/app/providers.tsx` — providers definitivos:
+  ```tsx
+  import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+  import { ThemeProvider } from 'next-themes'
+  import { TooltipProvider } from '@/components/ui/tooltip'
+  const queryClient = new QueryClient() // substituído por lib/react-query/query-client.ts na Issue #5
+  export function Providers({ children }: { children: React.ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class" defaultTheme="dark" storageKey="admin-theme">
+          <TooltipProvider>{children}</TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    )
+  }
+  ```
+  > `<TooltipProvider>` é necessário para todos os `<Tooltip>` do shadcn — deve envolver a árvore inteira.
+
+*Criar rotas placeholder:*
+- `src/app/routes/__root.tsx` — rota raiz; renderiza `<Providers>` + `<Outlet />` + devtools:
+  ```tsx
+  import { createRootRoute, Outlet } from '@tanstack/react-router'
+  import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+  import { Providers } from '../providers'
+  export const Route = createRootRoute({
+    component: () => (
+      <Providers>
+        <Outlet />
+        {import.meta.env.DEV && <TanStackRouterDevtools />}
+      </Providers>
+    ),
+  })
+  ```
+- `src/app/routes/_layout.tsx` — pathless layout route (protected shell):
+  ```tsx
+  import { createFileRoute, Outlet } from '@tanstack/react-router'
+  export const Route = createFileRoute('/_layout')({
+    component: () => <Outlet />,
+  })
+  ```
+  > Renderiza apenas `<Outlet />` por enquanto. O auth guard (`beforeLoad` com `throw redirect({ to: '/login' })`)
+  > é adicionado na Issue #7, quando o Zustand auth store estiver disponível no router context.
+- `src/app/routes/index.tsx` — redirect `/` → `/dashboard`:
+  ```tsx
+  import { createFileRoute, redirect } from '@tanstack/react-router'
+  export const Route = createFileRoute('/')({
+    beforeLoad: () => { throw redirect({ to: '/dashboard' }) },
+  })
+  ```
+- `src/app/routes/dashboard/index.tsx` — placeholder `<h1>Dashboard</h1>`
+
+*Atualizar `src/main.tsx`:*
+```tsx
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { RouterProvider } from '@tanstack/react-router'
+import { router } from './app/router'
+import './index.css'
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <RouterProvider router={router} />
+  </StrictMode>,
+)
+```
+> ThemeProvider é removido daqui — passa para `providers.tsx` via `__root.tsx`.
+
+**Validate:**
+- `pnpm --filter admin dev` inicia sem erros
+- Browser em `/` redireciona para `/dashboard` e exibe "Dashboard"
+- Router devtools visível no canto inferior da tela (apenas em dev)
+- `pnpm --filter admin build` completa sem erros
+- `pnpm --filter admin lint` sem erros
 
 ---
 

@@ -1,7 +1,7 @@
+import { defineConfig } from 'eslint/config'
 import baseConfig from '@eco-iguassu/eslint-config'
-import tseslint from 'typescript-eslint'
 
-export default tseslint.config(
+export default defineConfig(
   { ignores: ['dist/**', 'build/**', 'src/generated/**'] },
   ...baseConfig,
   {

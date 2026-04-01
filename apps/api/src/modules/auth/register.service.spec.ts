@@ -69,17 +69,6 @@ describe('RegisterService', () => {
     expect(user.locale).toBe('en')
   })
 
-  it('should default to pt-BR when no locale is provided', async () => {
-    const { user } = await sut.execute({
-      name: 'John Doe',
-      email: 'john-default@example.com',
-      password: '123456',
-      locale: 'pt-BR',
-    })
-
-    expect(user.locale).toBe('pt-BR')
-  })
-
   it('should send a welcome email after registration', async () => {
     await sut.execute({
       name: 'John Doe',

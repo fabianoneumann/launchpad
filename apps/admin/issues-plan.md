@@ -50,7 +50,9 @@ cd apps/admin && pnpm dlx shadcn@latest init
 **Labels:** admin, frontend, chore
 
 **Goal:** Complete what the CLI commands don't cover: monorepo wiring, path aliases,
-environment setup, ESLint + Prettier, shadcn components, and ThemeProvider.
+environment setup, shadcn components, and ThemeProvider.
+
+> **Nota:** ESLint + Prettier já foram tratados na Issue #12 (scaffold), que configura o `eslint.config.js` estendendo `@eco-iguassu/eslint-config/react` e adiciona os scripts `lint`, `format` e `format:check`. **Não reconfigurar aqui.** Esta seção foi atualizada para remover as tasks de ESLint que estavam descritas com a abordagem antiga (pré-Issue #15).
 
 **Tasks:**
 
@@ -66,24 +68,6 @@ environment setup, ESLint + Prettier, shadcn components, and ThemeProvider.
 *Monorepo wiring:*
 - Add `apps/admin` entry to `pnpm-workspace.yaml` (if not already covered by glob)
 - Add `admin` pipeline to `turbo.json`: `dev`, `build`, `test`, `lint`, `format`
-
-*ESLint + Prettier:*
-- O Vite react-ts já gera `eslint.config.js` com regras base — verificar e manter
-- Install `prettier` e `eslint-config-prettier` (desativa regras do ESLint que conflitam com Prettier)
-- Create `.prettierrc`:
-  ```json
-  {
-    "semi": true,
-    "singleQuote": false,
-    "trailingComma": "all",
-    "printWidth": 100,
-    "tabWidth": 2
-  }
-  ```
-- Adicionar `eslint-config-prettier` ao `eslint.config.js` (deve ser o último item da cadeia)
-- Adicionar scripts ao `package.json`:
-  - `"lint": "eslint ."`
-  - `"format": "prettier --write src/"`
 
 *shadcn components — install the base set:*
 ```bash
@@ -109,8 +93,6 @@ pnpm dlx shadcn@latest add select separator avatar tooltip sonner skeleton table
 - `pnpm --filter admin dev` starts without errors
 - Path alias `@/` resolves correctly (import a file using `@/` and check no TS error)
 - `pnpm --filter admin build` completes without errors
-- `pnpm --filter admin lint` executa sem erros
-- `pnpm --filter admin format` formata arquivos sem erros
 - Dark mode CSS variables visible in browser devtools
 - `src/index.css` contém `--primary: 239 84% 57%` (não os tokens zinc padrão)
 

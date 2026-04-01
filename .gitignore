@@ -7,6 +7,10 @@ dist/
 build/
 .turbo/
 
+# Playwright
+playwright-report/
+test-results/
+
 # Environment
 .env
 .env.local

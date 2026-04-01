@@ -167,16 +167,54 @@ createRoot(document.getElementById('root')!).render(
 
 **Goal:** Testing infrastructure ready before first feature is written.
 
+**Packages to install:**
+- `vitest`, `@vitest/coverage-v8`, `jsdom` (devDeps)
+- `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom` (devDeps)
+- `msw` (devDep — MSW v2, API mocking in Vitest integration tests)
+- `@playwright/test` (devDep — E2E tests)
+
 **Tasks:**
-- Install and configure Vitest with jsdom environment
-- Install `@testing-library/react` and `@testing-library/user-event`
-- Install MSW (Mock Service Worker) for API mocking in integration tests
-- Create `tests/setup.ts` (global test setup, MSW server start/stop)
-- Configure `vitest.config.ts` with path aliases and setup file
-- Install and configure Playwright
-- Create `playwright.config.ts` pointing to `http://localhost:5173`
-- Write one smoke test per layer (unit + e2e) to validate setup
-- Add `test`, `test:watch`, `test:e2e` scripts to `package.json`
+
+*Vitest:*
+- Create `vitest.config.ts`:
+  - `globals: true` (no need to import `describe`/`it`/`expect` in test files)
+  - `environment: 'jsdom'`
+  - `setupFiles: ['./tests/setup.ts']`
+  - Path alias `@` → `src/` (mirror of `vite.config.ts`)
+- Add `"types": ["vitest/globals", "vitest/jsdom"]` to `tsconfig.app.json` `compilerOptions`:
+  - `"vitest/globals"` — fornece `test`, `expect`, `describe`, etc. como globals do TypeScript
+  - `"vitest/jsdom"` — tipagem dos matchers jest-dom (`toBeInTheDocument()`, etc.)
+- Add `"exclude": ["**/node_modules/**", "**/tests/e2e/**"]` ao `vitest.config.ts` para que o Playwright não seja executado pelo Vitest
+
+*MSW:*
+- Create `src/mocks/handlers.ts` (empty array — handlers added per feature)
+- Create `src/mocks/node.ts` — `setupServer(...handlers)` from `msw/node`
+- Create `tests/setup.ts`:
+  ```ts
+  import '@testing-library/jest-dom'
+  import { beforeAll, afterEach, afterAll } from 'vitest'
+  import { server } from '../src/mocks/node'
+  beforeAll(() => server.listen())
+  afterEach(() => server.resetHandlers())
+  afterAll(() => server.close())
+  ```
+
+*Playwright:*
+- Install Playwright browsers: `pnpm exec playwright install --with-deps chromium`
+- Create `playwright.config.ts`:
+  - `testDir: './tests/e2e'`
+  - `use: { baseURL: 'http://localhost:5173' }`
+  - `webServer: { command: 'pnpm dev', url: 'http://localhost:5173', reuseExistingServer: !process.env.CI }`
+
+*Smoke tests (validate setup only — not feature logic):*
+- `src/components/ui/button.test.tsx` — renders Button with label, no crash
+- `tests/e2e/smoke.spec.ts` — navigate to `/dashboard`, expect `<h1>Dashboard</h1>`
+
+*Scripts in `package.json`:*
+- `"test": "vitest"`
+- `"test:watch": "vitest --watch"`
+- `"test:e2e": "playwright test"`
+- `"test:e2e:ui": "playwright test --ui"`
 
 ---
 

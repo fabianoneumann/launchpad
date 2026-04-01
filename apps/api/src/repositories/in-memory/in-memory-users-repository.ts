@@ -17,20 +17,45 @@ export class InMemoryUsersRepository implements UsersRepository {
     page,
     perPage,
     role,
+    search,
+    showDeleted,
   }: {
     page: number
     perPage: number
     role?: Role
+    search?: string
+    showDeleted?: boolean
   }): Promise<User[]> {
     return this.items
-      .filter((item) => item.deleted_at === null && (role ? item.role === role : true))
+      .filter((item) => (showDeleted ? true : item.deleted_at === null))
+      .filter((item) => (role ? item.role === role : true))
+      .filter((item) =>
+        search
+          ? item.name.toLowerCase().includes(search.toLowerCase()) ||
+            item.email.toLowerCase().includes(search.toLowerCase())
+          : true,
+      )
       .slice((page - 1) * perPage, page * perPage)
   }
 
-  async count({ role }: { role?: Role }): Promise<number> {
-    return this.items.filter(
-      (item) => item.deleted_at === null && (role ? item.role === role : true),
-    ).length
+  async count({
+    role,
+    search,
+    showDeleted,
+  }: {
+    role?: Role
+    search?: string
+    showDeleted?: boolean
+  }): Promise<number> {
+    return this.items
+      .filter((item) => (showDeleted ? true : item.deleted_at === null))
+      .filter((item) => (role ? item.role === role : true))
+      .filter((item) =>
+        search
+          ? item.name.toLowerCase().includes(search.toLowerCase()) ||
+            item.email.toLowerCase().includes(search.toLowerCase())
+          : true,
+      ).length
   }
 
   async create(data: Prisma.UserCreateInput): Promise<User> {

@@ -15,22 +15,52 @@ export class PrismaUsersRepository implements UsersRepository {
     page,
     perPage,
     role,
+    search,
+    showDeleted,
   }: {
     page: number
     perPage: number
     role?: Role
+    search?: string
+    showDeleted?: boolean
   }): Promise<User[]> {
     return prisma.user.findMany({
-      where: { deleted_at: null, ...(role ? { role } : {}) },
+      where: {
+        ...(showDeleted ? {} : { deleted_at: null }),
+        ...(role ? { role } : {}),
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' as const } },
+            { email: { contains: search, mode: 'insensitive' as const } },
+          ],
+        }),
+      },
       skip: (page - 1) * perPage,
       take: perPage,
       orderBy: { created_at: 'desc' },
     })
   }
 
-  async count({ role }: { role?: Role }): Promise<number> {
+  async count({
+    role,
+    search,
+    showDeleted,
+  }: {
+    role?: Role
+    search?: string
+    showDeleted?: boolean
+  }): Promise<number> {
     return prisma.user.count({
-      where: { deleted_at: null, ...(role ? { role } : {}) },
+      where: {
+        ...(showDeleted ? {} : { deleted_at: null }),
+        ...(role ? { role } : {}),
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' as const } },
+            { email: { contains: search, mode: 'insensitive' as const } },
+          ],
+        }),
+      },
     })
   }
 

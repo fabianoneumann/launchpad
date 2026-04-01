@@ -13,6 +13,7 @@ const userResponseSchema = z.object({
   name: z.string(),
   email: z.string(),
   role: z.enum(['ADMIN', 'MEMBER', 'USER']),
+  locale: z.string(),
   validated_at: z.date().nullable(),
   deleted_at: z.date().nullable(),
   created_at: z.date(),
@@ -31,6 +32,8 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
         page: z.coerce.number().int().positive().default(1),
         perPage: z.coerce.number().int().positive().default(20),
         role: z.enum(['ADMIN', 'MEMBER', 'USER']).optional(),
+        search: z.string().optional(),
+        showDeleted: z.stringbool().default(false),
       }),
       response: {
         200: z.object({

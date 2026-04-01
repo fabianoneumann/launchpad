@@ -67,4 +67,83 @@ describe('ListUsersService', () => {
     expect(users).toHaveLength(0)
     expect(total).toBe(0)
   })
+
+  it('should filter users by search term matching name', async () => {
+    await repository.create({
+      name: 'Alice Silva',
+      email: 'alice@test.com',
+      password_hash: await hash('123456', 6),
+    })
+    await repository.create({
+      name: 'Bob Souza',
+      email: 'bob@test.com',
+      password_hash: await hash('123456', 6),
+    })
+
+    const { users, total } = await sut.execute({ page: 1, perPage: 20, search: 'alice' })
+
+    expect(users).toHaveLength(1)
+    expect(total).toBe(1)
+    expect(users[0].name).toBe('Alice Silva')
+  })
+
+  it('should filter users by search term matching email', async () => {
+    await repository.create({
+      name: 'Carol',
+      email: 'carol@example.com',
+      password_hash: await hash('123456', 6),
+    })
+    await repository.create({
+      name: 'Dave',
+      email: 'dave@test.com',
+      password_hash: await hash('123456', 6),
+    })
+
+    const { users, total } = await sut.execute({ page: 1, perPage: 20, search: 'example.com' })
+
+    expect(users).toHaveLength(1)
+    expect(total).toBe(1)
+    expect(users[0].email).toBe('carol@example.com')
+  })
+
+  it('should be case-insensitive when filtering by search', async () => {
+    await repository.create({
+      name: 'Eduardo Costa',
+      email: 'eduardo@test.com',
+      password_hash: await hash('123456', 6),
+    })
+
+    const { users } = await sut.execute({ page: 1, perPage: 20, search: 'EDUARDO' })
+
+    expect(users).toHaveLength(1)
+    expect(users[0].name).toBe('Eduardo Costa')
+  })
+
+  it('should return soft-deleted users when showDeleted is true', async () => {
+    const user = await repository.create({
+      name: 'Deleted User',
+      email: 'deleted@test.com',
+      password_hash: await hash('123456', 6),
+    })
+    await repository.delete(user.id)
+
+    const { users, total } = await sut.execute({ page: 1, perPage: 20, showDeleted: true })
+
+    expect(users.some((u) => u.id === user.id)).toBe(true)
+    expect(total).toBeGreaterThanOrEqual(1)
+  })
+
+  it('should not return soft-deleted users when showDeleted is false', async () => {
+    const user = await repository.create({
+      name: 'Hidden User',
+      email: 'hidden@test.com',
+      password_hash: await hash('123456', 6),
+    })
+    await repository.delete(user.id)
+
+    const { users, total } = await sut.execute({ page: 1, perPage: 20, showDeleted: false })
+
+    expect(users.some((u) => u.id === user.id)).toBe(false)
+    expect(total).toBe(0)
+  })
 })

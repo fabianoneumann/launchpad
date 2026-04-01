@@ -22,7 +22,9 @@ const userResponseSchema = z.object({
   email: z.string(),
   role: z.enum(['ADMIN', 'MEMBER', 'USER']),
   locale: z.string(),
+  validated_at: z.date().nullable(),
   created_at: z.date(),
+  updated_at: z.date(),
 })
 
 export const authRoutes: FastifyPluginAsyncZod = async (app) => {

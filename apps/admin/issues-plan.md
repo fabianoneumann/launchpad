@@ -244,6 +244,7 @@ createRoot(document.getElementById('root')!).render(
 ---
 
 ### Issue #5 — [admin] Auth store + HTTP client
+# GitHub: eco-iguassu#20
 **Labels:** admin, frontend, chore
 
 **Goal:** Client-side session state + centralized API client — foundation for all feature development.
@@ -315,6 +316,7 @@ Atualizar `src/app/providers.tsx`: substituir `new QueryClient()` inline (placeh
 ---
 
 ### Issue #6 — [admin] Login page
+# GitHub: eco-iguassu#21
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**
@@ -451,7 +453,8 @@ const decorativeIcons = [
   > Não é necessário `activeOptions={{ exact: false }}` — é o default.
 - Badge "Em breve": `variant="secondary"` com `text-[10px] px-1.5 py-0 font-normal ml-auto`
 - Seção Configurações: `px-3 pb-4 border-t border-sidebar-border pt-4 mt-2`
-- Botão Sair: mesma classe dos links, `w-full`, abre `<ConfirmDialog>` de logout
+- Botão Sair: mesma classe dos links, `w-full`, renderizado como `<button>` simples nesta issue
+  > `ConfirmDialog` ainda não existe — é criado na Issue #8 (Logout), que também conecta a lógica
 
 *TopBar (`src/components/layout/TopBar.tsx`):*
 - `h-14 border-b border-border bg-background/80 backdrop-blur-sm`
@@ -492,7 +495,8 @@ const decorativeIcons = [
 
 **Tasks:**
 - Add `logoutAdmin()` to `auth.api.ts` → `DELETE /auth/logout`
-- Wire logout button in Sidebar (estrutura visual criada na Issue #7): ConfirmDialog → call `logoutAdmin()` → `clearSession()` → redirect to `/login`
+- Create `src/components/shared/ConfirmDialog.tsx` — necessário aqui pela primeira vez; reutilizado nas Issues #12–#14
+- Wire logout button in Sidebar (estrutura criada na Issue #7): `<ConfirmDialog>` → `logoutAdmin()` → `clearSession()` → redirect to `/login`
 - Unit test: logout button triggers confirmation, on confirm calls API and clears session
 
 ---
@@ -591,7 +595,7 @@ em fabianoneumann/admin-compass
 - Create `src/components/shared/LoadingSkeleton.tsx`
 - Create `src/components/shared/RoleBadge.tsx`
 - Create `src/components/shared/StatusBadge.tsx`
-- Create `src/components/shared/ConfirmDialog.tsx`
+- `src/components/shared/ConfirmDialog.tsx` — **já criado na Issue #8**; adicionar unit tests aqui
 - Unit tests for DataTable: renders data, shows skeleton on loading, shows empty state
 
 **Implementação visual — replicar fielmente do admin-compass:**

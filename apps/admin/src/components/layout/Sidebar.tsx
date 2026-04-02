@@ -61,10 +61,10 @@ function SidebarContent() {
       <nav className="flex-1 px-3 space-y-6 overflow-y-auto">
         {navSections.map((section) => (
           <div key={section.label}>
-            <p className="px-3 mb-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <p className="px-3 mb-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
               {section.label}
             </p>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {section.items.map((item) =>
                 item.disabled || !item.to ? (
                   <span
@@ -73,7 +73,10 @@ function SidebarContent() {
                   >
                     <item.icon className="h-4 w-4" />
                     {item.label}
-                    <Badge variant="secondary" className="ml-auto text-xs">
+                    <Badge
+                      variant="secondary"
+                      className="ml-auto text-[10px] px-1.5 py-0 font-normal"
+                    >
                       Em breve
                     </Badge>
                   </span>
@@ -95,20 +98,25 @@ function SidebarContent() {
       </nav>
 
       <div className="px-3 pb-4 border-t border-sidebar-border pt-4 mt-2">
-        <button className={`${linkBase} w-full`} onClick={() => setConfirmOpen(true)}>
-          <LogOut className="h-4 w-4" />
-          Sair
-        </button>
-        <ConfirmDialog
-          open={confirmOpen}
-          onOpenChange={setConfirmOpen}
-          title="Confirmar saída"
-          description="Tem certeza que deseja sair do painel?"
-          confirmLabel="Sair"
-          variant="destructive"
-          onConfirm={handleLogout}
-        />
+        <p className="px-3 mb-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+          Configurações
+        </p>
+        <div className="space-y-0.5">
+          <button className={`${linkBase} w-full`} onClick={() => setConfirmOpen(true)}>
+            <LogOut className="h-4 w-4" />
+            Sair
+          </button>
+        </div>
       </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Confirmar saída"
+        description="Tem certeza que deseja sair do painel?"
+        confirmLabel="Sair"
+        variant="destructive"
+        onConfirm={handleLogout}
+      />
     </div>
   )
 }

@@ -19,7 +19,7 @@ export function PageLayout({ breadcrumbs, title, actions, children }: PageLayout
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
           {breadcrumbs && breadcrumbs.length > 0 && (
-            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
+            <nav className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
               {breadcrumbs.map((crumb, i) => (
                 <span key={i} className="flex items-center gap-1">
                   {i > 0 && <ChevronRight className="h-3 w-3" />}
@@ -28,11 +28,11 @@ export function PageLayout({ breadcrumbs, title, actions, children }: PageLayout
                       {crumb.label}
                     </a>
                   ) : (
-                    <span>{crumb.label}</span>
+                    <span className="text-foreground">{crumb.label}</span>
                   )}
                 </span>
               ))}
-            </div>
+            </nav>
           )}
           <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
         </div>

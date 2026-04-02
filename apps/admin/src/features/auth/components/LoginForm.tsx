@@ -89,26 +89,34 @@ export function LoginForm() {
       {/* Painel direito — formulário */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-10 bg-background">
         <div className="w-full max-w-sm space-y-8">
-          <div>
-            <h1 className="text-2xl font-bold">Entrar</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Acesse o painel com suas credenciais
+          <div className="space-y-2">
+            <p className="text-lg font-bold text-foreground">eco-iguassu</p>
+            <h1 className="text-2xl font-bold tracking-tight">Entrar no painel</h1>
+            <p className="text-sm text-muted-foreground">
+              Acesse com suas credenciais de administrador
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" autoComplete="email" {...register('email')} />
-              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+              <Input
+                id="email"
+                type="email"
+                placeholder="admin@exemplo.com"
+                autoComplete="email"
+                {...register('email')}
+              />
+              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••"
                   autoComplete="current-password"
                   {...register('password')}
                 />
@@ -122,17 +130,8 @@ export function LoginForm() {
                 </button>
               </div>
               {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
+                <p className="text-xs text-destructive">{errors.password.message}</p>
               )}
-            </div>
-
-            <div className="flex justify-end">
-              <a
-                href="/forgot-password"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                Esqueci minha senha
-              </a>
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -140,6 +139,15 @@ export function LoginForm() {
               Entrar
             </Button>
           </form>
+
+          <div className="text-center">
+            <a
+              href="/forgot-password"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Esqueci minha senha
+            </a>
+          </div>
         </div>
       </div>
     </div>

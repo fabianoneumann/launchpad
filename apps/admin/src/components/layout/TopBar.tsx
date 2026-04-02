@@ -9,13 +9,14 @@ interface TopBarProps {
 
 export function TopBar({ onMenuClick }: TopBarProps) {
   const user = useAuthStore((s) => s.user)
-  const initials =
-    user?.name
-      .split(' ')
-      .slice(0, 2)
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase() ?? ''
+  const initials = user?.name
+    ? user.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : 'AD'
 
   return (
     <header className="h-14 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-30 flex items-center justify-between px-4 lg:px-6">
@@ -28,7 +29,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
           <div className="h-8 w-8 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-semibold">
             {initials}
           </div>
-          <span className="text-sm font-medium hidden sm:inline">{user?.name}</span>
+          <span className="text-sm font-medium hidden sm:inline">{user?.name ?? 'Admin'}</span>
         </div>
       </div>
     </header>

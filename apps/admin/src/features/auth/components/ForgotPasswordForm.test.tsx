@@ -22,7 +22,7 @@ describe('ForgotPasswordForm — validação', () => {
 
     render(<ForgotPasswordForm />)
     await userEvent.type(screen.getByLabelText('E-mail'), 'nao-e-email')
-    await userEvent.click(screen.getByRole('button', { name: /enviar link/i }))
+    await userEvent.click(screen.getByRole('button', { name: /enviar instruções/i }))
 
     await waitFor(() => {
       expect(screen.getByText('E-mail inválido')).toBeInTheDocument()
@@ -41,10 +41,10 @@ describe('ForgotPasswordForm — submit bem-sucedido', () => {
 
     render(<ForgotPasswordForm />)
     await userEvent.type(screen.getByLabelText('E-mail'), 'admin@test.com')
-    await userEvent.click(screen.getByRole('button', { name: /enviar link/i }))
+    await userEvent.click(screen.getByRole('button', { name: /enviar instruções/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/receberá um link de recuperação/i)).toBeInTheDocument()
+      expect(screen.getByText(/receberá as instruções/i)).toBeInTheDocument()
     })
     expect(screen.queryByLabelText('E-mail')).not.toBeInTheDocument()
   })

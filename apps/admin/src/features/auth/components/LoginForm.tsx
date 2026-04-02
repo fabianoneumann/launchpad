@@ -128,7 +128,7 @@ export function LoginForm() {
 
             <div className="flex justify-end">
               <a
-                href="/auth/password/forgot"
+                href="/forgot-password"
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 Esqueci minha senha

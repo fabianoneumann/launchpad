@@ -17,3 +17,7 @@ export async function getProfile() {
 export async function logoutAdmin() {
   await api.delete('/auth/logout')
 }
+
+export async function forgotPassword(email: string) {
+  await api.post('/auth/password/forgot', { email })
+}

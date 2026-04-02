@@ -536,12 +536,13 @@ logoutAdmin().catch(() => {}) // fire-and-forget; falha silenciosa
 
 **Tasks:**
 - Create `src/app/routes/forgot-password.tsx`
+- Add `forgotPassword(email)` to `src/features/auth/api/auth.api.ts` → `POST /auth/password/forgot`
 - Create `src/features/auth/components/ForgotPasswordForm.tsx`:
   - React Hook Form + Zod (email required)
-  - On submit: `POST /auth/password/forgot`
-  - Success state: inline confirmation message (API always returns 204)
+  - On submit: `forgotPassword(email)`
+  - Success state: sempre exibido após submit — API retorna 204 independente de o e-mail existir (segurança)
   - Link back to `/login`
-- Unit test: form shows validation error, renders success state after submit
+- Unit test: form shows validation error; renders success state after submit (mock retorna 204)
 
 **Implementação visual — replicar fielmente do admin-compass:**
 
@@ -574,16 +575,26 @@ logoutAdmin().catch(() => {}) // fire-and-forget; falha silenciosa
 **Depends on:** Issue #9 (forgot password sends the email with the link pointing to this route)
 
 **Tasks:**
-- Create `src/app/routes/reset-password.tsx`
-- Extract `token` from URL search params using TanStack Router `useSearch`
+- Create `src/app/routes/reset-password.tsx`:
+  - Declarar `validateSearch` com Zod para tipar o search param — padrão obrigatório do TanStack Router:
+    ```ts
+    export const Route = createFileRoute('/reset-password')({
+      validateSearch: z.object({
+        token: z.string().catch(''),
+      }),
+    })
+    // No componente: const { token } = Route.useSearch()
+    ```
+  - `.catch('')` garante que token ausente vira string vazia (sem erro de runtime)
+  - Se `token` for vazio ao montar, exibir estado de erro imediatamente sem aguardar submit
+- Add `resetPassword(token, newPassword)` to `src/features/auth/api/auth.api.ts` → `PATCH /auth/password/reset`
 - Create `src/features/auth/components/ResetPasswordForm.tsx`:
-  - Fields: nova senha (min 6) + confirmar nova senha (Zod refine for match)
-  - On submit: `PATCH /auth/password/reset` with `{ token, newPassword }`
+  - Fields: nova senha (min 6) + confirmar nova senha (Zod `.refine` para validar match)
+  - On submit: `resetPassword(token, newPassword)`
   - Success state: inline confirmation + link to `/login`
-  - Error state (400): "Link inválido ou expirado" + link to `/forgot-password`
-- Add `resetPassword(token, newPassword)` to `auth.api.ts`
-- Unit test: validation errors shown, success state rendered, error state rendered on 400
-- E2E test: valid token → password changed → redirect to /login
+  - Error state (400 ou token vazio): "Link inválido ou expirado" + link to `/forgot-password`
+- Unit test: validation errors shown; success state rendered on 200; error state rendered on 400; error state rendered imediatamente se token vazio
+- E2E test: valid token (seedado no DB) → password changed → redirect to /login
 
 **Implementação visual:**
 - Seguir o mesmo padrão visual de ForgotPassword (Issue #9): `Card w-full max-w-md`, `CardHeader text-center`, estados inline de sucesso e erro

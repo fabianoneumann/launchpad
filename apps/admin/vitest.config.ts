@@ -12,5 +12,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     exclude: ['**/node_modules/**', '**/tests/e2e/**'],
+    env: {
+      VITE_API_URL: 'http://localhost:3333',
+    },
   },
 })

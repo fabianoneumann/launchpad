@@ -525,6 +525,7 @@ logoutAdmin().catch(() => {}) // fire-and-forget; falha silenciosa
 ---
 
 ### Issue #9 — [admin] Forgot password page
+# GitHub: eco-iguassu#24
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**
@@ -565,6 +566,7 @@ logoutAdmin().catch(() => {}) // fire-and-forget; falha silenciosa
 ---
 
 ### Issue #10 — [admin] Reset password page
+# GitHub: eco-iguassu#25
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**

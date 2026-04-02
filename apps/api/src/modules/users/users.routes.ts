@@ -4,6 +4,7 @@ import { verifyJWT } from '@/shared/middlewares/verify-jwt'
 import { verifyUserRole } from '@/shared/middlewares/verify-user-role'
 import { listUsersController } from './list-users.controller'
 import { createUserController } from './create-user.controller'
+import { getUsersStatsController } from './get-users-stats.controller'
 import { getUserController } from './get-user.controller'
 import { updateUserController } from './update-user.controller'
 import { changeUserRoleController } from './change-user-role.controller'
@@ -62,6 +63,26 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     handler: createUserController,
+  })
+
+  app.route({
+    method: 'GET',
+    url: '/users/stats',
+    schema: {
+      response: {
+        200: z.object({
+          total: z.number(),
+          active: z.number(),
+          unvalidated: z.number(),
+          byRole: z.object({
+            ADMIN: z.number(),
+            MEMBER: z.number(),
+            USER: z.number(),
+          }),
+        }),
+      },
+    },
+    handler: getUsersStatsController,
   })
 
   app.route({

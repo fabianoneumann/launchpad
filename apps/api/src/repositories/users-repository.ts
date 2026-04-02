@@ -1,5 +1,12 @@
 import type { Prisma, Role, User } from '@/generated/prisma/client'
 
+export interface UserStats {
+  total: number
+  active: number
+  unvalidated: number
+  byRole: { ADMIN: number; MEMBER: number; USER: number }
+}
+
 export interface UsersRepository {
   findById(id: string): Promise<User | null>
   findByEmail(email: string): Promise<User | null>
@@ -21,4 +28,5 @@ export interface UsersRepository {
   update(id: string, data: Prisma.UserUpdateInput): Promise<User>
   delete(id: string): Promise<void>
   incrementTokenVersion(id: string): Promise<void>
+  stats(): Promise<UserStats>
 }

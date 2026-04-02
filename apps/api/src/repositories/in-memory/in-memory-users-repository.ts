@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { Prisma, Role, User } from '@/generated/prisma/client'
-import type { UsersRepository } from '@/repositories/users-repository'
+import type { UserStats, UsersRepository } from '@/repositories/users-repository'
 
 export class InMemoryUsersRepository implements UsersRepository {
   public items: User[] = []
@@ -118,6 +118,20 @@ export class InMemoryUsersRepository implements UsersRepository {
     const index = this.items.findIndex((item) => item.id === id)
     if (index !== -1) {
       this.items[index].token_version += 1
+    }
+  }
+
+  async stats(): Promise<UserStats> {
+    const items = this.items
+    return {
+      total: items.length,
+      active: items.filter((u) => u.deleted_at === null).length,
+      unvalidated: items.filter((u) => u.validated_at === null && u.deleted_at === null).length,
+      byRole: {
+        ADMIN: items.filter((u) => u.role === 'ADMIN' && u.deleted_at === null).length,
+        MEMBER: items.filter((u) => u.role === 'MEMBER' && u.deleted_at === null).length,
+        USER: items.filter((u) => u.role === 'USER' && u.deleted_at === null).length,
+      },
     }
   }
 }

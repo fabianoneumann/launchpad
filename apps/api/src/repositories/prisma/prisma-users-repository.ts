@@ -1,6 +1,6 @@
 import type { Prisma, Role, User } from '@/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
-import type { UsersRepository } from '@/repositories/users-repository'
+import type { UserStats, UsersRepository } from '@/repositories/users-repository'
 
 export class PrismaUsersRepository implements UsersRepository {
   async findById(id: string): Promise<User | null> {
@@ -94,5 +94,23 @@ export class PrismaUsersRepository implements UsersRepository {
 
   async incrementTokenVersion(id: string): Promise<void> {
     await prisma.user.update({ where: { id }, data: { token_version: { increment: 1 } } })
+  }
+
+  async stats(): Promise<UserStats> {
+    const [total, active, unvalidated, admins, members, users] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { deleted_at: null } }),
+      prisma.user.count({ where: { validated_at: null, deleted_at: null } }),
+      prisma.user.count({ where: { role: 'ADMIN', deleted_at: null } }),
+      prisma.user.count({ where: { role: 'MEMBER', deleted_at: null } }),
+      prisma.user.count({ where: { role: 'USER', deleted_at: null } }),
+    ])
+
+    return {
+      total,
+      active,
+      unvalidated,
+      byRole: { ADMIN: admins, MEMBER: members, USER: users },
+    }
   }
 }

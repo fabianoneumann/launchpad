@@ -19,15 +19,21 @@ export class InMemoryUsersRepository implements UsersRepository {
     role,
     search,
     showDeleted,
+    onlyDeleted,
   }: {
     page: number
     perPage: number
     role?: Role
     search?: string
     showDeleted?: boolean
+    onlyDeleted?: boolean
   }): Promise<User[]> {
     return this.items
-      .filter((item) => (showDeleted ? true : item.deleted_at === null))
+      .filter((item) => {
+        if (onlyDeleted) return item.deleted_at !== null
+        if (showDeleted) return true
+        return item.deleted_at === null
+      })
       .filter((item) => (role ? item.role === role : true))
       .filter((item) =>
         search
@@ -42,13 +48,19 @@ export class InMemoryUsersRepository implements UsersRepository {
     role,
     search,
     showDeleted,
+    onlyDeleted,
   }: {
     role?: Role
     search?: string
     showDeleted?: boolean
+    onlyDeleted?: boolean
   }): Promise<number> {
     return this.items
-      .filter((item) => (showDeleted ? true : item.deleted_at === null))
+      .filter((item) => {
+        if (onlyDeleted) return item.deleted_at !== null
+        if (showDeleted) return true
+        return item.deleted_at === null
+      })
       .filter((item) => (role ? item.role === role : true))
       .filter((item) =>
         search

@@ -610,6 +610,7 @@ logoutAdmin().catch(() => {}) // fire-and-forget; falha silenciosa
 ---
 
 ### Issue #11 — [admin] Shared DataTable component
+# GitHub: eco-iguassu#26
 **Labels:** admin, frontend, chore
 
 **Goal:** Generic, reusable paginated table using TanStack Table.
@@ -634,16 +635,75 @@ em fabianoneumann/admin-compass
 - `src/components/shared/ConfirmDialog.tsx` — **já criado na Issue #8**; adicionar unit tests: renders title/description, calls onConfirm on confirm, does not call onConfirm on cancel
 - Unit tests for DataTable: renders data, shows skeleton on loading, shows empty state
 
+> **Nota sobre admin-compass:** O `DataTable.tsx` do admin-compass **não usa `@tanstack/react-table`** —
+> é uma implementação customizada com paginação client-side (`data.slice()`), pois os dados são todos
+> em memória (mocks). Nosso projeto recebe dados paginados da API e precisa de paginação server-side:
+> `manualPagination: true`. Não replicar o padrão de colunas do admin-compass (`{ key, header, render }`);
+> usar `ColumnDef<T>[]` do TanStack Table.
+
+**Interface e implementação do DataTable:**
+
+```tsx
+interface DataTableProps<T> {
+  columns: ColumnDef<T>[]
+  data: T[]
+  isLoading?: boolean
+  rowCount?: number          // total de registros da API — TanStack calcula pageCount internamente
+  pagination?: {
+    page: number             // 1-based (UI) — convertido para pageIndex = page - 1 internamente
+    pageSize: number
+    onPageChange: (page: number) => void
+  }
+  rowClassName?: (row: T) => string
+  emptyState?: React.ReactNode
+}
+```
+
+Setup interno com `useReactTable`:
+```tsx
+const table = useReactTable({
+  data,
+  columns,
+  getCoreRowModel: getCoreRowModel(),
+  manualPagination: true,
+  rowCount,                  // habilita cálculo de pageCount; requer TanStack Table v8.13+
+  state: {
+    pagination: {
+      pageIndex: (pagination?.page ?? 1) - 1,
+      pageSize: pagination?.pageSize ?? 10,
+    },
+  },
+  onPaginationChange: (updater) => {
+    const next = typeof updater === 'function'
+      ? updater({ pageIndex: (pagination?.page ?? 1) - 1, pageSize: pagination?.pageSize ?? 10 })
+      : updater
+    pagination?.onPageChange(next.pageIndex + 1)
+  },
+})
+```
+
+Renderização das linhas via `flexRender`:
+```tsx
+{table.getRowModel().rows.map((row) => (
+  <TableRow key={row.id} className={rowClassName?.(row.original)}>
+    {row.getVisibleCells().map((cell) => (
+      <TableCell key={cell.id}>
+        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      </TableCell>
+    ))}
+  </TableRow>
+))}
+```
+
 **Implementação visual — replicar fielmente do admin-compass:**
 
 *DataTable:*
 - Wrapper da tabela: `rounded-md border` (usa o componente `<Table>` do shadcn)
-- Paginação (aparece apenas quando `totalPages > 1`):
+- Paginação (aparece apenas quando `rowCount > pageSize`, ou seja, há mais de uma página):
   - `flex items-center justify-between mt-4 px-1`
-  - Contador: `text-sm text-muted-foreground` — "Página X de Y"
+  - Contador: `text-sm text-muted-foreground` — "Página X de Y" (Y = `table.getPageCount()`)
   - Botões Anterior/Próxima: `variant="outline" size="sm"`
-- Props: `columns`, `data`, `isLoading`, `pagination`, `rowClassName`, `emptyState`
-- `rowClassName`: função `(row) => string` aplicada a cada `<TableRow>` — usada para `opacity-50` em linhas deletadas
+- `rowClassName`: função `(row: T) => string` aplicada a cada `<TableRow>` — usada para `opacity-50` em linhas deletadas
 
 *RoleBadge — `Badge variant="outline"` com classes específicas por role:*
 ```tsx
@@ -680,6 +740,7 @@ const roleConfig = {
 ---
 
 ### Issue #12 — [admin] Users list page
+# GitHub: eco-iguassu#28
 **Labels:** admin, frontend, users, feature
 
 **User stories:**
@@ -692,17 +753,46 @@ const roleConfig = {
 **Tasks:**
 - Create `src/app/routes/_layout/users/index.tsx`
 - Create `src/features/users/api/users.api.ts`:
-  - `listUsers({ page, perPage, role?, status? })` → `GET /users`
+  - `listUsers({ page, perPage, role?, search?, showDeleted?, onlyDeleted? })` → `GET /users`
+  > `onlyDeleted` adicionado pela eco-iguassu#27 (implementada antes desta issue)
 - Create `src/features/users/hooks/useUsers.ts`:
   - TanStack Query `useQuery` wrapping `listUsers`
-  - Manage `page`, `perPage`, `role`, `status` as URL search params
+  - Manage `page`, `perPage`, `role`, `search`, `status` as URL search params
     (TanStack Router `useSearch` — preserves filters on back navigation)
-- Columns: Nome, Email, Perfil (RoleBadge), Validado (icon), Status (StatusBadge),
-  Criado em, Ações (Ver, Editar, Excluir)
-- Filters: search input (name/email), role select, status toggle (Ativos/Deletados/Todos)
+  - `status` é um valor de UI (`'active' | 'deleted' | 'all'`) mapeado para os params da API:
+    ```ts
+    const apiParams = {
+      page, perPage, role, search,
+      showDeleted: status === 'all' || status === 'deleted',
+      onlyDeleted: status === 'deleted',
+    }
+    ```
+- Declarar `validateSearch` com Zod na rota — padrão obrigatório do TanStack Router para search params tipados:
+  ```ts
+  export const Route = createFileRoute('/_layout/users/')({
+    validateSearch: z.object({
+      page:    z.number().int().positive().catch(1),
+      perPage: z.number().int().positive().catch(10),
+      role:    z.enum(['ADMIN', 'MEMBER', 'USER']).optional().catch(undefined),
+      search:  z.string().optional().catch(undefined),
+      status:  z.enum(['active', 'deleted', 'all']).catch('active'),
+    }),
+  })
+  // No hook: const { page, perPage, role, search, status } = Route.useSearch()
+  ```
+- Define `ColumnDef<User>[]` para o DataTable (formato TanStack Table — não o `{ key, header }` do admin-compass):
+  - `nome`: `accessorKey: 'name'`, cell renderiza o texto
+  - `email`: `accessorKey: 'email'`
+  - `perfil`: `accessorKey: 'role'`, cell renderiza `<RoleBadge>`
+  - `validado`: cell verifica `row.original.validated_at`, renderiza `<CheckCircle2>` ou `<XCircle>`
+  - `status`: cell verifica `row.original.deleted_at`, renderiza `<StatusBadge>`
+  - `criado em`: `accessorKey: 'created_at'`, cell formata a data
+  - `ações`: sem `accessorKey`, cell renderiza botões Ver / Editar / Excluir
+- Filters: search input (name/email), role select, status select (Ativos / Somente deletados / Todos)
+  > Requer eco-iguassu#27 (`onlyDeleted`) — implementado antes desta issue
 - Deleted rows: opacity-50
 - Action button "+ Novo Usuário" → opens Create User modal (Issue #13)
-- Row actions: Ver → `/users/:id`, Editar → inline edit modal, Excluir → ConfirmDialog
+- Row actions: Ver → `/users/:id`, Editar → `/users/:id` (mesma rota — edição inline no card da Issue #14), Excluir → ConfirmDialog
 - Unit test: filters update URL search params, table renders with mocked API response (MSW)
 
 **Implementação visual — replicar fielmente do admin-compass:**
@@ -721,7 +811,7 @@ const roleConfig = {
 - Excluir: `variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"` — oculto se `row.deletedAt`
 
 *DataTable:*
-- `rowClassName={(row) => row.deletedAt ? "opacity-50" : ""}` para linhas deletadas
+- `rowClassName={(row) => row.deleted_at ? "opacity-50" : ""}` para linhas deletadas
 - `emptyState={<EmptyState title="..." description="..." actionLabel="Novo Usuário" onAction={...} />}`
 
 ---
@@ -734,24 +824,32 @@ const roleConfig = {
 
 **Goal:** Admin can create a new user directly from the users list.
 
+**Depends on:** eco-iguassu#29 (`POST /users` — implementar antes desta issue)
+
 **Tasks:**
+- Add `createUser({ name, email, password, role })` to `src/features/users/api/users.api.ts` → `POST /users`
 - Create `src/features/users/components/CreateUserModal.tsx`:
-  - Fields: Nome (required), Email (required, valid email), Perfil (select: User/Member/Admin)
+  - Fields: Nome (required), Email (required, valid email), Senha (required, min 6), Perfil (select: User/Member/Admin)
   - React Hook Form + Zod validation
-  - On submit: `POST /auth/register` (existing endpoint — no dedicated admin create endpoint yet)
+  - On submit: `createUser({ name, email, password, role })`
   - Success: close modal, invalidate `users` query, success toast
-  - Error: show error toast, keep modal open
-- Unit test: validation errors shown, modal closes on success
+  - Error 409: toast "E-mail já cadastrado", keep modal open
+  - Other errors: toast genérico, keep modal open
+- Unit test: validation errors shown, modal closes on success, 409 shows correct toast
+  > Conta criada via `POST /users` já é pré-validada (`validated_at` definido no servidor) —
+  > sem fluxo de verificação de e-mail nem e-mail de boas-vindas
 
 **Implementação visual:**
 - Usa `<Dialog>` do shadcn (não AlertDialog)
 - `<DialogContent>` → `<DialogHeader>` → `<DialogTitle>` "Novo Usuário"
 - Campos em `space-y-4`, labels + inputs + mensagens de erro `text-xs text-destructive`
+- Campos: Nome, Email, Senha (`type="password"`), Perfil (Select)
 - `<DialogFooter>`: botão "Cancelar" `variant="outline"` + botão "Criar Usuário" com `<Loader2 animate-spin>` enquanto submete
 
 ---
 
 ### Issue #14 — [admin] User detail page
+# GitHub: eco-iguassu#30
 **Labels:** admin, frontend, users, feature
 
 **User stories:**
@@ -772,8 +870,9 @@ const roleConfig = {
   - `deleteUser(id)` → `DELETE /users/:id`
 - Create `src/features/users/hooks/`:
   - `useUser(id)` — TanStack Query useQuery
-  - `useUpdateUser()`, `useChangeUserRole()`, `useDeleteUser()` — useMutation com
-    query invalidation e toast feedback
+  - `useUpdateUser()`, `useChangeUserRole()` — useMutation com query invalidation e toast feedback
+  - `useDeleteUser()` — useMutation: sucesso → toast + invalidate lista `['users']` + navigate para `/users`
+    (a detail page não deve permanecer aberta após exclusão — `GET /users/:id` retorna 404 para usuários deletados)
 - Unit test: page renders user data, delete triggers confirmation
 
 **Implementação visual — replicar fielmente do admin-compass:**
@@ -784,7 +883,7 @@ const roleConfig = {
 
 *Card "Informações" (modo visualização):*
 - `<CardHeader className="flex flex-row items-center justify-between">`
-- Botões: "Editar" `variant="outline" size="sm"` com `<Pencil h-3.5 w-3.5 mr-1>`, "Alterar Perfil" com `<ShieldCheck>`, "Excluir" com `text-destructive hover:text-destructive` (oculto se `deletedAt`)
+- Botões: "Editar" `variant="outline" size="sm"` com `<Pencil h-3.5 w-3.5 mr-1>`, "Alterar Perfil" com `<ShieldCheck>`, "Excluir" com `text-destructive hover:text-destructive` (oculto se `deleted_at`)
 - `<dl className="space-y-3 text-sm">` com itens `flex justify-between`
 - Labels: `<dt className="text-muted-foreground">`, valores: `<dd>`
 - ID: `<dd className="font-mono text-xs">`
@@ -812,6 +911,7 @@ const roleConfig = {
 ---
 
 ### Issue #15 — [admin] Dashboard page
+# GitHub: eco-iguassu#32
 **Labels:** admin, frontend, feature
 
 **User stories:**
@@ -821,16 +921,22 @@ const roleConfig = {
 
 **Referência de implementação:** `src/pages/Dashboard.tsx` em fabianoneumann/admin-compass
 
+**Depends on:** eco-iguassu#31 (`GET /users/stats` — implementar antes desta issue)
+
 **Tasks:**
 - Create `src/app/routes/_layout/dashboard/index.tsx`
+- Create `src/features/dashboard/api/dashboard.api.ts`:
+  - `getDashboardStats()` → `GET /users/stats` → returns `{ total, active, unvalidated, byRole }`
+  > Todos os contadores são calculados no servidor — sem agregação client-side
 - Create `src/features/dashboard/hooks/useDashboardStats.ts`:
-  - Calls `GET /users?perPage=100` (aggregate client-side — no dedicated stats endpoint)
-  - Derives: total, active (deletedAt null), unvalidated (validatedAt null), by role count
+  - TanStack Query `useQuery` wrapping `getDashboardStats()`
 - Install Recharts
 - Summary cards: Total de Usuários, Usuários Ativos, Não Validados, Administradores
 - Bar chart: mock "Novos usuários por mês" (last 6 months — static until API has date filtering)
-- Recent users table: last 5 users from the list (reuse DataTable)
-- Unit test: stats derived correctly from mock user list
+- Recent users table: last 5 users — `GET /users?perPage=5&showDeleted=false` (ativos, ordenados por `created_at desc`)
+  - `ColumnDef<User>[]`: `nome` (`accessorKey: 'name'`), `email`, `perfil` (cell → `<RoleBadge>`), `criado em` (cell formata data)
+  - Reutilizar `DataTable` sem prop `pagination`
+- Unit test: cards renderizam com valores mockados do `useDashboardStats`
 
 **Implementação visual — replicar fielmente do admin-compass:**
 
@@ -862,11 +968,13 @@ const roleConfig = {
 
 *Card de usuários recentes:*
 - `<CardTitle className="text-base">` "Usuários Recentes"
-- Colunas: Nome, Email, Perfil (RoleBadge), Criado em — reutilizar DataTable com `pageSize={5}`
+- Colunas: Nome, Email, Perfil (RoleBadge), Criado em — reutilizar `DataTable` sem prop `pagination`
+  (sem controles de paginação — apenas os 5 registros retornados pela API)
 
 ---
 
 ### Issue #16 — [admin] Profile page
+# GitHub: eco-iguassu#33
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**
@@ -885,10 +993,21 @@ const roleConfig = {
   > `getProfile()` already defined in Issue #6 — reuse for `useProfile()` hook
 - Create `src/features/auth/hooks/`:
   - `useProfile()` — TanStack Query useQuery
-  - `useUpdateProfile()`, `useChangePassword()` — useMutation with toast feedback
-- On password change success: clear session and redirect to `/login`
-  (API invalidates token_version — all sessions revoked)
-- Unit test: name update calls API, password mismatch shows inline error
+  - `useUpdateProfile()` — useMutation: sucesso → `useAuthStore.getState().updateName(name)` (atualiza TopBar imediatamente) + `queryClient.invalidateQueries({ queryKey: ['profile'] })` + toast
+  - `useChangePassword()` — useMutation:
+    - Sucesso (204): `clearSession()` + navigate para `/login` (token_version incrementado — todas as sessões revogadas)
+    - Erro 401: exibir erro **inline no formulário** — "Senha atual incorreta" (não toast)
+      > `PATCH /auth/me/password` retorna 401 quando a senha atual está errada (`InvalidCredentialsError`).
+      > O interceptor Axios da Issue #5 captura todos os 401 e tenta refresh — o que causaria logout
+      > indevido. Solução: excluir esta URL da lógica de retry no interceptor:
+      > ```ts
+      > // lib/api/client.ts — no response interceptor, antes de tentar refresh:
+      > const SKIP_REFRESH_URLS = ['/auth/me/password']
+      > if (SKIP_REFRESH_URLS.some((url) => originalRequest.url?.includes(url))) {
+      >   return Promise.reject(error) // deixa o erro chegar ao useChangePassword normalmente
+      > }
+      > ```
+- Unit test: name update calls API; wrong current password shows inline error; success clears session
 
 **Implementação visual — replicar fielmente do admin-compass:**
 
@@ -910,6 +1029,7 @@ const roleConfig = {
 ---
 
 ### Issue #17 — [admin] Error pages (404 and 403)
+# GitHub: eco-iguassu#34
 **Labels:** admin, frontend, chore
 
 **Goal:** Consistent error pages for not found and forbidden routes.

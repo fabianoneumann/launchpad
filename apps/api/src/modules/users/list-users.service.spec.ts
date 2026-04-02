@@ -133,6 +133,47 @@ describe('ListUsersService', () => {
     expect(total).toBeGreaterThanOrEqual(1)
   })
 
+  it('should return only deleted users when onlyDeleted is true', async () => {
+    const active = await repository.create({
+      name: 'Active User',
+      email: 'active@test.com',
+      password_hash: await hash('123456', 6),
+    })
+    const deleted = await repository.create({
+      name: 'Deleted User',
+      email: 'deleted@test.com',
+      password_hash: await hash('123456', 6),
+    })
+    await repository.delete(deleted.id)
+
+    const { users, total } = await sut.execute({ page: 1, perPage: 20, onlyDeleted: true })
+
+    expect(users).toHaveLength(1)
+    expect(total).toBe(1)
+    expect(users[0].id).toBe(deleted.id)
+    expect(users.some((u) => u.id === active.id)).toBe(false)
+  })
+
+  it('should return only deleted users when onlyDeleted is true even if showDeleted is false', async () => {
+    const deleted = await repository.create({
+      name: 'Deleted User 2',
+      email: 'deleted2@test.com',
+      password_hash: await hash('123456', 6),
+    })
+    await repository.delete(deleted.id)
+
+    const { users, total } = await sut.execute({
+      page: 1,
+      perPage: 20,
+      onlyDeleted: true,
+      showDeleted: false,
+    })
+
+    expect(users).toHaveLength(1)
+    expect(total).toBe(1)
+    expect(users[0].id).toBe(deleted.id)
+  })
+
   it('should not return soft-deleted users when showDeleted is false', async () => {
     const user = await repository.create({
       name: 'Hidden User',

@@ -9,8 +9,14 @@ export interface UsersRepository {
     role?: Role
     search?: string
     showDeleted?: boolean
+    onlyDeleted?: boolean
   }): Promise<User[]>
-  count(params: { role?: Role; search?: string; showDeleted?: boolean }): Promise<number>
+  count(params: {
+    role?: Role
+    search?: string
+    showDeleted?: boolean
+    onlyDeleted?: boolean
+  }): Promise<number>
   create(data: Prisma.UserCreateInput): Promise<User>
   update(id: string, data: Prisma.UserUpdateInput): Promise<User>
   delete(id: string): Promise<void>

@@ -122,6 +122,38 @@ describe('List Users E2E', () => {
     expect(response.body.total).toBe(0)
   })
 
+  it('should return only soft-deleted users when onlyDeleted=true', async () => {
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
+    const token = loginResponse.body.token
+
+    const response = await request(app.server)
+      .get('/users?search=Deleted+Person&onlyDeleted=true')
+      .set('Authorization', `Bearer ${token}`)
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body.users).toHaveLength(1)
+    expect(response.body.users[0].email).toBe(deletedEmail)
+    expect(response.body.total).toBe(1)
+    expect(response.body.users[0].deleted_at).not.toBeNull()
+  })
+
+  it('should return only soft-deleted users when onlyDeleted=true and showDeleted=false', async () => {
+    const loginResponse = await request(app.server)
+      .post('/auth/login')
+      .send({ email: adminEmail, password: '123456' })
+    const token = loginResponse.body.token
+
+    const response = await request(app.server)
+      .get('/users?search=Deleted+Person&onlyDeleted=true&showDeleted=false')
+      .set('Authorization', `Bearer ${token}`)
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body.users).toHaveLength(1)
+    expect(response.body.users[0].email).toBe(deletedEmail)
+  })
+
   it('should return soft-deleted users when showDeleted=true', async () => {
     const loginResponse = await request(app.server)
       .post('/auth/login')

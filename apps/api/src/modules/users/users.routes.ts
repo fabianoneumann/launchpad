@@ -34,6 +34,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
         role: z.enum(['ADMIN', 'MEMBER', 'USER']).optional(),
         search: z.string().optional(),
         showDeleted: z.stringbool().default(false),
+        onlyDeleted: z.stringbool().default(false),
       }),
       response: {
         200: z.object({

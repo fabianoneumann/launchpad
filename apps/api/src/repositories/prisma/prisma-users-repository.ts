@@ -17,16 +17,24 @@ export class PrismaUsersRepository implements UsersRepository {
     role,
     search,
     showDeleted,
+    onlyDeleted,
   }: {
     page: number
     perPage: number
     role?: Role
     search?: string
     showDeleted?: boolean
+    onlyDeleted?: boolean
   }): Promise<User[]> {
+    const deletedFilter = onlyDeleted
+      ? { deleted_at: { not: null } }
+      : showDeleted
+        ? {}
+        : { deleted_at: null }
+
     return prisma.user.findMany({
       where: {
-        ...(showDeleted ? {} : { deleted_at: null }),
+        ...deletedFilter,
         ...(role ? { role } : {}),
         ...(search && {
           OR: [
@@ -45,14 +53,22 @@ export class PrismaUsersRepository implements UsersRepository {
     role,
     search,
     showDeleted,
+    onlyDeleted,
   }: {
     role?: Role
     search?: string
     showDeleted?: boolean
+    onlyDeleted?: boolean
   }): Promise<number> {
+    const deletedFilter = onlyDeleted
+      ? { deleted_at: { not: null } }
+      : showDeleted
+        ? {}
+        : { deleted_at: null }
+
     return prisma.user.count({
       where: {
-        ...(showDeleted ? {} : { deleted_at: null }),
+        ...deletedFilter,
         ...(role ? { role } : {}),
         ...(search && {
           OR: [

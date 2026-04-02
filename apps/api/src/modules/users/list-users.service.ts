@@ -7,6 +7,7 @@ interface ListUsersServiceRequest {
   role?: Role
   search?: string
   showDeleted?: boolean
+  onlyDeleted?: boolean
 }
 
 interface ListUsersServiceResponse {
@@ -23,10 +24,11 @@ export class ListUsersService {
     role,
     search,
     showDeleted,
+    onlyDeleted,
   }: ListUsersServiceRequest): Promise<ListUsersServiceResponse> {
     const [users, total] = await Promise.all([
-      this.usersRepository.findMany({ page, perPage, role, search, showDeleted }),
-      this.usersRepository.count({ role, search, showDeleted }),
+      this.usersRepository.findMany({ page, perPage, role, search, showDeleted, onlyDeleted }),
+      this.usersRepository.count({ role, search, showDeleted, onlyDeleted }),
     ])
 
     return { users, total }

@@ -25,5 +25,5 @@ export async function authenticateController(request: FastifyRequest, reply: Fas
       httpOnly: true,
     })
     .status(200)
-    .send({ token })
+    .send({ token, user })
 }

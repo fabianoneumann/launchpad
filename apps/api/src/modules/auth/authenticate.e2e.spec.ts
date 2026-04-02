@@ -28,7 +28,12 @@ describe('Authenticate E2E', () => {
     })
 
     expect(response.statusCode).toBe(200)
-    expect(response.body).toMatchObject({ token: expect.any(String) })
+    expect(response.body).toMatchObject({
+      token: expect.any(String),
+      user: { id: expect.any(String), email: testEmail, role: 'USER' },
+    })
+    expect(response.body.user).not.toHaveProperty('password_hash')
+    expect(response.body.user).not.toHaveProperty('token_version')
     expect(response.headers['set-cookie']).toBeDefined()
   })
 

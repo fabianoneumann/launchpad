@@ -53,7 +53,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         password: z.string().min(6),
       }),
       response: {
-        200: z.object({ token: z.string() }),
+        200: z.object({ token: z.string(), user: userResponseSchema }),
       },
     },
     handler: authenticateController,
@@ -204,7 +204,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         password: z.string().min(6),
       }),
       response: {
-        200: z.object({ token: z.string() }),
+        200: z.object({ token: z.string(), user: userResponseSchema }),
       },
     },
     handler: adminAuthenticateController,

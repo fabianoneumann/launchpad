@@ -25,5 +25,5 @@ export async function adminAuthenticateController(request: FastifyRequest, reply
       httpOnly: true,
     })
     .status(200)
-    .send({ token })
+    .send({ token, user })
 }

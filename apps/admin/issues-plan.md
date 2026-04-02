@@ -39,6 +39,18 @@
 ---
 
 ### Issue #3 — [admin] TanStack Router setup with file-based routing
+# GitHub: eco-iguassu#18 ✅ CONCLUÍDA
+
+**O que foi feito (resumo):**
+- `@tanstack/react-router`, `@tanstack/react-query` instalados como deps; `@tanstack/router-plugin`, `@tanstack/react-router-devtools` como devDeps
+- `vite.config.ts` atualizado: plugin `tanstackRouter` (de `@tanstack/router-plugin/vite`) adicionado **antes** do `react()`, com `routesDirectory: './src/app/routes'` e `generatedRouteTree: './src/app/routeTree.gen.ts'`
+- `src/app/router.ts`, `src/app/providers.tsx` (com `QueryClient` inline placeholder), `src/app/routes/__root.tsx`, `src/app/routes/_layout.tsx`, `src/app/routes/index.tsx`, `src/app/routes/_layout/dashboard/index.tsx` criados
+- `src/main.tsx` atualizado: ThemeProvider removido, `RouterProvider` adicionado
+- `src/app/routeTree.gen.ts` gerado e commitado
+- `eslint.config.js` e `.prettierignore` (local) atualizados para ignorar `routeTree.gen.ts`
+- README.md corrigido: estrutura `_layout/dashboard/` documentada corretamente
+- Todos os checks passam: `dev`, `build`, `lint`, `format:check`
+
 **Labels:** admin, frontend, chore
 
 **Goal:** Wire up TanStack Router with file-based routing, criar a estrutura `src/app/` e o
@@ -136,7 +148,7 @@ export default defineConfig({
     beforeLoad: () => { throw redirect({ to: '/dashboard' }) },
   })
   ```
-- `src/app/routes/dashboard/index.tsx` — placeholder `<h1>Dashboard</h1>`
+- `src/app/routes/_layout/dashboard/index.tsx` — placeholder `<h1>Dashboard</h1>`
 
 *Atualizar `src/main.tsx`:*
 ```tsx
@@ -163,6 +175,19 @@ createRoot(document.getElementById('root')!).render(
 ---
 
 ### Issue #4 — [admin] Vitest + React Testing Library + Playwright setup
+# GitHub: eco-iguassu#19 ✅ CONCLUÍDA
+
+**O que foi feito (resumo):**
+- `vitest`, `@vitest/coverage-v8`, `jsdom`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`, `msw`, `@playwright/test` instalados como devDeps
+- `vitest.config.ts` criado: `globals: true`, `environment: 'jsdom'`, `setupFiles`, alias `@`, `exclude: ['**/tests/e2e/**']` (impede que o Playwright seja executado pelo Vitest)
+- `tsconfig.app.json` atualizado: `"types": ["vite/client", "vitest/globals", "vitest/jsdom"]` e `"include": ["src", "tests"]` — ambos `vitest/globals` (globals `test`/`expect`) e `vitest/jsdom` (matchers jest-dom) são necessários
+- `playwright.config.ts` criado: `testDir: './tests/e2e'`, `baseURL: 'http://localhost:5173'`, `webServer` com `reuseExistingServer: !process.env.CI`
+- `src/mocks/handlers.ts` e `src/mocks/node.ts` criados (MSW server, handlers vazios)
+- `tests/setup.ts` criado: import jest-dom + ciclo MSW `beforeAll/afterEach/afterAll`
+- `src/components/ui/button.test.tsx` (smoke unitário) e `tests/e2e/smoke.spec.ts` (smoke E2E) criados e passando
+- Scripts `test`, `test:watch`, `test:e2e`, `test:e2e:ui` adicionados ao `package.json`
+- `.gitignore` atualizado: `playwright-report/` e `test-results/` excluídos
+
 **Labels:** admin, frontend, chore
 
 **Goal:** Testing infrastructure ready before first feature is written.
@@ -220,19 +245,41 @@ createRoot(document.getElementById('root')!).render(
 
 ### Issue #5 — [admin] Axios HTTP client with auth interceptors
 **Labels:** admin, frontend, chore
+**Depends on: Issue #6** — implementar após o Zustand auth store estar disponível
 
 **Goal:** Centralized API client ready for all feature integrations.
 
 **Tasks:**
-- Install Axios
-- Create `src/lib/api/client.ts`:
-  - Base URL from `VITE_API_URL` env var
-  - `withCredentials: true` (sends httpOnly refresh token cookie)
-  - Request interceptor: attach `Authorization: Bearer <token>` from Zustand store
-  - Response interceptor: on 401, call `PATCH /auth/token/refresh`, update token in store,
-    retry original request; on second 401, logout and redirect to `/login`
-- Create `src/lib/react-query/query-client.ts` (QueryClient instance)
-- Unit test: interceptor retries failed request after successful token refresh
+
+*Instalar:*
+- `axios`
+
+*Criar `src/lib/react-query/query-client.ts`:*
+```ts
+import { QueryClient } from '@tanstack/react-query'
+export const queryClient = new QueryClient()
+```
+Atualizar `src/app/providers.tsx` para importar daqui em vez de usar `new QueryClient()` inline (placeholder da Issue #3).
+
+*Criar `src/lib/api/client.ts`:*
+- `baseURL: import.meta.env.VITE_API_URL`
+- `withCredentials: true` — necessário para enviar o cookie httpOnly que contém o refresh token
+- **Request interceptor**: lê `useAuthStore.getState().token`; se existir, adiciona `Authorization: Bearer <token>`
+- **Response interceptor (401)**:
+  1. Chama `PATCH /auth/token/refresh` (sem interceptor, usando `axios.patch` direto)
+  2. Se sucesso: `useAuthStore.getState().setSession(user, newToken)` e retenta a request original
+  3. Se falha (segundo 401): `useAuthStore.getState().clearSession()` + navega para `/login`
+
+> **Atenção — navegação fora do React:** O interceptor roda fora da árvore de componentes;
+> `useNavigate()` não funciona aqui. Usar a instância do router diretamente:
+> ```ts
+> import { router } from '@/app/router'
+> router.navigate({ to: '/login' })
+> ```
+
+*Unit tests com MSW:*
+- Mock `GET /some-protected` retornando 401 → mock `PATCH /auth/token/refresh` retornando `{ token }` → verifica que a request original foi retentada com o novo token
+- Mock `GET /some-protected` retornando 401 → mock refresh retornando 401 → verifica que `clearSession()` foi chamado e router navegou para `/login`
 
 ---
 
@@ -242,17 +289,44 @@ createRoot(document.getElementById('root')!).render(
 
 ### Issue #6 — [admin] Zustand auth store
 **Labels:** admin, frontend, auth, chore
+**Prerequisite for Issue #5** — implementar antes do cliente Axios
 
 **Goal:** Client-side session state that works inside and outside React components.
 
 **Tasks:**
-- Install Zustand
-- Create `src/features/auth/store/auth-store.ts`:
-  - State: `user`, `token`, `isAuthenticated`
-  - Actions: `setSession(user, token)`, `clearSession()`, `updateName(name)`
-- The store must be readable outside React via `useAuthStore.getState()`
-  (required by Axios interceptor in Issue #5)
-- Unit test: store actions update state correctly
+
+*Instalar:*
+- `zustand`
+
+*Definir o tipo `AuthUser` em `src/features/auth/types.ts`:*
+```ts
+export type AuthUser = {
+  id: string
+  name: string
+  email: string
+  role: 'ADMIN' | 'MEMBER' | 'USER'
+}
+```
+Subset do `userResponseSchema` da API — apenas o que é necessário para a sessão (guard de rota, TopBar, guard de role). Os campos de auditoria (`locale`, `validated_at`, etc.) ficam no tipo completo das páginas de usuários.
+
+*Criar `src/features/auth/store/auth-store.ts`:*
+- State: `user: AuthUser | null`, `token: string | null`, `isAuthenticated: boolean`
+- Actions:
+  - `setSession(user: AuthUser, token: string)` — chamado após login: salva os dois campos e define `isAuthenticated: true`
+  - `clearSession()` — chamado no logout e no 401 irrecuperável: zera tudo
+  - `updateName(name: string)` — chamado após `PATCH /auth/me` (Issue #16); atualiza só o nome sem exigir novo login
+
+> O store **deve ser legível fora de componentes React** via `useAuthStore.getState()` —
+> requisito do interceptor do Axios (Issue #5).
+
+> **Fluxo de login:** `POST /auth/admin/login` retorna apenas `{ token }` + cookie de refresh.
+> O `user` deve ser buscado logo em seguida com `GET /auth/me`. O chamador (LoginForm, Issue #7)
+> é responsável pelas duas chamadas antes de invocar `setSession(user, token)`.
+
+*Unit tests:*
+- `setSession(user, token)` → state correto, `isAuthenticated: true`
+- `clearSession()` → state zerado, `isAuthenticated: false`
+- `updateName('novo nome')` → apenas `user.name` muda, demais campos intactos
 
 ---
 
@@ -275,7 +349,14 @@ createRoot(document.getElementById('root')!).render(
   - Error toast on invalid credentials (401)
 - Create `src/features/auth/api/auth.api.ts`:
   - `loginAdmin(email, password)` → `POST /auth/admin/login` → returns `{ token }`
-- On success: save session to Zustand store, redirect to `/dashboard`
+  - `getProfile()` → `GET /auth/me` → returns `{ user: AuthUser }`
+- On success: **dois passos antes de chamar `setSession`**:
+  1. `loginAdmin(email, password)` → obtém `token`
+  2. `getProfile()` (com o token recém-recebido) → obtém `user`
+  3. `useAuthStore.getState().setSession(user, token)` → persiste a sessão
+  4. Redirect para `/dashboard`
+  > `POST /auth/admin/login` retorna apenas `{ token }` — o `user` não vem no login.
+  > É necessário chamar `GET /auth/me` com o token para popular o store completo.
 - Responsive: left panel hidden on mobile (`hidden lg:flex`)
 - Unit test: LoginForm shows validation errors, calls api on valid submit
 - E2E test: successful login redirects to /dashboard
@@ -341,8 +422,7 @@ const decorativeIcons = [
 - Add `beforeLoad` guard to `_layout.tsx`: check `useAuthStore.getState().isAuthenticated`;
   redirect to `/login` if false
 - Add redirect in `login.tsx` `beforeLoad`: if already authenticated, redirect to `/dashboard`
-- Create `src/hooks/use-mobile.ts` — hook `useIsMobile()` via `window.matchMedia("(max-width: 768px)")`,
-  usado pelo AppShell para alternar entre sidebar desktop e Sheet mobile
+- `src/hooks/use-mobile.ts` — **já existe** (instalado como dependência transitiva do `sidebar.tsx` shadcn na Issue #2); não recriar
 - Create `src/components/layout/Sidebar.tsx`
 - Create `src/components/layout/TopBar.tsx`
 - Create `src/components/layout/AppShell.tsx`

@@ -406,6 +406,7 @@ const decorativeIcons = [
 ---
 
 ### Issue #7 — [admin] Route guards and protected layout
+# GitHub: eco-iguassu#22
 **Labels:** admin, frontend, auth, chore
 
 **Goal:** Unauthenticated users are redirected to /login. Authenticated users see the app shell.
@@ -496,8 +497,29 @@ const decorativeIcons = [
 **Tasks:**
 - Add `logoutAdmin()` to `auth.api.ts` → `DELETE /auth/logout`
 - Create `src/components/shared/ConfirmDialog.tsx` — necessário aqui pela primeira vez; reutilizado nas Issues #12–#14
-- Wire logout button in Sidebar (estrutura criada na Issue #7): `<ConfirmDialog>` → `logoutAdmin()` → `clearSession()` → redirect to `/login`
-- Unit test: logout button triggers confirmation, on confirm calls API and clears session
+- Wire logout button in Sidebar (estrutura criada na Issue #7): `<ConfirmDialog>` → logout otimista → fecha modal
+- Unit test: logout button triggers confirmation, on confirm executes optimistic logout
+
+**Logout otimista (padrão obrigatório):**
+```ts
+// Ordem correta — clearSession e navigate sempre acontecem, independente da API
+clearSession()
+router.navigate({ to: '/login' })
+logoutAdmin().catch(() => {}) // fire-and-forget; falha silenciosa
+```
+> Motivo: o objetivo do usuário é sair. Prender a sessão aberta por uma falha de rede é
+> pior do que um token órfão no servidor — ele expira em 10 minutos de qualquer forma.
+
+**Implementação visual do ConfirmDialog (`src/components/shared/ConfirmDialog.tsx`):**
+- Usa `AlertDialog` do shadcn (não `Dialog`)
+- Props: `open`, `onOpenChange`, `title`, `description`, `confirmLabel`, `cancelLabel`, `onConfirm`, `variant?: 'default' | 'destructive'`
+- Variante `destructive`: botão de confirmação com `bg-destructive text-destructive-foreground hover:bg-destructive/90`
+
+**ConfirmDialog de logout:**
+- `title`: "Confirmar saída"
+- `description`: "Tem certeza que deseja sair do painel?"
+- `confirmLabel`: "Sair"
+- `variant`: `"destructive"`
 
 ---
 
@@ -595,7 +617,7 @@ em fabianoneumann/admin-compass
 - Create `src/components/shared/LoadingSkeleton.tsx`
 - Create `src/components/shared/RoleBadge.tsx`
 - Create `src/components/shared/StatusBadge.tsx`
-- `src/components/shared/ConfirmDialog.tsx` — **já criado na Issue #8**; adicionar unit tests aqui
+- `src/components/shared/ConfirmDialog.tsx` — **já criado na Issue #8**; adicionar unit tests: renders title/description, calls onConfirm on confirm, does not call onConfirm on cancel
 - Unit tests for DataTable: renders data, shows skeleton on loading, shows empty state
 
 **Implementação visual — replicar fielmente do admin-compass:**
@@ -628,9 +650,7 @@ const roleConfig = {
 // className base: "text-xs font-medium"
 ```
 
-*ConfirmDialog — usa `AlertDialog` (não `Dialog`) do shadcn:*
-- Props: `open`, `onOpenChange`, `title`, `description`, `confirmLabel`, `cancelLabel`, `onConfirm`, `variant`
-- Variante destructive: botão de confirmação com `bg-destructive text-destructive-foreground hover:bg-destructive/90`
+*ConfirmDialog — criado na Issue #8; spec visual documentada lá. Nesta issue: adicionar unit tests.*
 
 *EmptyState:*
 - `flex flex-col items-center justify-center py-16 text-center`

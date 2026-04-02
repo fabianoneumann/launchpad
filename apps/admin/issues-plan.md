@@ -243,60 +243,16 @@ createRoot(document.getElementById('root')!).render(
 
 ---
 
-### Issue #5 — [admin] Axios HTTP client with auth interceptors
+### Issue #5 — [admin] Auth store + HTTP client
 **Labels:** admin, frontend, chore
-**Depends on: Issue #6** — implementar após o Zustand auth store estar disponível
 
-**Goal:** Centralized API client ready for all feature integrations.
-
-**Tasks:**
-
-*Instalar:*
-- `axios`
-
-*Criar `src/lib/react-query/query-client.ts`:*
-```ts
-import { QueryClient } from '@tanstack/react-query'
-export const queryClient = new QueryClient()
-```
-Atualizar `src/app/providers.tsx` para importar daqui em vez de usar `new QueryClient()` inline (placeholder da Issue #3).
-
-*Criar `src/lib/api/client.ts`:*
-- `baseURL: import.meta.env.VITE_API_URL`
-- `withCredentials: true` — necessário para enviar o cookie httpOnly que contém o refresh token
-- **Request interceptor**: lê `useAuthStore.getState().token`; se existir, adiciona `Authorization: Bearer <token>`
-- **Response interceptor (401)**:
-  1. Chama `PATCH /auth/token/refresh` (sem interceptor, usando `axios.patch` direto)
-  2. Se sucesso: `useAuthStore.getState().setSession(user, newToken)` e retenta a request original
-  3. Se falha (segundo 401): `useAuthStore.getState().clearSession()` + navega para `/login`
-
-> **Atenção — navegação fora do React:** O interceptor roda fora da árvore de componentes;
-> `useNavigate()` não funciona aqui. Usar a instância do router diretamente:
-> ```ts
-> import { router } from '@/app/router'
-> router.navigate({ to: '/login' })
-> ```
-
-*Unit tests com MSW:*
-- Mock `GET /some-protected` retornando 401 → mock `PATCH /auth/token/refresh` retornando `{ token }` → verifica que a request original foi retentada com o novo token
-- Mock `GET /some-protected` retornando 401 → mock refresh retornando 401 → verifica que `clearSession()` foi chamado e router navegou para `/login`
-
----
-
-## MILESTONE 2 — Authentication
-
----
-
-### Issue #6 — [admin] Zustand auth store
-**Labels:** admin, frontend, auth, chore
-**Prerequisite for Issue #5** — implementar antes do cliente Axios
-
-**Goal:** Client-side session state that works inside and outside React components.
+**Goal:** Client-side session state + centralized API client — foundation for all feature development.
 
 **Tasks:**
 
 *Instalar:*
 - `zustand`
+- `axios`
 
 *Definir o tipo `AuthUser` em `src/features/auth/types.ts`:*
 ```ts
@@ -307,30 +263,58 @@ export type AuthUser = {
   role: 'ADMIN' | 'MEMBER' | 'USER'
 }
 ```
-Subset do `userResponseSchema` da API — apenas o que é necessário para a sessão (guard de rota, TopBar, guard de role). Os campos de auditoria (`locale`, `validated_at`, etc.) ficam no tipo completo das páginas de usuários.
+Subset do `userResponseSchema` da API — apenas o necessário para sessão (guard de rota, TopBar, guard de role). Campos de auditoria (`locale`, `validated_at`, etc.) ficam no tipo completo das páginas de usuários.
 
 *Criar `src/features/auth/store/auth-store.ts`:*
 - State: `user: AuthUser | null`, `token: string | null`, `isAuthenticated: boolean`
 - Actions:
-  - `setSession(user: AuthUser, token: string)` — chamado após login: salva os dois campos e define `isAuthenticated: true`
-  - `clearSession()` — chamado no logout e no 401 irrecuperável: zera tudo
-  - `updateName(name: string)` — chamado após `PATCH /auth/me` (Issue #16); atualiza só o nome sem exigir novo login
+  - `setSession(user: AuthUser, token: string)` — salva user e token, define `isAuthenticated: true`
+  - `clearSession()` — zera tudo; chamado no logout e no 401 irrecuperável
+  - `updateName(name: string)` — atualiza só o nome após `PATCH /auth/me` (Issue #16); sem exigir novo login
 
 > O store **deve ser legível fora de componentes React** via `useAuthStore.getState()` —
-> requisito do interceptor do Axios (Issue #5).
+> requisito do interceptor Axios abaixo.
 
 > **Fluxo de login:** `POST /auth/admin/login` retorna apenas `{ token }` + cookie de refresh.
-> O `user` deve ser buscado logo em seguida com `GET /auth/me`. O chamador (LoginForm, Issue #7)
-> é responsável pelas duas chamadas antes de invocar `setSession(user, token)`.
+> O `user` deve ser buscado com `GET /auth/me` imediatamente após. O chamador (LoginForm, Issue #6)
+> chama as duas APIs e só então invoca `setSession(user, token)`.
+
+*Criar `src/lib/react-query/query-client.ts`:*
+```ts
+import { QueryClient } from '@tanstack/react-query'
+export const queryClient = new QueryClient()
+```
+Atualizar `src/app/providers.tsx`: substituir `new QueryClient()` inline (placeholder da Issue #3) pela importação daqui.
+
+*Criar `src/lib/api/client.ts`:*
+- `baseURL: import.meta.env.VITE_API_URL`
+- `withCredentials: true` — envia o cookie httpOnly com o refresh token
+- **Request interceptor**: lê `useAuthStore.getState().token`; se existir, adiciona `Authorization: Bearer <token>`
+- **Response interceptor (401)**:
+  1. Chama `PATCH /auth/token/refresh` (axios direto, sem interceptor)
+  2. Se sucesso: `setSession(useAuthStore.getState().user!, newToken)` e retenta a request original
+  3. Se falha (segundo 401): `clearSession()` + navega para `/login`
+
+> **Navegação fora do React:** `useNavigate()` não funciona aqui. Usar a instância do router:
+> ```ts
+> import { router } from '@/app/router'
+> router.navigate({ to: '/login' })
+> ```
 
 *Unit tests:*
-- `setSession(user, token)` → state correto, `isAuthenticated: true`
-- `clearSession()` → state zerado, `isAuthenticated: false`
-- `updateName('novo nome')` → apenas `user.name` muda, demais campos intactos
+- Store: `setSession(user, token)` → state correto, `isAuthenticated: true`
+- Store: `clearSession()` → state zerado, `isAuthenticated: false`
+- Store: `updateName('novo nome')` → apenas `user.name` muda, demais intactos
+- Interceptor: mock `GET /protected` 401 → mock `PATCH /auth/token/refresh` success → request retentada com novo token
+- Interceptor: mock `GET /protected` 401 → mock refresh 401 → `clearSession()` chamado, router navega para `/login`
 
 ---
 
-### Issue #7 — [admin] Login page
+## MILESTONE 2 — Authentication
+
+---
+
+### Issue #6 — [admin] Login page
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**
@@ -413,7 +397,7 @@ const decorativeIcons = [
 
 ---
 
-### Issue #8 — [admin] Route guards and protected layout
+### Issue #7 — [admin] Route guards and protected layout
 **Labels:** admin, frontend, auth, chore
 
 **Goal:** Unauthenticated users are redirected to /login. Authenticated users see the app shell.
@@ -457,6 +441,7 @@ const decorativeIcons = [
 - `flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30`
 - Ícone menu mobile: `variant="ghost" size="icon" lg:hidden`
 - Avatar: `h-8 w-8 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-semibold`
+- Nome e avatar: lidos do store via `useAuthStore((s) => s.user)` — exibir `user.name` e iniciais
 - Nome do usuário: `text-sm font-medium hidden sm:inline`
 - ThemeToggle: componente separado (ver abaixo)
 
@@ -477,26 +462,25 @@ const decorativeIcons = [
 
 ---
 
-### Issue #9 — [admin] Logout + token refresh
+### Issue #8 — [admin] Logout
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**
 - Como **administrador autenticado**, quero **encerrar minha sessão**, para que **eu possa sair do painel com segurança**.
-- Como **administrador autenticado**, quero **que meu token de acesso seja renovado automaticamente**, para que **minha sessão permaneça ativa sem que eu precise fazer login novamente durante o uso normal do painel**.
 
-**Goal:** Logout clears session. Token refresh happens transparently on 401.
+**Goal:** Logout clears session and redirects to /login.
+
+> O refresh automático de token (interceptor 401 → PATCH /auth/token/refresh → retry) foi
+> implementado e testado na Issue #5. Esta issue cobre apenas o logout explícito.
 
 **Tasks:**
-- Create `logoutAdmin()` in `auth.api.ts` → `DELETE /auth/logout`
-- Logout button in Sidebar: confirmation dialog → call API → `clearSession()` → redirect `/login`
-- Verify Axios interceptor from Issue #5 handles the silent refresh end-to-end:
-  - Mock 401 → mock `PATCH /auth/token/refresh` success → original request retried
-  - Mock 401 → mock refresh failure → logout triggered
-- Unit tests for both refresh scenarios using MSW
+- Add `logoutAdmin()` to `auth.api.ts` → `DELETE /auth/logout`
+- Wire logout button in Sidebar (estrutura visual criada na Issue #7): ConfirmDialog → call `logoutAdmin()` → `clearSession()` → redirect to `/login`
+- Unit test: logout button triggers confirmation, on confirm calls API and clears session
 
 ---
 
-### Issue #10 — [admin] Forgot password page
+### Issue #9 — [admin] Forgot password page
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**
@@ -535,15 +519,15 @@ const decorativeIcons = [
 
 ---
 
-### Issue #11 — [admin] Reset password page
+### Issue #10 — [admin] Reset password page
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**
 - Como **administrador**, quero **redefinir minha senha através do link recebido por e-mail**, para que **eu possa recuperar o acesso ao painel**.
 
-**Goal:** Page that receives the reset token from the URL and allows the admin to set a new password. Completes the forgot-password flow started in Issue #10.
+**Goal:** Page that receives the reset token from the URL and allows the admin to set a new password. Completes the forgot-password flow started in Issue #9.
 
-**Depends on:** Issue #10 (forgot password sends the email with the link pointing to this route)
+**Depends on:** Issue #9 (forgot password sends the email with the link pointing to this route)
 
 **Tasks:**
 - Create `src/app/routes/reset-password.tsx`
@@ -558,7 +542,7 @@ const decorativeIcons = [
 - E2E test: valid token → password changed → redirect to /login
 
 **Implementação visual:**
-- Seguir o mesmo padrão visual de ForgotPassword (Issue #10): `Card w-full max-w-md`, `CardHeader text-center`, estados inline de sucesso e erro
+- Seguir o mesmo padrão visual de ForgotPassword (Issue #9): `Card w-full max-w-md`, `CardHeader text-center`, estados inline de sucesso e erro
 - Estado de sucesso: mesmo padrão — `CheckCircle2 h-12 w-12 text-emerald-500` + mensagem + link ao `/login`
 - Estado de erro (400): usar `XCircle h-12 w-12 text-destructive` + mensagem "Link inválido ou expirado." + link ao `/forgot-password`
 
@@ -568,7 +552,7 @@ const decorativeIcons = [
 
 ---
 
-### Issue #12 — [admin] Shared DataTable component
+### Issue #11 — [admin] Shared DataTable component
 **Labels:** admin, frontend, chore
 
 **Goal:** Generic, reusable paginated table using TanStack Table.
@@ -640,7 +624,7 @@ const roleConfig = {
 
 ---
 
-### Issue #13 — [admin] Users list page
+### Issue #12 — [admin] Users list page
 **Labels:** admin, frontend, users, feature
 
 **User stories:**
@@ -662,7 +646,7 @@ const roleConfig = {
   Criado em, Ações (Ver, Editar, Excluir)
 - Filters: search input (name/email), role select, status toggle (Ativos/Deletados/Todos)
 - Deleted rows: opacity-50
-- Action button "+ Novo Usuário" → opens Create User modal (Issue #14)
+- Action button "+ Novo Usuário" → opens Create User modal (Issue #13)
 - Row actions: Ver → `/users/:id`, Editar → inline edit modal, Excluir → ConfirmDialog
 - Unit test: filters update URL search params, table renders with mocked API response (MSW)
 
@@ -687,7 +671,7 @@ const roleConfig = {
 
 ---
 
-### Issue #14 — [admin] Create user modal
+### Issue #13 — [admin] Create user modal
 **Labels:** admin, frontend, users, feature
 
 **User stories:**
@@ -712,7 +696,7 @@ const roleConfig = {
 
 ---
 
-### Issue #15 — [admin] User detail page
+### Issue #14 — [admin] User detail page
 **Labels:** admin, frontend, users, feature
 
 **User stories:**
@@ -768,87 +752,11 @@ const roleConfig = {
 
 ---
 
-## MILESTONE 4 — Profile & Settings
+## MILESTONE 4 — Finishing
 
 ---
 
-### Issue #16 — [admin] Profile page
-**Labels:** admin, frontend, auth, feature
-
-**User stories:**
-- Como **administrador autenticado**, quero **visualizar e atualizar meu próprio perfil**, para que **eu possa manter meus dados cadastrais corretos**.
-- Como **administrador autenticado**, quero **trocar minha senha informando a senha atual**, para que **eu possa alterar minhas credenciais com segurança**.
-
-**Goal:** Logged-in admin can view and update their own profile.
-
-**Referência de implementação:** `src/pages/Profile.tsx` em fabianoneumann/admin-compass
-
-**Tasks:**
-- Create `src/app/routes/_layout/profile.tsx`
-- Create `src/features/auth/api/`:
-  - `getProfile()` → `GET /auth/me`
-  - `updateProfile(name)` → `PATCH /auth/me`
-  - `changePassword(currentPassword, newPassword)` → `PATCH /auth/me/password`
-- Create `src/features/auth/hooks/`:
-  - `useProfile()` — TanStack Query useQuery
-  - `useUpdateProfile()`, `useChangePassword()` — useMutation with toast feedback
-- On password change success: clear session and redirect to `/login`
-  (API invalidates token_version — all sessions revoked)
-- Unit test: name update calls API, password mismatch shows inline error
-
-**Implementação visual — replicar fielmente do admin-compass:**
-
-*Layout da página:*
-- `PageLayout title="Meu Perfil"`
-- Wrapper dos cards: `max-w-2xl space-y-6`
-
-*Card "Informações pessoais":*
-- `<CardTitle className="text-base">` + `<CardDescription>`
-- Campos em `space-y-4`
-- Campo Email: `disabled` com nota abaixo `text-xs text-muted-foreground` — "O e-mail não pode ser alterado"
-- Botão "Salvar": `size="sm"` com Loader2
-
-*Card "Alterar senha":*
-- `<CardTitle className="text-base">` + `<CardDescription>`
-- Três campos: senha atual, nova senha, confirmar nova senha — todos `type="password"`
-- Botão "Alterar senha": `size="sm"` com Loader2
-
----
-
-## MILESTONE 5 — Error Pages & Polish
-
----
-
-### Issue #17 — [admin] Error pages (404 and 403)
-**Labels:** admin, frontend, chore
-
-**Goal:** Consistent error pages for not found and forbidden routes.
-
-**Referência de implementação:**
-- `src/pages/Forbidden.tsx` em fabianoneumann/admin-compass — referência primária para ambas as páginas
-- `src/pages/NotFound.tsx` no admin-compass é minimalista e em inglês; **não replicar** — usar o padrão do Forbidden
-
-**Tasks:**
-- Create `src/app/routes/$.tsx` (TanStack Router catch-all → 404 page)
-- Create `src/app/routes/403.tsx`
-- Wire 403 redirect in route guards for future role-restricted routes
-
-**Implementação visual — replicar o padrão de Forbidden.tsx para ambas as páginas:**
-
-*Estrutura comum (403 e 404):*
-- `min-h-screen flex items-center justify-center bg-background`
-- `<div className="text-center space-y-4">`
-- Código de erro: `text-7xl font-bold text-primary`
-- Mensagem: `text-xl text-muted-foreground` — em português
-- Botão "Voltar ao painel": `<Button>` apontando para `/dashboard`
-
-*Textos:*
-- 404: "Página não encontrada"
-- 403: "Você não tem permissão para acessar esta página"
-
----
-
-### Issue #18 — [admin] Dashboard page
+### Issue #15 — [admin] Dashboard page
 **Labels:** admin, frontend, feature
 
 **User stories:**
@@ -899,10 +807,82 @@ const roleConfig = {
 
 ---
 
+### Issue #16 — [admin] Profile page
+**Labels:** admin, frontend, auth, feature
+
+**User stories:**
+- Como **administrador autenticado**, quero **visualizar e atualizar meu próprio perfil**, para que **eu possa manter meus dados cadastrais corretos**.
+- Como **administrador autenticado**, quero **trocar minha senha informando a senha atual**, para que **eu possa alterar minhas credenciais com segurança**.
+
+**Goal:** Logged-in admin can view and update their own profile.
+
+**Referência de implementação:** `src/pages/Profile.tsx` em fabianoneumann/admin-compass
+
+**Tasks:**
+- Create `src/app/routes/_layout/profile.tsx`
+- Add to existing `src/features/auth/api/auth.api.ts` (created in Issue #6):
+  - `updateProfile(name)` → `PATCH /auth/me`
+  - `changePassword(currentPassword, newPassword)` → `PATCH /auth/me/password`
+  > `getProfile()` already defined in Issue #6 — reuse for `useProfile()` hook
+- Create `src/features/auth/hooks/`:
+  - `useProfile()` — TanStack Query useQuery
+  - `useUpdateProfile()`, `useChangePassword()` — useMutation with toast feedback
+- On password change success: clear session and redirect to `/login`
+  (API invalidates token_version — all sessions revoked)
+- Unit test: name update calls API, password mismatch shows inline error
+
+**Implementação visual — replicar fielmente do admin-compass:**
+
+*Layout da página:*
+- `PageLayout title="Meu Perfil"`
+- Wrapper dos cards: `max-w-2xl space-y-6`
+
+*Card "Informações pessoais":*
+- `<CardTitle className="text-base">` + `<CardDescription>`
+- Campos em `space-y-4`
+- Campo Email: `disabled` com nota abaixo `text-xs text-muted-foreground` — "O e-mail não pode ser alterado"
+- Botão "Salvar": `size="sm"` com Loader2
+
+*Card "Alterar senha":*
+- `<CardTitle className="text-base">` + `<CardDescription>`
+- Três campos: senha atual, nova senha, confirmar nova senha — todos `type="password"`
+- Botão "Alterar senha": `size="sm"` com Loader2
+
+---
+
+### Issue #17 — [admin] Error pages (404 and 403)
+**Labels:** admin, frontend, chore
+
+**Goal:** Consistent error pages for not found and forbidden routes.
+
+**Referência de implementação:**
+- `src/pages/Forbidden.tsx` em fabianoneumann/admin-compass — referência primária para ambas as páginas
+- `src/pages/NotFound.tsx` no admin-compass é minimalista e em inglês; **não replicar** — usar o padrão do Forbidden
+
+**Tasks:**
+- Create `src/app/routes/$.tsx` (TanStack Router catch-all → 404 page)
+- Create `src/app/routes/403.tsx`
+- Wire 403 redirect in route guards for future role-restricted routes
+
+**Implementação visual — replicar o padrão de Forbidden.tsx para ambas as páginas:**
+
+*Estrutura comum (403 e 404):*
+- `min-h-screen flex items-center justify-center bg-background`
+- `<div className="text-center space-y-4">`
+- Código de erro: `text-7xl font-bold text-primary`
+- Mensagem: `text-xl text-muted-foreground` — em português
+- Botão "Voltar ao painel": `<Button>` apontando para `/dashboard`
+
+*Textos:*
+- 404: "Página não encontrada"
+- 403: "Você não tem permissão para acessar esta página"
+
+---
+
 ## Implementation order
 
-Milestone 1 (Issues #1–5) → Milestone 2 (Issues #6–11) → Milestone 3 (Issues #12–15)
-→ Milestone 4 (Issue #16) → Milestone 5 (Issues #17–18)
+Milestone 1 (Issues #1–5) → Milestone 2 (Issues #6–10) → Milestone 3 (Issues #11–14)
+→ Milestone 4 (Issues #15–17)
 
 Start each issue only after the previous is merged and green on CI.
 The Lovable project (fabianoneumann/admin-compass) serves as visual and implementation reference throughout.

@@ -3,6 +3,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { verifyJWT } from '@/shared/middlewares/verify-jwt'
 import { verifyUserRole } from '@/shared/middlewares/verify-user-role'
 import { listUsersController } from './list-users.controller'
+import { createUserController } from './create-user.controller'
 import { getUserController } from './get-user.controller'
 import { updateUserController } from './update-user.controller'
 import { changeUserRoleController } from './change-user-role.controller'
@@ -44,6 +45,23 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     handler: listUsersController,
+  })
+
+  app.route({
+    method: 'POST',
+    url: '/users',
+    schema: {
+      body: z.object({
+        name: z.string().min(1),
+        email: z.email(),
+        role: z.enum(['ADMIN', 'MEMBER', 'USER']),
+        locale: z.string().optional(),
+      }),
+      response: {
+        201: z.object({ user: userResponseSchema }),
+      },
+    },
+    handler: createUserController,
   })
 
   app.route({

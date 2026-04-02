@@ -79,7 +79,7 @@ export class InMemoryUsersRepository implements UsersRepository {
       role: (data.role as User['role']) ?? 'USER',
       token_version: 0,
       locale: typeof data.locale === 'string' ? data.locale : 'pt-BR',
-      validated_at: null,
+      validated_at: data.validated_at instanceof Date ? data.validated_at : null,
       deleted_at: null,
       created_at: new Date(),
       updated_at: new Date(),

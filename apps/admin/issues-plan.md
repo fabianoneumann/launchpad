@@ -325,15 +325,21 @@ Atualizar `src/app/providers.tsx`: substituir `new QueryClient()` inline (placeh
 **Referência de implementação:** `src/pages/Login.tsx` em fabianoneumann/admin-compass
 
 **Tasks:**
-- Create `src/app/routes/login.tsx`
+- Create `src/app/routes/login.tsx`:
+  - `beforeLoad`: se `useAuthStore.getState().isAuthenticated`, redireciona para `/dashboard`
+    (rota própria da login page — não pertence ao guard do `_layout.tsx`)
+- Add `<Toaster />` (shadcn sonner, já instalado na Issue #2) em `src/app/providers.tsx`
+  — deve ser montado uma vez na raiz, fora do router, ao lado do `ThemeProvider`
+- Create `src/features/auth/api/auth.api.ts`:
+  - `loginAdmin(email, password)` → `POST /auth/admin/login` → returns `{ token }`
+  - `getProfile()` → `GET /auth/me` → returns `{ user: AuthUser }`
+  > Arquivo único para todas as funções do domínio `/auth/*`. `getProfile` é reutilizado
+  > na Issue #16 (Profile page) — reuse natural, sem duplicação.
 - Create `src/features/auth/components/LoginForm.tsx`:
   - React Hook Form + Zod validation (email required, password min 6)
   - Show/hide password toggle
   - Loading state on submit button
-  - Error toast on invalid credentials (401)
-- Create `src/features/auth/api/auth.api.ts`:
-  - `loginAdmin(email, password)` → `POST /auth/admin/login` → returns `{ token }`
-  - `getProfile()` → `GET /auth/me` → returns `{ user: AuthUser }`
+  - Error toast via `toast.error(...)` do Sonner on invalid credentials (401)
 - On success: **dois passos antes de chamar `setSession`**:
   1. `loginAdmin(email, password)` → obtém `token`
   2. `getProfile()` (com o token recém-recebido) → obtém `user`
@@ -342,8 +348,8 @@ Atualizar `src/app/providers.tsx`: substituir `new QueryClient()` inline (placeh
   > `POST /auth/admin/login` retorna apenas `{ token }` — o `user` não vem no login.
   > É necessário chamar `GET /auth/me` com o token para popular o store completo.
 - Responsive: left panel hidden on mobile (`hidden lg:flex`)
-- Unit test: LoginForm shows validation errors, calls api on valid submit
-- E2E test: successful login redirects to /dashboard
+- Unit test: LoginForm shows validation errors, calls api on valid submit (MSW)
+- E2E test: successful login redirects to /dashboard (API real — requer seed de usuário admin no DB)
 
 **Implementação visual — replicar fielmente do admin-compass:**
 
@@ -405,7 +411,7 @@ const decorativeIcons = [
 **Tasks:**
 - Add `beforeLoad` guard to `_layout.tsx`: check `useAuthStore.getState().isAuthenticated`;
   redirect to `/login` if false
-- Add redirect in `login.tsx` `beforeLoad`: if already authenticated, redirect to `/dashboard`
+  > O redirect inverso (autenticado → `/dashboard`) fica em `login.tsx` e foi implementado na Issue #6
 - `src/hooks/use-mobile.ts` — **já existe** (instalado como dependência transitiva do `sidebar.tsx` shadcn na Issue #2); não recriar
 - Create `src/components/layout/Sidebar.tsx`
 - Create `src/components/layout/TopBar.tsx`

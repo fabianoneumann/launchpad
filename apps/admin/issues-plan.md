@@ -484,6 +484,7 @@ const decorativeIcons = [
 ---
 
 ### Issue #8 — [admin] Logout
+# GitHub: eco-iguassu#23
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**

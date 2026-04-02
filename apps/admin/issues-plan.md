@@ -428,10 +428,21 @@ const decorativeIcons = [
 - Nav: `flex-1 px-3 space-y-6 overflow-y-auto`
 - Labels de seção: `px-3 mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground`
 - Itens: `space-y-0.5`
-- Link ativo: `bg-primary/10 text-primary font-medium`
-- Link inativo: `text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground`
-- Padding de cada link: `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors`
+- Padding de cada link (base, sempre presente): `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors`
 - Item desabilitado: `text-muted-foreground/40 cursor-not-allowed`
+- **Active/inactive com TanStack Router** — usar `activeProps`/`inactiveProps` no `<Link>`;
+  as classes são **concatenadas** com o `className` base (não substituídas):
+  ```tsx
+  <Link
+    to="/dashboard"
+    className="flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors"
+    activeProps={{ className: "bg-primary/10 text-primary font-medium" }}
+    inactiveProps={{ className: "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" }}
+  >
+  ```
+  > O matching padrão do TanStack Router é não-exato: `/users` fica ativo em `/users/123`.
+  > Equivalente ao `location.pathname.startsWith(path + "/")` do admin-compass (React Router).
+  > Não é necessário `activeOptions={{ exact: false }}` — é o default.
 - Badge "Em breve": `variant="secondary"` com `text-[10px] px-1.5 py-0 font-normal ml-auto`
 - Seção Configurações: `px-3 pb-4 border-t border-sidebar-border pt-4 mt-2`
 - Botão Sair: mesma classe dos links, `w-full`, abre `<ConfirmDialog>` de logout
@@ -788,18 +799,22 @@ const roleConfig = {
 
 *Gráfico de barras (Recharts — `BarChart`):*
 - `<ResponsiveContainer width="100%" height={280}>`
-- `<CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />`
-- Eixos: `stroke="hsl(var(--muted-foreground))" fontSize={12}`
+- `<CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />`
+- Eixos: `stroke="var(--muted-foreground)" fontSize={12}`
 - Tooltip customizado:
   ```tsx
   contentStyle={{
-    background: "hsl(var(--card))",
-    border: "1px solid hsl(var(--border))",
+    background: "var(--card)",
+    border: "1px solid var(--border)",
     borderRadius: "6px",
-    color: "hsl(var(--foreground))",
+    color: "var(--foreground)",
   }}
   ```
-- Barras: `fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}`
+- Barras: `fill="var(--primary)" radius={[4, 4, 0, 0]}`
+
+> **Tailwind v4:** O admin-compass usa Tailwind v3, onde as CSS vars armazenam valores HSL sem wrapper
+> e exigem `hsl(var(--x))` em inline styles. No nosso projeto (Tailwind v4) as vars já contêm
+> valores oklch completos — usar `var(--x)` diretamente. Nunca usar `hsl(var(--x))` aqui.
 
 *Card de usuários recentes:*
 - `<CardTitle className="text-base">` "Usuários Recentes"

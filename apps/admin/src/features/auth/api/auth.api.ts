@@ -25,3 +25,12 @@ export async function forgotPassword(email: string) {
 export async function resetPassword(token: string, newPassword: string) {
   await api.patch('/auth/password/reset', { token, newPassword })
 }
+
+export async function updateProfile(data: { name: string }) {
+  const { data: res } = await api.patch<{ user: AuthUser }>('/auth/me', data)
+  return res
+}
+
+export async function changePassword(data: { currentPassword: string; newPassword: string }) {
+  await api.patch('/auth/me/password', data)
+}

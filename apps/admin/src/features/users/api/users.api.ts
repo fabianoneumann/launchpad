@@ -18,3 +18,18 @@ export async function listUsers(params: ListUsersParams) {
 export async function deleteUser(id: string) {
   await api.delete(`/users/${id}`)
 }
+
+export async function getUser(id: string) {
+  const { data } = await api.get<{ user: User }>(`/users/${id}`)
+  return data
+}
+
+export async function updateUser(id: string, data: { name: string; email: string }) {
+  const { data: res } = await api.patch<{ user: User }>(`/users/${id}`, data)
+  return res
+}
+
+export async function changeUserRole(id: string, role: User['role']) {
+  const { data } = await api.patch<{ user: User }>(`/users/${id}/role`, { role })
+  return data
+}

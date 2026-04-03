@@ -24,4 +24,12 @@ export default defineConfig(
       'react-hooks/purity': 'off',
     },
   },
+  {
+    // TanStack Router route files always export `Route` alongside page components —
+    // this is the intended pattern and not a fast-refresh concern for route-level files.
+    files: ['src/app/routes/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 )

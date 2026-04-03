@@ -21,3 +21,7 @@ export async function logoutAdmin() {
 export async function forgotPassword(email: string) {
   await api.post('/auth/password/forgot', { email })
 }
+
+export async function resetPassword(token: string, newPassword: string) {
+  await api.patch('/auth/password/reset', { token, newPassword })
+}

@@ -79,6 +79,8 @@ apps/api/
 - Valida o body/params/query com Zod
 - Chama a factory para obter o service
 - Chama `service.execute()`
+- Orquestra side effects assíncronos (e-mails fire-and-forget, notificações) — **não o service**
+- Registra eventos de auditoria, falhas operacionais e segurança com `request.log`
 - Retorna a resposta HTTP
 
 **PROIBIDO no controller:** lógica de negócio, acesso ao Prisma, manipulação de senha, regras condicionais de domínio.
@@ -371,6 +373,91 @@ origin: env.NODE_ENV === 'production' ? (env.CORS_ORIGIN ?? false) : true,
 
 ---
 
+## Logging e Observabilidade
+
+### Onde registrar logs de negócio
+
+Logs de auditoria, falhas operacionais e eventos de segurança são registrados **no controller** usando `request.log`, disponível no contexto Fastify. Services não recebem logger — eles executam lógica de negócio e lançam erros de domínio.
+
+```typescript
+// controller — após service.execute()
+request.log.info({ event: 'user.login_success', userId: user.id, role: user.role })
+request.log.warn({ event: 'user.login_failed', email, ip: request.ip })
+request.log.error({ event: 'email.send_failed', userId, error: err.message })
+```
+
+### Campo `event` — obrigatório em logs de negócio
+
+Todo log de evento de negócio deve incluir um campo `event` no formato `dominio.acao`:
+
+```typescript
+// Convenção de nomenclatura
+'user.registered'       'user.login_success'    'user.login_failed'
+'user.email_verified'   'user.password_changed' 'user.password_reset'
+'user.role_changed'     'user.deleted'
+'email.send_failed'
+'auth.token_expired'    'auth.token_reused'     'auth.forbidden'
+```
+
+### Serializer — nunca logar o objeto `user` completo
+
+Configurar serializer em `app.ts` para evitar expor `password_hash` nos logs:
+
+```typescript
+export const app = fastify({
+  logger: {
+    ...,
+    serializers: {
+      user: (u) => ({ id: u.id, role: u.role }),
+    },
+  },
+})
+```
+
+### Side effects no controller — padrão fire-and-forget
+
+E-mails e notificações disparados após uma operação principal pertencem ao controller, não ao service. Usar `.catch` com log estruturado — nunca `.catch(() => {})`:
+
+```typescript
+// register.controller.ts
+makeSendVerificationEmailService()
+  .execute({ userId: user.id })
+  .catch((err) => request.log.error({ event: 'email.send_failed', userId: user.id, error: err.message }))
+```
+
+### Injeção de logger em services — quando necessário
+
+Usar apenas quando o service tiver lógica interna complexa com múltiplos passos, for executado fora do contexto de request (workers, jobs, filas), ou for chamado de múltiplos lugares. O tipo correto é `FastifyBaseLogger` de `'fastify'`:
+
+```typescript
+import type { FastifyBaseLogger } from 'fastify'
+
+// Service que precisa de logger interno
+export class ProcessBookingService {
+  constructor(
+    private repository: BookingsRepository,
+    private logger: FastifyBaseLogger,
+  ) {}
+
+  async execute(request: ProcessBookingRequest) {
+    this.logger.info({ event: 'booking.processing_started', bookingId: request.id })
+    // ...
+  }
+}
+
+// Factory correspondente
+export function makeProcessBookingService(logger: FastifyBaseLogger) {
+  return new ProcessBookingService(new PrismaBookingsRepository(), logger.child({ module: 'process-booking' }))
+}
+
+// Controller passa request.log para a factory
+const service = makeProcessBookingService(request.log)
+```
+
+> Para os módulos atuais (auth, users), o logging no controller é suficiente. O padrão de injeção será necessário quando surgirem workers ou jobs agendados.
+
+---
+
 ## O que nunca fazer
 
 - ❌ Importar de `'@prisma/client'` — use sempre `'@/generated/prisma'`
@@ -382,6 +469,9 @@ origin: env.NODE_ENV === 'production' ? (env.CORS_ORIGIN ?? false) : true,
 - ❌ Fazer `reply.send()` sem `return` em middlewares
 - ❌ Variável de ambiente usada sem estar no schema Zod
 - ❌ Logs de `console.log` no código de produção (use `request.log.info()`)
+- ❌ Logar objeto `user` completo — use o serializer ou `{ id: user.id, role: user.role }`
+- ❌ `.catch(() => {})` em e-mails ou side effects — sempre logar a falha com `event` estruturado
+- ❌ Logs de negócio em services — pertencem ao controller via `request.log`
 - ❌ Arquivos de log (`.log`) ou `.env` commitados no Git
 - ❌ Commitar a pasta `src/generated/` (é gerada pelo `prisma generate`)
 - ❌ Usar `z.string().email()` ou `z.string().url()` — use `z.email()` e `z.url()` do Zod v4

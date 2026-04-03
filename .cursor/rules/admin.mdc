@@ -1,0 +1,525 @@
+---
+description: Padrões de arquitetura, organização e código para o painel admin (apps/admin). Aplica-se a todo desenvolvimento dentro de apps/admin.
+globs: apps/admin/**
+alwaysApply: true
+---
+
+# Regras do Frontend — apps/admin
+
+## Stack
+
+- **Runtime:** Node.js 22 (LTS) + TypeScript 5.9+
+- **Framework:** React 19 + Vite 8
+- **Roteamento:** TanStack Router v1 (file-based, `createFileRoute`)
+- **Estado do servidor:** TanStack Query v5 (`useQuery`, `useMutation`)
+- **Estado global:** Zustand v5 (`create`)
+- **Formulários:** React Hook Form v7 + Zod v4
+- **HTTP:** Axios com interceptors de JWT/refresh
+- **UI:** shadcn/ui + Radix UI + Tailwind CSS v4
+- **Gráficos:** Recharts v3
+- **Notificações:** Sonner v2 (toasts)
+- **Testes unitários:** Vitest v4 + Testing Library + MSW v2
+- **Testes E2E:** Playwright
+
+---
+
+## Estrutura de Pastas
+
+```
+apps/admin/src/
+├── app/
+│   ├── routes/                   ← arquivos de rota (file-based TanStack Router)
+│   │   ├── __root.tsx            ← layout raiz com Providers
+│   │   ├── _layout.tsx           ← layout protegido (auth guard via beforeLoad)
+│   │   ├── _layout/              ← rotas protegidas
+│   │   │   ├── dashboard/
+│   │   │   │   └── index.tsx
+│   │   │   ├── users/
+│   │   │   │   ├── index.tsx
+│   │   │   │   └── $id.tsx       ← rota dinâmica (parâmetro de URL)
+│   │   │   └── profile.tsx
+│   │   ├── login.tsx
+│   │   ├── forgot-password.tsx
+│   │   ├── reset-password.tsx
+│   │   ├── 403.tsx
+│   │   └── $.tsx                 ← catch-all 404
+│   ├── providers.tsx             ← QueryClient, Toaster, ThemeProvider
+│   ├── router.ts                 ← instância exportada do router
+│   └── routeTree.gen.ts          ← gerado automaticamente (não editar)
+│
+├── components/
+│   ├── layout/                   ← AppShell, Sidebar, TopBar, PageLayout
+│   ├── shared/                   ← DataTable, ConfirmDialog, RoleBadge, etc.
+│   └── ui/                       ← primitivos shadcn/ui (não modificar diretamente)
+│
+├── features/                     ← organização por domínio (vertical slicing)
+│   ├── auth/
+│   │   ├── api/                  ← funções axios puras
+│   │   ├── components/           ← páginas e formulários
+│   │   ├── hooks/                ← wrappers React Query
+│   │   ├── store/                ← Zustand store
+│   │   └── types.ts
+│   ├── dashboard/
+│   │   ├── api/
+│   │   ├── components/
+│   │   └── hooks/
+│   └── users/
+│       ├── api/
+│       ├── components/
+│       ├── hooks/
+│       └── types.ts
+│
+├── lib/
+│   ├── api/
+│   │   └── client.ts             ← instância axios com interceptors
+│   ├── react-query/
+│   │   └── query-client.ts       ← configuração do QueryClient
+│   └── utils.ts                  ← cn() e utilitários gerais
+│
+└── mocks/
+    ├── handlers.ts               ← handlers MSW padrão (happy path)
+    └── node.ts                   ← servidor MSW para testes
+```
+
+---
+
+## Convenções de Nomenclatura
+
+| Artefato | Convenção | Exemplo |
+|---|---|---|
+| Arquivos de rota | Convenção TanStack Router | `_layout.tsx`, `$id.tsx`, `__root.tsx` |
+| Componentes | `PascalCase` | `UsersPage.tsx`, `ConfirmDialog.tsx` |
+| Hooks | `camelCase` + prefixo `use` | `useUsers.ts`, `useDeleteUser.ts` |
+| API functions | `camelCase` | `listUsers.ts`, `auth.api.ts` |
+| Stores Zustand | `camelCase` + sufixo `store` | `auth-store.ts` |
+| Testes | mesmo nome + sufixo `.test.tsx` | `UsersPage.test.tsx` |
+| Types | `PascalCase` | `AuthUser`, `UserRole` |
+
+---
+
+## Responsabilidades por Camada
+
+### Route (`app/routes/*.tsx`)
+- Define a rota com `createFileRoute`
+- Guarda de autenticação em `beforeLoad` (apenas no `_layout.tsx`)
+- Renderiza o componente de página — não contém lógica de negócio
+- Valida e expõe search params via `validateSearch` quando necessário
+
+```typescript
+// _layout.tsx — único ponto de auth guard
+export const Route = createFileRoute('/_layout')({
+  beforeLoad: () => {
+    if (!useAuthStore.getState().isAuthenticated) {
+      throw redirect({ to: '/login' })
+    }
+  },
+  component: AppShell,
+})
+```
+
+### Feature API (`features/*/api/*.api.ts`)
+- Funções puras que chamam `api` (instância axios de `@/lib/api/client`)
+- Sem dependência de hooks ou estado React
+- Tipagem explícita de request e response
+
+```typescript
+// Correto: função pura com tipos explícitos
+export async function listUsers(params: ListUsersParams): Promise<ListUsersResponse> {
+  const { data } = await api.get<ListUsersResponse>('/users', { params })
+  return data
+}
+```
+
+### Feature Hook (`features/*/hooks/*.ts`)
+- Wrapper `useQuery` ou `useMutation` sobre a função de API
+- Define a `queryKey` com todos os parâmetros que afetam o resultado
+- Não contém lógica de transformação — isso pertence ao componente ou à API function
+- Invalidação de queries em `onSuccess` de mutations quando necessário
+
+```typescript
+export function useUsers(params: UseUsersParams) {
+  return useQuery({
+    queryKey: ['users', params],
+    queryFn: () => listUsers(params),
+  })
+}
+```
+
+### Feature Component (`features/*/components/*.tsx`)
+- Consome hooks da mesma feature
+- Usa componentes de `components/ui/` e `components/shared/`
+- Feedback visual: toast `sonner` para sucesso/erro de mutations
+- Confirmações destrutivas: `ConfirmDialog` de `components/shared/`
+
+### Zustand Store (`features/*/store/*.ts`)
+- Apenas para estado global persistente entre rotas (ex: sessão autenticada)
+- **Não usar** para estado do servidor — isso é responsabilidade do React Query
+- Sem `persist` middleware por padrão — state é em memória
+
+---
+
+## Cliente HTTP — Padrão Obrigatório
+
+O arquivo `src/lib/api/client.ts` exporta a instância `api` com dois interceptors:
+
+1. **Request:** injeta `Authorization: Bearer <token>` do Zustand store
+2. **Response:** em 401 tenta refresh via `PATCH /auth/token/refresh`; se falhar, limpa sessão e redireciona para `/login`
+
+```typescript
+// Sempre importar de @/lib/api/client — nunca instanciar axios diretamente
+import { api } from '@/lib/api/client'
+```
+
+URLs que não devem acionar o refresh estão na lista `SKIP_REFRESH_URLS` dentro de `client.ts`.
+
+---
+
+## Roteamento — TanStack Router v1
+
+### Arquivo de rota mínimo
+```typescript
+import { createFileRoute } from '@tanstack/react-router'
+import { UsersPage } from '@/features/users/components/UsersPage'
+
+export const Route = createFileRoute('/_layout/users/')({
+  component: UsersPage,
+})
+```
+
+### Search params tipados e validados
+```typescript
+import { createFileRoute } from '@tanstack/react-router'
+import { z } from 'zod'
+
+const searchSchema = z.object({
+  page: z.number().default(1),
+  perPage: z.number().default(10),
+  role: z.enum(['ADMIN', 'MEMBER', 'USER']).optional(),
+  search: z.string().optional(),
+})
+
+export const Route = createFileRoute('/_layout/users/')({
+  validateSearch: searchSchema,
+  component: UsersPage,
+})
+```
+
+### Acesso a search params no componente
+```typescript
+// No componente da feature — não no arquivo de rota
+import { Route } from '@/app/routes/_layout/users/'
+
+const { page, perPage, role, search } = Route.useSearch()
+```
+
+### Navegação programática
+```typescript
+import { router } from '@/app/router'
+
+router.navigate({ to: '/users', search: (prev) => ({ ...prev, page: 1, role: 'ADMIN' }) })
+```
+
+### Links ativos — `activeProps`
+
+`activeProps.className` é **concatenado** ao `className` base — não o substitui. O estado inativo não precisa de `inactiveProps`: basta o `className` base cobrir os estilos padrão (incluindo hover).
+
+```typescript
+const linkBase =
+  'flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors'
+
+<Link
+  to="/dashboard"
+  className={linkBase}
+  activeProps={{ className: 'bg-primary/10 text-primary font-medium' }}
+>
+  Dashboard
+</Link>
+```
+
+### Vite plugin ordering — `tanstackRouter` antes de `react`
+
+```typescript
+// vite.config.ts — ordem obrigatória
+plugins: [
+  tanstackRouter({ target: 'react', autoCodeSplitting: true, routesDirectory: './src/app/routes', generatedRouteTree: './src/app/routeTree.gen.ts' }),
+  react(),
+  tailwindcss(),
+]
+```
+
+### `routeTree.gen.ts` — nunca editar, sempre commitar
+É gerado automaticamente pelo plugin Vite do TanStack Router. Qualquer edição manual será sobrescrita. Deve ser commitado no Git — é necessário para builds CI/CD. Não adicionar ao `.gitignore`.
+
+---
+
+## Fluxo de Login
+
+`POST /auth/admin/login` retorna `{ token, user }` — o objeto do usuário já vem na resposta do login. Não é necessário chamar `GET /auth/me` separadamente após o login.
+
+```typescript
+const onSubmit = async ({ email, password }: FormData) => {
+  const { token, user } = await loginAdmin(email, password)
+  useAuthStore.getState().setSession(user, token)
+  router.navigate({ to: '/dashboard' })
+}
+```
+
+---
+
+## Formulários — React Hook Form + Zod v4
+
+```typescript
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+const schema = z.object({
+  email: z.email(),           // Zod v4: top-level format validators
+  password: z.string().min(6),
+})
+
+type FormData = z.infer<typeof schema>
+
+export function LoginForm() {
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  })
+  // ...
+}
+```
+
+**APIs Zod v4 preferidas:**
+```typescript
+z.email()         // ✅ em vez de z.string().email()
+z.url()           // ✅ em vez de z.string().url()
+z.uuid()          // ✅ em vez de z.string().uuid()
+```
+
+---
+
+## Componentes UI
+
+### shadcn/ui (`components/ui/`)
+- Primitivos gerados via CLI do shadcn: `button`, `input`, `select`, `dialog`, `badge`, etc.
+- **Nunca modificar** os arquivos em `components/ui/` diretamente — isso quebra futuras atualizações
+- Para customização de comportamento, criar wrapper em `components/shared/`
+
+### Utilitário `cn()`
+```typescript
+import { cn } from '@/lib/utils'
+
+// Merge condicional de classes Tailwind
+<div className={cn('base-class', condition && 'conditional-class', className)} />
+```
+
+---
+
+## Testes — Padrão Obrigatório
+
+### Configuração global (`tests/setup.ts`)
+```typescript
+import '@testing-library/jest-dom'
+import { afterAll, afterEach, beforeAll } from 'vitest'
+import { server } from '../src/mocks/node'
+
+// Polyfill para Recharts (ResponsiveContainer usa ResizeObserver)
+global.ResizeObserver = class ResizeObserver {
+  observe() {} unobserve() {} disconnect() {}
+}
+
+// Polyfill para Radix UI Select (chama scrollIntoView no mount)
+Element.prototype.scrollIntoView = () => {}
+
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
+```
+
+### Wrapper QueryClient — obrigatório em todo teste de componente
+```typescript
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },  // retry: false obrigatório em testes
+  })
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  )
+}
+
+// Uso:
+render(<UsersPage />, { wrapper: createWrapper() })
+```
+
+**Por que `retry: false`:** sem isso, queries com erro fazem 3 tentativas, tornando os testes de estado de erro lentos e instáveis.
+
+### MSW — sobrescrever handlers por teste
+```typescript
+import { http, HttpResponse, delay } from 'msw'
+import { server } from '@/mocks/node'
+
+// Happy path vem do handlers.ts global — sobrescrever apenas quando necessário
+it('exibe skeleton durante loading', async () => {
+  server.use(
+    http.get(`${API_BASE}/users`, async () => {
+      await delay('infinite')
+      return HttpResponse.json({ users: [], total: 0 })
+    }),
+  )
+  // ...
+})
+```
+
+Os handlers padrão em `src/mocks/handlers.ts` cobrem os happy paths de `/auth/me`, `/users` e `/users/stats`. Testes que precisam de dados específicos sobrescrevem via `server.use()`.
+
+### Mocks de Router e Route — quando usar `vi.mock`
+```typescript
+// Obrigatório quando o componente chama Route.useSearch() ou router.navigate()
+vi.mock('@/app/router', () => ({ router: { navigate: vi.fn() } }))
+vi.mock('@/app/routes/_layout/users/', () => ({
+  Route: { useSearch: vi.fn() },
+}))
+
+// Import dinâmico após os mocks (necessário para garantir hoisting correto)
+const { UsersPage } = await import('./UsersPage')
+```
+
+**Nunca mockar hooks de feature** (`vi.mock('../hooks/useUsers')`). Usar MSW para controlar respostas HTTP.
+
+### Interação com Radix UI Select
+```typescript
+// Radix Select: click no trigger para abrir, click na option para selecionar
+const [select] = screen.getAllByRole('combobox')
+fireEvent.click(select)
+await waitFor(() => screen.getByRole('option', { name: 'Admin' }))
+fireEvent.click(screen.getByRole('option', { name: 'Admin' }))
+```
+
+### Zustand em testes
+```typescript
+import { useAuthStore } from '@/features/auth/store/auth-store'
+
+beforeEach(() => {
+  useAuthStore.setState({
+    user: { id: '1', name: 'Admin', email: 'admin@test.com', role: 'ADMIN', ... },
+    token: 'fake-token',
+    isAuthenticated: true,
+  })
+})
+```
+
+### Comandos de teste
+```bash
+pnpm --filter admin test          # roda todos os testes unitários
+pnpm --filter admin test:watch    # modo watch
+pnpm --filter admin test:e2e      # Playwright E2E
+pnpm --filter admin test:e2e:ui   # Playwright com UI visual (debug)
+```
+
+---
+
+## Testes E2E — Playwright
+
+Os testes E2E em `tests/e2e/` usam browser real e fazem chamadas HTTP reais à API. MSW **não** é usado aqui — diferente dos testes Vitest.
+
+### Dependências de execução
+- API rodando em `http://localhost:3333`
+- Frontend: levantado automaticamente pelo `webServer` do `playwright.config.ts`
+- Banco com dados seedados (usuários conhecidos)
+
+### `globalSetup` — ambiente determinístico
+Cria `tests/e2e/global-setup.ts` para truncar e re-seed o banco antes de cada suite:
+
+```typescript
+import { execSync } from 'child_process'
+
+export default async function globalSetup() {
+  execSync('pnpm --filter api exec prisma migrate reset --force --skip-generate', {
+    stdio: 'inherit',
+  })
+}
+```
+
+Referenciado em `playwright.config.ts`:
+```typescript
+globalSetup: './tests/e2e/global-setup.ts',
+```
+
+### Helpers reutilizáveis (`tests/e2e/helpers/auth.ts`)
+```typescript
+import type { Page } from '@playwright/test'
+
+export async function loginAsAdmin(page: Page) {
+  await page.goto('/login')
+  await page.getByLabel('E-mail').fill('admin-login@test.com')
+  await page.getByLabel('Senha').fill('123456')
+  await page.getByRole('button', { name: /entrar/i }).click()
+  await page.waitForURL('/dashboard')
+}
+
+export async function loginAs(page: Page, email: string, password: string) {
+  await page.goto('/login')
+  await page.getByLabel('E-mail').fill(email)
+  await page.getByLabel('Senha').fill(password)
+  await page.getByRole('button', { name: /entrar/i }).click()
+  await page.waitForURL('/dashboard')
+}
+```
+
+### Dados isolados para testes mutantes
+Testes que alteram ou excluem dados (role, exclusão) **não devem depender dos usuários do seed global** — devem criar seu próprio usuário via chamada direta à API no `beforeEach` e limpar no `afterEach`. Isso evita conflito entre testes paralelos e não "suja" os dados dos demais testes.
+
+```typescript
+test.beforeEach(async () => {
+  // criar usuário via API antes do teste
+})
+```
+
+O usuário `password-change@test.com` é reservado para o teste de troca de senha. Após a troca, a senha `123456` deixa de funcionar — o `globalSetup` restaura na próxima execução.
+
+### Estrutura dos arquivos E2E
+```
+tests/e2e/
+├── helpers/
+│   └── auth.ts           ← loginAsAdmin, loginAs
+├── global-setup.ts       ← prisma migrate reset antes da suite
+├── auth.spec.ts          ← route guards (sem login)
+├── login.spec.ts         ← fluxo de login
+├── smoke.spec.ts         ← dashboard acessível após login
+├── dashboard.spec.ts     ← cards e tabela de usuários recentes
+├── users.spec.ts         ← busca, filtros, exclusão
+├── user-detail.spec.ts   ← edição inline, alterar role, excluir
+├── profile.spec.ts       ← atualizar nome, trocar senha
+└── logout.spec.ts        ← confirmação + redirect
+```
+
+---
+
+## Variáveis de Ambiente
+
+```typescript
+// Prefixo VITE_ obrigatório para exposição ao browser
+VITE_API_URL=http://localhost:3333
+
+// Acesso via import.meta.env — nunca process.env
+const baseURL = import.meta.env.VITE_API_URL
+```
+
+---
+
+## O que nunca fazer
+
+- ❌ Instanciar `axios` diretamente — usar sempre `api` de `@/lib/api/client`
+- ❌ Modificar arquivos em `components/ui/` — são gerados pelo shadcn CLI
+- ❌ Editar `routeTree.gen.ts` — é gerado automaticamente pelo Vite plugin; adicionar ao `.gitignore` quebra o CI
+- ❌ Usar `process.env` no frontend — usar `import.meta.env.VITE_*`
+- ❌ Colocar lógica de negócio em arquivos de rota (`app/routes/`)
+- ❌ Usar `vi.mock` em hooks de feature — usar MSW para controlar respostas
+- ❌ `new QueryClient()` sem `retry: false` em testes — causa lentidão e flakiness
+- ❌ Usar Zustand para estado do servidor — isso é responsabilidade do React Query
+- ❌ `console.log` em código de produção
+- ❌ Usar `z.string().email()` ou `z.string().url()` — usar `z.email()` e `z.url()` do Zod v4
+- ❌ Importar componentes de `@/components/ui/` diretamente em testes sem o `createWrapper` de QueryClient quando o componente usa `useQuery`/`useMutation`
+- ❌ Chamar `GET /auth/me` após login para obter o usuário — a API retorna `{ token, user }` diretamente em `POST /auth/admin/login`
+- ❌ Usar MSW em testes E2E (Playwright) — MSW é exclusivo dos testes Vitest; E2E usam API real
+- ❌ Colocar `tanstackRouter()` depois de `react()` nos plugins do Vite — deve vir antes
+- ❌ Depender de dados do seed global em testes E2E mutantes (exclusão, troca de role, troca de senha) — criar dados isolados no `beforeEach`

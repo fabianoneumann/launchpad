@@ -32,4 +32,13 @@ export default defineConfig(
       'react-refresh/only-export-components': 'off',
     },
   },
+  {
+    // DataTable uses `useReactTable` from TanStack Table v8, which is incompatible with
+    // React Compiler memoization. The "use no memo" directive in the file opts out of
+    // compilation explicitly. Remove when upgrading to TanStack Table v9 (RC Compiler-compatible).
+    files: ['src/components/shared/DataTable/**'],
+    rules: {
+      'react-hooks/incompatible-library': 'off',
+    },
+  },
 )

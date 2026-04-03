@@ -1,3 +1,5 @@
+'use no memo'
+
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
 import {
   Table,

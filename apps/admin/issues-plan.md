@@ -276,9 +276,10 @@ Subset do `userResponseSchema` da API — apenas o necessário para sessão (gua
 > O store **deve ser legível fora de componentes React** via `useAuthStore.getState()` —
 > requisito do interceptor Axios abaixo.
 
-> **Fluxo de login:** `POST /auth/admin/login` retorna apenas `{ token }` + cookie de refresh.
-> O `user` deve ser buscado com `GET /auth/me` imediatamente após. O chamador (LoginForm, Issue #6)
-> chama as duas APIs e só então invoca `setSession(user, token)`.
+> **Fluxo de login:** `POST /auth/admin/login` retorna `{ token, user }` + cookie de refresh.
+> O chamador (LoginForm, Issue #6) invoca diretamente `setSession(user, token)` — sem necessidade
+> de uma segunda chamada a `GET /auth/me`. *(Nota: o plano original previa retorno apenas de `{ token }`,
+> mas a implementação do controller inclui o `user` na resposta.)*
 
 *Criar `src/lib/react-query/query-client.ts`:*
 ```ts
@@ -333,7 +334,7 @@ Atualizar `src/app/providers.tsx`: substituir `new QueryClient()` inline (placeh
 - Add `<Toaster />` (shadcn sonner, já instalado na Issue #2) em `src/app/providers.tsx`
   — deve ser montado uma vez na raiz, fora do router, ao lado do `ThemeProvider`
 - Create `src/features/auth/api/auth.api.ts`:
-  - `loginAdmin(email, password)` → `POST /auth/admin/login` → returns `{ token }`
+  - `loginAdmin(email, password)` → `POST /auth/admin/login` → returns `{ token, user }`
   - `getProfile()` → `GET /auth/me` → returns `{ user: AuthUser }`
   > Arquivo único para todas as funções do domínio `/auth/*`. `getProfile` é reutilizado
   > na Issue #16 (Profile page) — reuse natural, sem duplicação.
@@ -342,13 +343,12 @@ Atualizar `src/app/providers.tsx`: substituir `new QueryClient()` inline (placeh
   - Show/hide password toggle
   - Loading state on submit button
   - Error toast via `toast.error(...)` do Sonner on invalid credentials (401)
-- On success: **dois passos antes de chamar `setSession`**:
-  1. `loginAdmin(email, password)` → obtém `token`
-  2. `getProfile()` (com o token recém-recebido) → obtém `user`
-  3. `useAuthStore.getState().setSession(user, token)` → persiste a sessão
-  4. Redirect para `/dashboard`
-  > `POST /auth/admin/login` retorna apenas `{ token }` — o `user` não vem no login.
-  > É necessário chamar `GET /auth/me` com o token para popular o store completo.
+- On success:
+  1. `loginAdmin(email, password)` → obtém `{ token, user }`
+  2. `useAuthStore.getState().setSession(user, token)` → persiste a sessão
+  3. Redirect para `/dashboard`
+  > `POST /auth/admin/login` retorna `{ token, user }` — o `user` já vem na resposta do login.
+  > Não é necessário chamar `GET /auth/me` separadamente após o login.
 - Responsive: left panel hidden on mobile (`hidden lg:flex`)
 - Unit test: LoginForm shows validation errors, calls api on valid submit (MSW)
 - E2E test: successful login redirects to /dashboard (API real — requer seed de usuário admin no DB)

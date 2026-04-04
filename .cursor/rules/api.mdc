@@ -79,7 +79,7 @@ apps/api/
 - Valida o body/params/query com Zod
 - Chama a factory para obter o service
 - Chama `service.execute()`
-- Orquestra side effects assíncronos (e-mails fire-and-forget, notificações) — **não o service**
+- Orquestra side effects de e-mail conforme o padrão adequado ao tipo (ver seção Logging e Observabilidade)
 - Registra eventos de auditoria, falhas operacionais e segurança com `request.log`
 - Retorna a resposta HTTP
 
@@ -414,16 +414,40 @@ export const app = fastify({
 })
 ```
 
-### Side effects no controller — padrão fire-and-forget
+### Side effects de e-mail — três padrões conforme criticidade
 
-E-mails e notificações disparados após uma operação principal pertencem ao controller, não ao service. Usar `.catch` com log estruturado — nunca `.catch(() => {})`:
+A decisão de onde colocar o envio de e-mail e como tratar falhas depende da criticidade do e-mail para o fluxo de negócio:
+
+**1. Fire-and-forget no controller — e-mails de notificação**
+
+E-mail é cortesia; a operação principal está completa independente do envio. O controller dispara de forma assíncrona e loga a falha sem bloquear a resposta:
 
 ```typescript
-// register.controller.ts
-makeSendVerificationEmailService()
+// register.controller.ts — welcome email
+makeSendWelcomeEmailService()
   .execute({ userId: user.id })
   .catch((err) => request.log.error({ event: 'email.send_failed', userId: user.id, error: err.message }))
 ```
+
+**2. Fail-fast no service — e-mails funcionais**
+
+E-mail é parte essencial da operação (ex: convite com link para definir senha). Sem ele, o recurso criado está em estado inválido. O e-mail permanece no service, a falha propaga ao controller e retorna erro ao cliente. O admin pode tentar novamente.
+
+**3. Absorver + log no controller — e-mails com contrato de segurança**
+
+Endpoints como `POST /auth/forgot-password` retornam 204 independente de o e-mail existir ou não — decisão deliberada para não vazar informações. Esse contrato deve ser mantido mesmo quando o envio falha. O controller envolve o service em try-catch, loga e retorna 204:
+
+```typescript
+// forgot-password.controller.ts
+try {
+  await service.execute({ email })
+} catch (err) {
+  request.log.error({ event: 'email.send_failed', email, error: err.message })
+}
+return reply.status(204).send()
+```
+
+> **Padrão futuro:** para garantia de entrega em e-mails críticos, o padrão da indústria é o **Transactional Outbox** — operação principal e entrada na tabela `outbox_emails` gravadas na mesma transação; worker separado processa com retry. Adotar quando confiabilidade de entrega virar requisito explícito.
 
 ### Injeção de logger em services — quando necessário
 
@@ -472,6 +496,7 @@ const service = makeProcessBookingService(request.log)
 - ❌ Logar objeto `user` completo — use o serializer ou `{ id: user.id, role: user.role }`
 - ❌ `.catch(() => {})` em e-mails ou side effects — sempre logar a falha com `event` estruturado
 - ❌ Logs de negócio em services — pertencem ao controller via `request.log`
+- ❌ Tratar todos os e-mails como fire-and-forget — e-mails funcionais (ex: convite com link de acesso) devem usar fail-fast; e-mails com contrato de segurança (ex: forgot-password) devem absorver + log
 - ❌ Arquivos de log (`.log`) ou `.env` commitados no Git
 - ❌ Commitar a pasta `src/generated/` (é gerada pelo `prisma generate`)
 - ❌ Usar `z.string().email()` ou `z.string().url()` — use `z.email()` e `z.url()` do Zod v4

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, Eye, Pencil, Plus, Trash2, XCircle } from 'lucide-react'
+import { CheckCircle2, Eye, Plus, Trash2, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import type { ColumnDef } from '@tanstack/react-table'
 import { router } from '@/app/router'
@@ -15,6 +15,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -92,28 +93,35 @@ export function UsersPage() {
       cell: ({ row }) => {
         const user = row.original
         return (
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-              <a href={`/users/${user.id}`}>
-                <Eye className="h-4 w-4" />
-              </a>
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-              <a href={`/users/${user.id}`}>
-                <Pencil className="h-4 w-4" />
-              </a>
-            </Button>
-            {!user.deleted_at && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-destructive hover:text-destructive"
-                onClick={() => setDeleteId(user.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+          <TooltipProvider>
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                    <a href={`/users/${user.id}`}>
+                      <Eye className="h-4 w-4" />
+                    </a>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Ver detalhes</TooltipContent>
+              </Tooltip>
+              {!user.deleted_at && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => setDeleteId(user.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Excluir</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          </TooltipProvider>
         )
       },
     },

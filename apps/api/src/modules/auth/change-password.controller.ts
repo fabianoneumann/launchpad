@@ -10,5 +10,7 @@ export async function changePasswordController(request: FastifyRequest, reply: F
   const service = makeChangePasswordService()
   await service.execute({ userId: request.user.sub, currentPassword, newPassword })
 
+  request.log.info({ event: 'user.password_changed', userId: request.user.sub })
+
   return reply.status(204).send()
 }

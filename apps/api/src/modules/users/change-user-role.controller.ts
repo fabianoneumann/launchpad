@@ -9,5 +9,7 @@ export async function changeUserRoleController(request: FastifyRequest, reply: F
   const service = makeChangeUserRoleService()
   const { user } = await service.execute({ adminId: request.user.sub, userId: id, role })
 
+  request.log.info({ event: 'user.role_changed', userId: id, role, adminId: request.user.sub })
+
   return reply.status(200).send({ user })
 }

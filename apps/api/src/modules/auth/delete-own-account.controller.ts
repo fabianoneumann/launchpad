@@ -5,5 +5,7 @@ export async function deleteOwnAccountController(request: FastifyRequest, reply:
   const service = makeDeleteOwnAccountService()
   await service.execute({ userId: request.user.sub })
 
+  request.log.info({ event: 'user.deleted', userId: request.user.sub })
+
   return reply.status(204).send()
 }

@@ -7,5 +7,7 @@ export async function deleteUserController(request: FastifyRequest, reply: Fasti
   const service = makeDeleteUserService()
   await service.execute({ adminId: request.user.sub, userId: id })
 
+  request.log.info({ event: 'user.deleted', userId: id, adminId: request.user.sub })
+
   return reply.status(204).send()
 }

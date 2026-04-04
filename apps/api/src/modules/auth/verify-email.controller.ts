@@ -7,5 +7,7 @@ export async function verifyEmailController(request: FastifyRequest, reply: Fast
   const service = makeVerifyEmailService()
   await service.execute({ token })
 
+  request.log.info({ event: 'user.email_verified' })
+
   return reply.status(204).send()
 }

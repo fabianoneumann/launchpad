@@ -5,7 +5,16 @@ export async function forgotPasswordController(request: FastifyRequest, reply: F
   const { email } = request.body as { email: string }
 
   const service = makeForgotPasswordService()
-  await service.execute({ email })
+
+  try {
+    await service.execute({ email })
+  } catch (err) {
+    request.log.error({
+      event: 'email.send_failed',
+      context: 'forgot_password',
+      error: err instanceof Error ? err.message : String(err),
+    })
+  }
 
   return reply.status(204).send()
 }

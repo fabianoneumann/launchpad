@@ -20,8 +20,13 @@ import { PrismaUsersRepository } from '@/repositories/prisma/prisma-users-reposi
 export const app = fastify({
   logger:
     env.NODE_ENV === 'dev'
-      ? { transport: { target: 'pino-pretty', options: { colorize: true } } }
-      : true,
+      ? {
+          transport: { target: 'pino-pretty', options: { colorize: true } },
+          serializers: { user: (u) => ({ id: u.id, role: u.role }) },
+        }
+      : {
+          serializers: { user: (u) => ({ id: u.id, role: u.role }) },
+        },
 })
 
 app.setValidatorCompiler(validatorCompiler)

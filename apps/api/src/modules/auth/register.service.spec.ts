@@ -1,19 +1,16 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { compare } from 'bcryptjs'
 import { InMemoryUsersRepository } from '@/repositories/in-memory/in-memory-users-repository'
-import { FakeMailProvider } from '@/lib/mail/fake-mail-provider'
 import { RegisterService } from './register.service'
 import { UserAlreadyExistsError } from '@/shared/errors/user-already-exists-error'
 
 describe('RegisterService', () => {
   let repository: InMemoryUsersRepository
-  let mailProvider: FakeMailProvider
   let sut: RegisterService
 
   beforeEach(() => {
     repository = new InMemoryUsersRepository()
-    mailProvider = new FakeMailProvider()
-    sut = new RegisterService(repository, mailProvider)
+    sut = new RegisterService(repository)
   })
 
   it('should register a new user', async () => {
@@ -67,21 +64,5 @@ describe('RegisterService', () => {
     })
 
     expect(user.locale).toBe('en')
-  })
-
-  it('should send a welcome email after registration', async () => {
-    await sut.execute({
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: '123456',
-      locale: 'pt-BR',
-    })
-
-    await vi.waitFor(() => {
-      expect(mailProvider.sent).toHaveLength(1)
-    })
-
-    expect(mailProvider.sent[0].to).toBe('john@example.com')
-    expect(mailProvider.sent[0].subject).toBe('Bem-vindo ao Eco Iguaçu!')
   })
 })

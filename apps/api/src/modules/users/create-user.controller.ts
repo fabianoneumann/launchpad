@@ -15,6 +15,12 @@ export async function createUserController(request: FastifyRequest, reply: Fasti
 
   try {
     const { user } = await service.execute({ name, email, role, locale })
+    request.log.info({
+      event: 'user.created',
+      userId: user.id,
+      role: user.role,
+      adminId: request.user.sub,
+    })
     return reply.status(201).send({ user })
   } catch (err) {
     if (err instanceof UserAlreadyExistsError) {

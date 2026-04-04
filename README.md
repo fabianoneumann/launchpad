@@ -45,11 +45,13 @@ pnpm install
 cp apps/api/.env.example apps/api/.env
 
 # 3. Subir o banco de dados
-cd apps/api
-docker compose up -d
+docker compose -f apps/api/docker-compose.yml up -d
 
 # 4. Rodar as migrations
 pnpm --filter api db:migrate
+
+# 5. Popular o banco com dados iniciais
+pnpm --filter api exec prisma db seed
 ```
 
 ## Desenvolvimento
@@ -62,6 +64,12 @@ pnpm dev
 pnpm --filter api dev
 pnpm --filter web dev
 pnpm --filter admin dev
+
+# Inspecionar o banco via UI (Prisma Studio — abre no navegador)
+pnpm --filter api db:studio
+
+# Recriar o seed (apaga e repopula os dados de desenvolvimento)
+pnpm --filter api exec prisma db seed
 ```
 
 ## Testes

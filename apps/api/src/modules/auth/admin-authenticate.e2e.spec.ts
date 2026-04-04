@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import request from 'supertest'
-import { hash } from 'bcryptjs'
+import bcrypt from 'bcryptjs'
+const { hash } = bcrypt
 import { app } from '@/app'
 import { prisma } from '@/lib/prisma'
 

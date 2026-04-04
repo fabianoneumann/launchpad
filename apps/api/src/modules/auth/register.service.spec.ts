@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { compare } from 'bcryptjs'
+import bcrypt from 'bcryptjs'
+const { compare } = bcrypt
 import { InMemoryUsersRepository } from '@/repositories/in-memory/in-memory-users-repository'
 import { RegisterService } from './register.service'
 import { UserAlreadyExistsError } from '@/shared/errors/user-already-exists-error'

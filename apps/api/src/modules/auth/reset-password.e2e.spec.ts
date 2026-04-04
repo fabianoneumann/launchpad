@@ -2,7 +2,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import request from 'supertest'
 import { app } from '@/app'
 import { prisma } from '@/lib/prisma'
-import { hash } from 'bcryptjs'
+import bcrypt from 'bcryptjs'
+const { hash } = bcrypt
 import { createHash, randomBytes } from 'node:crypto'
 
 function sha256(value: string) {

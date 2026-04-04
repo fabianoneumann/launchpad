@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { hash, compare } from 'bcryptjs'
+import bcrypt from 'bcryptjs'
+const { hash, compare } = bcrypt
 import { createHash } from 'node:crypto'
 import { InMemoryUsersRepository } from '@/repositories/in-memory/in-memory-users-repository'
 import { InMemoryPasswordResetTokensRepository } from '@/repositories/in-memory/in-memory-password-reset-tokens-repository'

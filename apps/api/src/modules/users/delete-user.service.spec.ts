@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { hash } from 'bcryptjs'
+import bcrypt from 'bcryptjs'
+const { hash } = bcrypt
 import { InMemoryUsersRepository } from '@/repositories/in-memory/in-memory-users-repository'
 import { DeleteUserService } from './delete-user.service'
 import { CannotTargetSelfError } from '@/shared/errors/cannot-target-self-error'

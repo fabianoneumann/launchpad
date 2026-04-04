@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { hash } from 'bcryptjs'
+import bcrypt from 'bcryptjs'
+const { hash } = bcrypt
 import { InMemoryUsersRepository } from '@/repositories/in-memory/in-memory-users-repository'
 import { UpdateUserService } from './update-user.service'
 import { ResourceNotFoundError } from '@/shared/errors/resource-not-found-error'

@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Eye, Plus, Trash2, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import type { ColumnDef } from '@tanstack/react-table'
+import { Link } from '@tanstack/react-router'
 import { router } from '@/app/router'
 import { Route } from '@/app/routes/_layout/users/'
 import { useUsers } from '../hooks/useUsers'
@@ -41,7 +42,7 @@ export function UsersPage() {
     }>,
   ) {
     router.navigate({
-      to: '/_layout/users/',
+      to: '/users',
       search: { page, perPage, role, search, status, ...patch },
     })
   }
@@ -98,9 +99,9 @@ export function UsersPage() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                    <a href={`/users/${user.id}`}>
+                    <Link to="/users/$id" params={{ id: user.id }}>
                       <Eye className="h-4 w-4" />
-                    </a>
+                    </Link>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Ver detalhes</TooltipContent>

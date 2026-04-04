@@ -9,6 +9,13 @@ export function verifyUserRole(roleToVerify: Role) {
     const { role } = request.user
 
     if (roleHierarchy[role] < roleHierarchy[roleToVerify]) {
+      request.log.warn({
+        event: 'auth.forbidden',
+        userId: request.user.sub,
+        role,
+        requiredRole: roleToVerify,
+        path: request.url,
+      })
       return reply.status(403).send({ message: 'Não autorizado.' })
     }
   }

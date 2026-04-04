@@ -449,6 +449,20 @@ return reply.status(204).send()
 
 > **Padrão futuro:** para garantia de entrega em e-mails críticos, o padrão da indústria é o **Transactional Outbox** — operação principal e entrada na tabela `outbox_emails` gravadas na mesma transação; worker separado processa com retry. Adotar quando confiabilidade de entrega virar requisito explícito.
 
+### Logging em middlewares
+
+Middlewares também têm acesso a `request.log` e devem logar eventos de segurança antes de retornar a resposta:
+
+```typescript
+// verify-user-role.ts
+if (roleHierarchy[role] < roleHierarchy[roleToVerify]) {
+  request.log.warn({ event: 'auth.forbidden', userId: request.user.sub, role, requiredRole: roleToVerify, path: request.url })
+  return reply.status(403).send({ message: 'Não autorizado.' })
+}
+```
+
+Eventos de segurança em middleware usam `request.log.warn` — não `info` (não é operação normal) e não `error` (não é falha inesperada).
+
 ### Injeção de logger em services — quando necessário
 
 Usar apenas quando o service tiver lógica interna complexa com múltiplos passos, for executado fora do contexto de request (workers, jobs, filas), ou for chamado de múltiplos lugares. O tipo correto é `FastifyBaseLogger` de `'fastify'`:

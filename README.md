@@ -43,6 +43,7 @@ pnpm install
 # 2. Configurar variáveis de ambiente
 # Cada app tem um .env.example — copie e preencha antes de rodar
 cp apps/api/.env.example apps/api/.env
+cp apps/admin/.env.example apps/admin/.env
 
 # 3. Subir o banco de dados
 docker compose -f apps/api/docker-compose.yml up -d

@@ -3,8 +3,10 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse, delay } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { createRoute } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { server } from '@/mocks/node'
+import { renderWithRouter, rootRoute } from '@/tests/router-test-utils'
 
 vi.mock('@/app/router', () => ({ router: { navigate: vi.fn() } }))
 vi.mock('@/app/routes/_layout/users/', () => ({
@@ -44,6 +46,23 @@ function createWrapper() {
   )
 }
 
+function renderPage() {
+  const usersRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'users',
+    component: UsersPage,
+  })
+  const userDetailRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'users/$id',
+    component: () => null, // stub — apenas para o Link resolver
+  })
+  return renderWithRouter({
+    initialPath: '/users',
+    routes: [usersRoute, userDetailRoute],
+  })
+}
+
 beforeEach(() => {
   vi.mocked(Route.useSearch).mockReturnValue(defaultSearch)
   vi.clearAllMocks()
@@ -55,7 +74,7 @@ describe('UsersPage — renderização', () => {
       http.get(`${API_BASE}/users`, () => HttpResponse.json({ users: [mockUser], total: 1 })),
     )
 
-    render(<UsersPage />, { wrapper: createWrapper() })
+    renderPage()
 
     await waitFor(() => expect(screen.getByText('Alice Silva')).toBeInTheDocument())
     expect(screen.getByText('alice@test.com')).toBeInTheDocument()
@@ -123,7 +142,7 @@ describe('UsersPage — exclusão', () => {
       }),
     )
 
-    render(<UsersPage />, { wrapper: createWrapper() })
+    renderPage()
 
     await waitFor(() => screen.getByText('Alice Silva'))
 

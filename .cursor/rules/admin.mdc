@@ -385,6 +385,38 @@ const { UsersPage } = await import('./UsersPage')
 
 **Nunca mockar hooks de feature** (`vi.mock('../hooks/useUsers')`). Usar MSW para controlar respostas HTTP.
 
+### `renderWithRouter` — quando o componente usa `<Link>` do TanStack Router
+
+`<Link>` usa `useRouter()` internamente e requer `RouterProvider` no contexto. Quando o componente renderiza um `<Link>` com dados reais (não em estados de loading/lista vazia), `createWrapper()` é insuficiente — usar `renderWithRouter` de `@/tests/router-test-utils`.
+
+O utilitário segue o [padrão oficial do TanStack Router para testes](https://github.com/tanstack/router/blob/main/docs/router/how-to/setup-testing.md): `rootRoute` exportado no nível de módulo (não criado por chamada), `addChildren` pura (sem mutação).
+
+```typescript
+import { createRoute } from '@tanstack/react-router'
+import { renderWithRouter, rootRoute } from '@/tests/router-test-utils'
+
+function renderPage() {
+  const usersRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'users',
+    component: UsersPage,
+  })
+  const userDetailRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'users/$id',
+    component: () => null, // stub — apenas para o Link resolver
+  })
+  return renderWithRouter({
+    initialPath: '/users',
+    routes: [usersRoute, userDetailRoute],
+  })
+}
+```
+
+- Paths de rotas filho são **relativos** (sem `/` inicial): `'users'`, não `'/users'`
+- Incluir stubs para rotas alvo de `<Link>` evita erro de rota não encontrada
+- Os mocks `vi.mock('@/app/router')` e `vi.mock(Route.useSearch)` coexistem com `renderWithRouter` — são independentes
+
 ### Interação com Radix UI Select
 ```typescript
 // Radix Select: click no trigger para abrir, click na option para selecionar

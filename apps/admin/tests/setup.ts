@@ -12,6 +12,9 @@ global.ResizeObserver = class ResizeObserver {
 // Radix UI Select calls scrollIntoView on mount, which is not implemented in jsdom
 Element.prototype.scrollIntoView = () => {}
 
+// TanStack Router calls window.scrollTo on navigation, which is not implemented in jsdom
+window.scrollTo = () => {}
+
 beforeAll(() => server.listen())
 afterEach(() => server.resetHandlers())
 afterAll(() => server.close())

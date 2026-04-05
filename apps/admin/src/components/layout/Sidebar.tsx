@@ -1,4 +1,4 @@
-import { BarChart3, CreditCard, LayoutDashboard, LogOut, Users } from 'lucide-react'
+import { BarChart3, CreditCard, LayoutDashboard, LogOut, UserCircle, Users } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import type { LucideIcon } from 'lucide-react'
@@ -102,6 +102,14 @@ function SidebarContent() {
           Configurações
         </p>
         <div className="space-y-0.5">
+          <Link
+            to="/profile"
+            className={linkBase}
+            activeProps={{ className: 'bg-primary/10 text-primary font-medium' }}
+          >
+            <UserCircle className="h-4 w-4" />
+            Meu Perfil
+          </Link>
           <button className={`${linkBase} w-full`} onClick={() => setConfirmOpen(true)}>
             <LogOut className="h-4 w-4" />
             Sair

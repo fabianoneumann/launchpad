@@ -6,6 +6,7 @@ import { isAxiosError } from 'axios'
 import { Pencil, ShieldCheck, Trash2 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Route } from '@/app/routes/_layout/users/$id'
+import { useAuthStore } from '@/features/auth/store/auth-store'
 import type { User } from '../types'
 import { useUser } from '../hooks/useUser'
 import { useUpdateUser } from '../hooks/useUpdateUser'
@@ -19,6 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Dialog,
   DialogContent,
@@ -61,6 +63,8 @@ export function UserDetailPage() {
 
   const { data } = useUser(id)
   const user = data?.user
+  const currentUser = useAuthStore((s) => s.user)
+  const isSelf = currentUser?.id === user?.id
 
   const updateUser = useUpdateUser(id)
   const changeRole = useChangeUserRole(id)
@@ -108,26 +112,48 @@ export function UserDetailPage() {
                   <Pencil className="h-3.5 w-3.5 mr-1" />
                   Editar
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedRole(user.role)
-                    setRoleDialogOpen(true)
-                  }}
-                >
-                  <ShieldCheck className="h-3.5 w-3.5 mr-1" />
-                  Alterar Perfil
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-destructive hover:text-destructive"
-                  onClick={() => setDeleteDialogOpen(true)}
-                >
-                  <Trash2 className="h-3.5 w-3.5 mr-1" />
-                  Excluir
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={isSelf}
+                        onClick={() => {
+                          setSelectedRole(user.role)
+                          setRoleDialogOpen(true)
+                        }}
+                      >
+                        <ShieldCheck className="h-3.5 w-3.5 mr-1" />
+                        Alterar Perfil
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {isSelf
+                      ? 'Você não pode alterar o perfil da sua própria conta'
+                      : 'Alterar perfil'}
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        disabled={isSelf}
+                        onClick={() => setDeleteDialogOpen(true)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1" />
+                        Excluir
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {isSelf ? 'Você não pode excluir sua própria conta' : 'Excluir usuário'}
+                  </TooltipContent>
+                </Tooltip>
               </div>
             )}
           </CardHeader>

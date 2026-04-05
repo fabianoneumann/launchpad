@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse, delay } from 'msw'
@@ -15,6 +15,7 @@ vi.mock('@/app/routes/_layout/users/', () => ({
 
 import { router } from '@/app/router'
 import { Route } from '@/app/routes/_layout/users/'
+import { useAuthStore } from '@/features/auth/store/auth-store'
 const { UsersPage } = await import('./UsersPage')
 
 const API_BASE = 'http://localhost:3333'
@@ -131,6 +132,30 @@ describe('UsersPage — filtros', () => {
 })
 
 describe('UsersPage — exclusão', () => {
+  it('botão Excluir fica disabled na linha do próprio admin logado', async () => {
+    server.use(
+      http.get(`${API_BASE}/users`, () => HttpResponse.json({ users: [mockUser], total: 1 })),
+    )
+
+    useAuthStore.setState({
+      user: { id: 'user-1', name: 'Alice Silva', email: 'alice@test.com', role: 'ADMIN' },
+      token: 'tok',
+      isAuthenticated: true,
+    })
+
+    renderPage()
+
+    await waitFor(() => screen.getByText('Alice Silva'))
+
+    const row = screen.getByText('Alice Silva').closest('tr')!
+    const deleteBtn = within(row).getAllByRole('button').at(-1)!
+    expect(deleteBtn).toBeDisabled()
+  })
+
+  afterEach(() => {
+    useAuthStore.setState({ user: null, token: null, isAuthenticated: false })
+  })
+
   it('confirmar exclusão chama DELETE /users/:id', async () => {
     let deleteCalled = false
 

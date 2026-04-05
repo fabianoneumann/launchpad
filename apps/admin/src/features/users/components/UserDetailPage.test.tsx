@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -13,6 +13,7 @@ vi.mock('@/app/routes/_layout/users/$id', () => ({
 
 import { router } from '@/app/router'
 import { Route } from '@/app/routes/_layout/users/$id'
+import { useAuthStore } from '@/features/auth/store/auth-store'
 const { UserDetailPage } = await import('./UserDetailPage')
 
 const API_BASE = 'http://localhost:3333'
@@ -153,6 +154,29 @@ describe('UserDetailPage — alterar perfil', () => {
     await userEvent.click(screen.getByRole('button', { name: /confirmar/i }))
 
     await waitFor(() => expect(roleBody).toEqual({ role: 'ADMIN' }))
+  })
+})
+
+describe('UserDetailPage — self (próprio admin)', () => {
+  beforeEach(() => {
+    useAuthStore.setState({
+      user: { id: 'user-1', name: 'Alice Silva', email: 'alice@test.com', role: 'ADMIN' },
+      token: 'tok',
+      isAuthenticated: true,
+    })
+  })
+
+  afterEach(() => {
+    useAuthStore.setState({ user: null, token: null, isAuthenticated: false })
+  })
+
+  it('botões Alterar Perfil e Excluir ficam disabled quando visualizando o próprio perfil', async () => {
+    renderPage()
+
+    await waitFor(() => screen.getAllByText('Alice Silva'))
+    expect(screen.getByRole('button', { name: /alterar perfil/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /excluir/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /editar/i })).not.toBeDisabled()
   })
 })
 

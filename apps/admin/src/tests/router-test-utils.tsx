@@ -8,6 +8,7 @@ import {
   type AnyRoute,
 } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 export function createTestQueryClient() {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -33,7 +34,9 @@ export function renderWithRouter({
 
   const result = render(
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <TooltipProvider>
+        <RouterProvider router={router} />
+      </TooltipProvider>
     </QueryClientProvider>,
   )
 

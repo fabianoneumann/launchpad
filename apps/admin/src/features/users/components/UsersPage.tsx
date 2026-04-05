@@ -6,6 +6,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { Link } from '@tanstack/react-router'
 import { router } from '@/app/router'
 import { Route } from '@/app/routes/_layout/users/'
+import { useAuthStore } from '@/features/auth/store/auth-store'
 import { useUsers } from '../hooks/useUsers'
 import { deleteUser } from '../api/users.api'
 import type { User } from '../types'
@@ -16,7 +17,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -31,6 +32,7 @@ export function UsersPage() {
   const queryClient = useQueryClient()
   const { data, isLoading } = useUsers({ page, perPage, role, search, status })
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const currentUser = useAuthStore((s) => s.user)
 
   function navigate(
     patch: Partial<{
@@ -94,35 +96,40 @@ export function UsersPage() {
       cell: ({ row }) => {
         const user = row.original
         return (
-          <TooltipProvider>
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                  <Link to="/users/$id" params={{ id: user.id }}>
+                    <Eye className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Ver detalhes</TooltipContent>
+            </Tooltip>
+            {!user.deleted_at && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                    <Link to="/users/$id" params={{ id: user.id }}>
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Ver detalhes</TooltipContent>
-              </Tooltip>
-              {!user.deleted_at && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
+                  <span>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-destructive hover:text-destructive"
+                      disabled={currentUser?.id === user.id}
                       onClick={() => setDeleteId(user.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Excluir</TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-          </TooltipProvider>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {currentUser?.id === user.id
+                    ? 'Você não pode excluir sua própria conta'
+                    : 'Excluir'}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
         )
       },
     },

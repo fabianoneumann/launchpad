@@ -417,6 +417,21 @@ function renderPage() {
 - Incluir stubs para rotas alvo de `<Link>` evita erro de rota não encontrada
 - Os mocks `vi.mock('@/app/router')` e `vi.mock(Route.useSearch)` coexistem com `renderWithRouter` — são independentes
 
+**Primeira query após `renderWithRouter` deve ser assíncrona.** `RouterProvider` resolve rotas via `startTransition` — o componente não está no DOM imediatamente após o render. Usar `findBy*` (async) na primeira query ou `waitFor` na primeira assertion:
+
+```typescript
+// ✅ correto — findBy* aguarda o componente montar
+await userEvent.type(await screen.findByLabelText('E-mail'), 'valor')
+
+// ✅ correto — waitFor para assertions diretas
+await waitFor(() => expect(screen.getByText(/mensagem/i)).toBeInTheDocument())
+
+// ❌ errado — getBy* é síncrono, componente ainda não montou
+await userEvent.type(screen.getByLabelText('E-mail'), 'valor')
+```
+
+Após a primeira query assíncrona, queries síncronas (`getBy*`) funcionam normalmente — o componente já está montado.
+
 ### Interação com Radix UI Select
 ```typescript
 // Radix Select: click no trigger para abrir, click na option para selecionar

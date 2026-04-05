@@ -10,6 +10,7 @@ import { useAuthStore } from '@/features/auth/store/auth-store'
 import { useUsers } from '../hooks/useUsers'
 import { deleteUser } from '../api/users.api'
 import type { User } from '../types'
+import { CreateUserDialog } from './CreateUserDialog'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { DataTable } from '@/components/shared/DataTable/DataTable'
 import { RoleBadge } from '@/components/shared/RoleBadge'
@@ -32,6 +33,7 @@ export function UsersPage() {
   const queryClient = useQueryClient()
   const { data, isLoading } = useUsers({ page, perPage, role, search, status })
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
   const currentUser = useAuthStore((s) => s.user)
 
   function navigate(
@@ -139,7 +141,7 @@ export function UsersPage() {
     <PageLayout
       title="Usuários"
       actions={
-        <Button disabled>
+        <Button onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Novo Usuário
         </Button>
@@ -208,6 +210,8 @@ export function UsersPage() {
         variant="destructive"
         onConfirm={handleDelete}
       />
+
+      <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} />
     </PageLayout>
   )
 }

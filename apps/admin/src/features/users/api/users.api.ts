@@ -33,3 +33,13 @@ export async function changeUserRole(id: string, role: User['role']) {
   const { data } = await api.patch<{ user: User }>(`/users/${id}/role`, { role })
   return data
 }
+
+export async function createUser(data: {
+  name: string
+  email: string
+  role: User['role']
+  locale?: string
+}) {
+  const { data: res } = await api.post<{ user: User }>('/users', data)
+  return res
+}

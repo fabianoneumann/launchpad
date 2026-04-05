@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { CheckCircle2, Loader2 } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { forgotPassword } from '../api/auth.api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -51,7 +52,7 @@ export function ForgotPasswordForm() {
                 sua senha.
               </p>
               <Button variant="outline" asChild>
-                <a href="/login">Voltar ao login</a>
+                <Link to="/login">Voltar ao login</Link>
               </Button>
             </div>
           ) : (
@@ -72,12 +73,12 @@ export function ForgotPasswordForm() {
                 Enviar instruções
               </Button>
               <div className="text-center">
-                <a
-                  href="/login"
+                <Link
+                  to="/login"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   Voltar ao login
-                </a>
+                </Link>
               </div>
             </form>
           )}

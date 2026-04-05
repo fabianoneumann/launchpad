@@ -1,4 +1,5 @@
 import { ChevronRight } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 
 interface Breadcrumb {
@@ -24,9 +25,9 @@ export function PageLayout({ breadcrumbs, title, actions, children }: PageLayout
                 <span key={i} className="flex items-center gap-1">
                   {i > 0 && <ChevronRight className="h-3 w-3" />}
                   {crumb.href ? (
-                    <a href={crumb.href} className="hover:text-foreground transition-colors">
+                    <Link to={crumb.href} className="hover:text-foreground transition-colors">
                       {crumb.label}
-                    </a>
+                    </Link>
                   ) : (
                     <span className="text-foreground">{crumb.label}</span>
                   )}

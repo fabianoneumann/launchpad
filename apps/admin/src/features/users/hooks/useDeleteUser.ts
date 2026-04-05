@@ -10,7 +10,7 @@ export function useDeleteUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       toast.success('Usuário excluído com sucesso')
-      router.navigate({ to: '/_layout/users/' })
+      router.navigate({ to: '/users' })
     },
     onError: () => {
       toast.error('Erro ao excluir usuário')

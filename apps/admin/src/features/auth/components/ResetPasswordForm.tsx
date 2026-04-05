@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { resetPassword } from '../api/auth.api'
 import { Route } from '@/app/routes/reset-password'
 import { Button } from '@/components/ui/button'
@@ -66,7 +67,7 @@ export function ResetPasswordForm() {
                 Sua senha foi redefinida com sucesso.
               </p>
               <Button variant="outline" asChild>
-                <a href="/login">Ir para o login</a>
+                <Link to="/login">Ir para o login</Link>
               </Button>
             </div>
           ) : status === 'error' ? (
@@ -76,7 +77,7 @@ export function ResetPasswordForm() {
                 Este link de recuperação é inválido ou já expirou.
               </p>
               <Button variant="outline" asChild>
-                <a href="/forgot-password">Solicitar novo link</a>
+                <Link to="/forgot-password">Solicitar novo link</Link>
               </Button>
             </div>
           ) : (

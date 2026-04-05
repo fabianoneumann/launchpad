@@ -1,8 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
+import { createRoute } from '@tanstack/react-router'
 import { server } from '@/mocks/node'
+import { renderWithRouter, rootRoute } from '@/tests/router-test-utils'
 
 vi.mock('@/app/router', () => ({ router: { navigate: vi.fn() } }))
 vi.mock('@/app/routes/reset-password', () => ({
@@ -11,6 +13,29 @@ vi.mock('@/app/routes/reset-password', () => ({
 
 import { Route } from '@/app/routes/reset-password'
 const { ResetPasswordForm } = await import('./ResetPasswordForm')
+
+function renderForm() {
+  return renderWithRouter({
+    initialPath: '/reset-password',
+    routes: [
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: 'reset-password',
+        component: ResetPasswordForm,
+      }),
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: 'login',
+        component: () => null,
+      }),
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: 'forgot-password',
+        component: () => null,
+      }),
+    ],
+  })
+}
 
 const API_BASE = 'http://localhost:3333'
 
@@ -25,9 +50,9 @@ describe('ResetPasswordForm — token ausente', () => {
     )
 
     vi.mocked(Route.useSearch).mockReturnValue({ token: '' })
-    render(<ResetPasswordForm />)
+    renderForm()
 
-    expect(screen.getByText(/inválido ou expirado/i)).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText(/inválido ou expirado/i)).toBeInTheDocument())
     expect(apiCalled).toBe(false)
   })
 })
@@ -43,9 +68,9 @@ describe('ResetPasswordForm — validação', () => {
     )
 
     vi.mocked(Route.useSearch).mockReturnValue({ token: 'valid-token' })
-    render(<ResetPasswordForm />)
+    renderForm()
 
-    await userEvent.type(screen.getByLabelText('Nova senha'), '1234567')
+    await userEvent.type(await screen.findByLabelText('Nova senha'), '1234567')
     await userEvent.type(screen.getByLabelText('Confirmar senha'), '1234567')
     await userEvent.click(screen.getByRole('button', { name: /redefinir senha/i }))
 
@@ -65,9 +90,9 @@ describe('ResetPasswordForm — validação', () => {
     )
 
     vi.mocked(Route.useSearch).mockReturnValue({ token: 'valid-token' })
-    render(<ResetPasswordForm />)
+    renderForm()
 
-    await userEvent.type(screen.getByLabelText('Nova senha'), 'minhasenha123')
+    await userEvent.type(await screen.findByLabelText('Nova senha'), 'minhasenha123')
     await userEvent.type(screen.getByLabelText('Confirmar senha'), 'senhadiferente')
     await userEvent.click(screen.getByRole('button', { name: /redefinir senha/i }))
 
@@ -87,9 +112,9 @@ describe('ResetPasswordForm — submit bem-sucedido', () => {
     )
 
     vi.mocked(Route.useSearch).mockReturnValue({ token: 'valid-token' })
-    render(<ResetPasswordForm />)
+    renderForm()
 
-    await userEvent.type(screen.getByLabelText('Nova senha'), 'minhasenha123')
+    await userEvent.type(await screen.findByLabelText('Nova senha'), 'minhasenha123')
     await userEvent.type(screen.getByLabelText('Confirmar senha'), 'minhasenha123')
     await userEvent.click(screen.getByRole('button', { name: /redefinir senha/i }))
 
@@ -109,9 +134,9 @@ describe('ResetPasswordForm — token inválido na API', () => {
     )
 
     vi.mocked(Route.useSearch).mockReturnValue({ token: 'expired-token' })
-    render(<ResetPasswordForm />)
+    renderForm()
 
-    await userEvent.type(screen.getByLabelText('Nova senha'), 'minhasenha123')
+    await userEvent.type(await screen.findByLabelText('Nova senha'), 'minhasenha123')
     await userEvent.type(screen.getByLabelText('Confirmar senha'), 'minhasenha123')
     await userEvent.click(screen.getByRole('button', { name: /redefinir senha/i }))
 

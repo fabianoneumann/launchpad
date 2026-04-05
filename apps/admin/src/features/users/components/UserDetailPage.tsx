@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { isAxiosError } from 'axios'
 import { Pencil, ShieldCheck, Trash2 } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { Route } from '@/app/routes/_layout/users/$id'
 import type { User } from '../types'
 import { useUser } from '../hooks/useUser'
@@ -93,7 +94,7 @@ export function UserDetailPage() {
       breadcrumbs={[{ label: 'Usuários', href: '/users' }, { label: user?.name ?? '...' }]}
       actions={
         <Button variant="outline" size="sm" asChild>
-          <a href="/users">Voltar</a>
+          <Link to="/users">Voltar</Link>
         </Button>
       }
     >

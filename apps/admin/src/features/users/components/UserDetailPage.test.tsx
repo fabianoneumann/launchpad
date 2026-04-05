@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createRoute } from '@tanstack/react-router'
 import { server } from '@/mocks/node'
+import { renderWithRouter, rootRoute } from '@/tests/router-test-utils'
 
 vi.mock('@/app/router', () => ({ router: { navigate: vi.fn() } }))
 vi.mock('@/app/routes/_layout/users/$id', () => ({
@@ -29,11 +29,21 @@ const mockUser = {
   updated_at: '2024-01-01T00:00:00Z',
 }
 
-function createWrapper() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  )
+function renderPage() {
+  const userDetailRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'users/$id',
+    component: UserDetailPage,
+  })
+  const usersRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'users',
+    component: () => null, // stub — destino do botão Voltar e breadcrumb
+  })
+  return renderWithRouter({
+    initialPath: '/users/user-1',
+    routes: [userDetailRoute, usersRoute],
+  })
 }
 
 beforeEach(() => {
@@ -44,7 +54,7 @@ beforeEach(() => {
 
 describe('UserDetailPage — renderização', () => {
   it('renderiza dados do usuário', async () => {
-    render(<UserDetailPage />, { wrapper: createWrapper() })
+    renderPage()
 
     await waitFor(() => expect(screen.getAllByText('Alice Silva').length).toBeGreaterThan(0))
     expect(screen.getByText('alice@test.com')).toBeInTheDocument()
@@ -54,7 +64,7 @@ describe('UserDetailPage — renderização', () => {
 
 describe('UserDetailPage — edição', () => {
   it('botão Editar exibe formulário inline', async () => {
-    render(<UserDetailPage />, { wrapper: createWrapper() })
+    renderPage()
 
     await waitFor(() => screen.getAllByText('Alice Silva'))
     await userEvent.click(screen.getByRole('button', { name: /editar/i }))
@@ -72,7 +82,7 @@ describe('UserDetailPage — edição', () => {
       }),
     )
 
-    render(<UserDetailPage />, { wrapper: createWrapper() })
+    renderPage()
 
     await waitFor(() => screen.getAllByText('Alice Silva'))
     await userEvent.click(screen.getByRole('button', { name: /editar/i }))
@@ -88,7 +98,7 @@ describe('UserDetailPage — edição', () => {
       http.patch(`${API_BASE}/users/user-1`, () => HttpResponse.json(null, { status: 409 })),
     )
 
-    render(<UserDetailPage />, { wrapper: createWrapper() })
+    renderPage()
 
     await waitFor(() => screen.getAllByText('Alice Silva'))
     await userEvent.click(screen.getByRole('button', { name: /editar/i }))
@@ -108,14 +118,14 @@ describe('UserDetailPage — exclusão', () => {
       }),
     )
 
-    render(<UserDetailPage />, { wrapper: createWrapper() })
+    renderPage()
 
     await waitFor(() => screen.getAllByText('Alice Silva'))
     await userEvent.click(screen.getByRole('button', { name: /excluir/i }))
     await userEvent.click(screen.getByRole('button', { name: /^excluir$/i }))
 
     await waitFor(() => expect(deleteCalled).toBe(true))
-    expect(vi.mocked(router.navigate)).toHaveBeenCalledWith({ to: '/_layout/users/' })
+    expect(vi.mocked(router.navigate)).toHaveBeenCalledWith({ to: '/users' })
   })
 })
 
@@ -129,7 +139,7 @@ describe('UserDetailPage — alterar perfil', () => {
       }),
     )
 
-    render(<UserDetailPage />, { wrapper: createWrapper() })
+    renderPage()
 
     await waitFor(() => screen.getAllByText('Alice Silva'))
     await userEvent.click(screen.getByRole('button', { name: /alterar perfil/i }))
@@ -154,7 +164,7 @@ describe('UserDetailPage — usuário excluído', () => {
       ),
     )
 
-    render(<UserDetailPage />, { wrapper: createWrapper() })
+    renderPage()
 
     await waitFor(() => screen.getAllByText('Alice Silva'))
     expect(screen.queryByRole('button', { name: /editar/i })).not.toBeInTheDocument()

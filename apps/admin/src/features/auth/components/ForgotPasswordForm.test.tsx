@@ -1,12 +1,32 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
+import { createRoute } from '@tanstack/react-router'
 import { server } from '@/mocks/node'
+import { renderWithRouter, rootRoute } from '@/tests/router-test-utils'
 
 vi.mock('@/app/router', () => ({ router: { navigate: vi.fn() } }))
 
 const { ForgotPasswordForm } = await import('./ForgotPasswordForm')
+
+function renderForm() {
+  return renderWithRouter({
+    initialPath: '/forgot-password',
+    routes: [
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: 'forgot-password',
+        component: ForgotPasswordForm,
+      }),
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: 'login',
+        component: () => null,
+      }),
+    ],
+  })
+}
 
 const API_BASE = 'http://localhost:3333'
 
@@ -20,8 +40,8 @@ describe('ForgotPasswordForm — validação', () => {
       }),
     )
 
-    render(<ForgotPasswordForm />)
-    await userEvent.type(screen.getByLabelText('E-mail'), 'nao-e-email')
+    renderForm()
+    await userEvent.type(await screen.findByLabelText('E-mail'), 'nao-e-email')
     await userEvent.click(screen.getByRole('button', { name: /enviar instruções/i }))
 
     await waitFor(() => {
@@ -39,8 +59,8 @@ describe('ForgotPasswordForm — submit bem-sucedido', () => {
       }),
     )
 
-    render(<ForgotPasswordForm />)
-    await userEvent.type(screen.getByLabelText('E-mail'), 'admin@test.com')
+    renderForm()
+    await userEvent.type(await screen.findByLabelText('E-mail'), 'admin@test.com')
     await userEvent.click(screen.getByRole('button', { name: /enviar instruções/i }))
 
     await waitFor(() => {

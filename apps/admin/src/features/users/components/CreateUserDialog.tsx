@@ -1,4 +1,5 @@
 import { useForm, Controller } from 'react-hook-form'
+import { Loader2 } from 'lucide-react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { isAxiosError } from 'axios'
@@ -42,6 +43,11 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
     defaultValues: { name: '', email: '', role: 'USER' },
   })
 
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) form.reset()
+    onOpenChange(nextOpen)
+  }
+
   const onSubmit = form.handleSubmit((data) => {
     createUser.mutate(
       { ...data, locale: 'pt-BR' },
@@ -60,7 +66,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   })
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Novo Usuário</DialogTitle>
@@ -100,10 +106,11 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
               Cancelar
             </Button>
             <Button type="submit" disabled={createUser.isPending}>
+              {createUser.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Criar
             </Button>
           </DialogFooter>

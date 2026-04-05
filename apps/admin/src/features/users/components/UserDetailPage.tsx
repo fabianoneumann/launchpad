@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { isAxiosError } from 'axios'
-import { Pencil, ShieldCheck, Trash2 } from 'lucide-react'
+import { Loader2, Pencil, ShieldCheck, Trash2 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Route } from '@/app/routes/_layout/users/$id'
 import { useAuthStore } from '@/features/auth/store/auth-store'
@@ -178,6 +178,7 @@ export function UserDetailPage() {
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit" size="sm" disabled={updateUser.isPending}>
+                    {updateUser.isPending && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
                     Salvar
                   </Button>
                   <Button
@@ -275,6 +276,7 @@ export function UserDetailPage() {
                 }
               }}
             >
+              {changeRole.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Confirmar
             </Button>
           </DialogFooter>
@@ -288,6 +290,7 @@ export function UserDetailPage() {
         description={`Tem certeza que deseja excluir ${user?.name ?? 'este usuário'}?`}
         confirmLabel="Excluir"
         variant="destructive"
+        isPending={deleteUser.isPending}
         onConfirm={() => deleteUser.mutate(id)}
       />
     </PageLayout>

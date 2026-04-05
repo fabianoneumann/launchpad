@@ -1,3 +1,4 @@
+import { Loader2 } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +19,7 @@ interface ConfirmDialogProps {
   cancelLabel?: string
   onConfirm: () => void
   variant?: 'default' | 'destructive'
+  isPending?: boolean
 }
 
 export function ConfirmDialog({
@@ -29,6 +31,7 @@ export function ConfirmDialog({
   cancelLabel = 'Cancelar',
   onConfirm,
   variant = 'default',
+  isPending = false,
 }: ConfirmDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -41,12 +44,14 @@ export function ConfirmDialog({
           <AlertDialogCancel>{cancelLabel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
+            disabled={isPending}
             className={
               variant === 'destructive'
                 ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
                 : undefined
             }
           >
+            {isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
             {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

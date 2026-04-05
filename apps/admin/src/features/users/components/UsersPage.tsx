@@ -34,6 +34,7 @@ export function UsersPage() {
   const { data, isLoading } = useUsers({ page, perPage, role, search, status })
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const currentUser = useAuthStore((s) => s.user)
 
   function navigate(
@@ -53,6 +54,7 @@ export function UsersPage() {
 
   const handleDelete = async () => {
     if (!deleteId) return
+    setIsDeleting(true)
     try {
       await deleteUser(deleteId)
       queryClient.invalidateQueries({ queryKey: ['users'] })
@@ -60,6 +62,7 @@ export function UsersPage() {
     } catch {
       toast.error('Erro ao excluir usuário')
     } finally {
+      setIsDeleting(false)
       setDeleteId(null)
     }
   }
@@ -208,6 +211,7 @@ export function UsersPage() {
         description="Tem certeza que deseja excluir este usuário?"
         confirmLabel="Excluir"
         variant="destructive"
+        isPending={isDeleting}
         onConfirm={handleDelete}
       />
 

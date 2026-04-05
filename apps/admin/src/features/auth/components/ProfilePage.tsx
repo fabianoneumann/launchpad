@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { isAxiosError } from 'axios'
+import { Loader2 } from 'lucide-react'
 import { useProfile } from '../hooks/useProfile'
 import { useUpdateProfile } from '../hooks/useUpdateProfile'
 import { useChangePassword } from '../hooks/useChangePassword'
@@ -94,7 +95,8 @@ export function ProfilePage() {
                 <Input id="email" value={user?.email ?? ''} disabled />
               </div>
               <Button type="submit" disabled={updateProfile.isPending}>
-                {updateProfile.isPending ? 'Salvando...' : 'Salvar alterações'}
+                {updateProfile.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                Salvar alterações
               </Button>
             </form>
           </CardContent>
@@ -150,7 +152,8 @@ export function ProfilePage() {
                 )}
               </div>
               <Button type="submit" disabled={changePassword.isPending}>
-                {changePassword.isPending ? 'Salvando...' : 'Alterar senha'}
+                {changePassword.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                Alterar senha
               </Button>
             </form>
           </CardContent>

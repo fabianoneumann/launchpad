@@ -76,6 +76,26 @@ describe('CreateUserDialog', () => {
     await waitFor(() => expect(screen.getByText('Este email já está em uso')).toBeInTheDocument())
   })
 
+  it('campos obrigatórios e email inválido exibem erros de validação sem chamar a API', async () => {
+    let postCalled = false
+    server.use(
+      http.post(`${API_BASE}/users`, () => {
+        postCalled = true
+        return HttpResponse.json({})
+      }),
+    )
+
+    renderDialog()
+
+    await userEvent.click(screen.getByRole('button', { name: /criar/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Nome deve ter ao menos 2 caracteres')).toBeInTheDocument()
+      expect(screen.getByText('Email inválido')).toBeInTheDocument()
+    })
+    expect(postCalled).toBe(false)
+  })
+
   it('sucesso fecha o dialog', async () => {
     const onOpenChange = vi.fn()
     server.use(http.post(`${API_BASE}/users`, () => HttpResponse.json({ user: mockUser })))

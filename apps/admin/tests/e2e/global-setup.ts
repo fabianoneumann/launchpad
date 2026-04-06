@@ -12,6 +12,6 @@ const env = {
 }
 
 export default async function globalSetup() {
-  execSync('npx prisma migrate reset --force', { stdio: 'inherit', cwd: apiDir, env })
-  execSync('npx prisma db seed', { stdio: 'inherit', cwd: apiDir, env })
+  execSync('pnpm exec prisma migrate reset --force', { stdio: 'inherit', cwd: apiDir, env })
+  execSync('pnpm exec prisma db seed', { stdio: 'inherit', cwd: apiDir, env })
 }

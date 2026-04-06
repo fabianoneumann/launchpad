@@ -22,4 +22,16 @@ test.describe('Login page', () => {
     await page.goto('/login')
     await expect(page).toHaveURL('/dashboard')
   })
+
+  test('sessão expirada preserva URL e redireciona após login', async ({ page }) => {
+    await page.goto('/users')
+    await expect(page).toHaveURL(/\/login\?redirect=%2Fusers/)
+
+    await page.getByLabel('E-mail').fill(ADMIN_EMAIL)
+    await page.locator('input[name="password"]').fill(ADMIN_PASSWORD)
+    await page.getByRole('button', { name: /entrar/i }).click()
+
+    await page.waitForURL(/\/users/)
+    await expect(page).toHaveURL(/\/users/)
+  })
 })

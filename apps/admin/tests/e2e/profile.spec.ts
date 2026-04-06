@@ -15,9 +15,9 @@ test('alterar senha encerra sessão e impede acesso ao dashboard', async ({ page
   await page.getByRole('button', { name: 'Alterar senha' }).click()
 
   // Após mudança de senha a sessão é encerrada e o usuário vai para /login
-  await expect(page).toHaveURL('/login')
+  await expect(page).toHaveURL(/\/login/)
 
   // Tentar acessar /dashboard sem sessão redireciona para /login
   await page.goto('/dashboard')
-  await expect(page).toHaveURL('/login')
+  await expect(page).toHaveURL(/\/login/)
 })

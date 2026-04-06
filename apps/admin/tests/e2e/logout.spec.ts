@@ -10,8 +10,8 @@ test('logout: confirmar redireciona para /login e protege rotas', async ({ page 
   await page.getByRole('button', { name: 'Sair' }).click()
   await page.getByRole('button', { name: /^sair$/i }).click()
 
-  await expect(page).toHaveURL('/login')
+  await expect(page).toHaveURL(/\/login/)
 
   await page.goto('/dashboard')
-  await expect(page).toHaveURL('/login')
+  await expect(page).toHaveURL(/\/login/)
 })

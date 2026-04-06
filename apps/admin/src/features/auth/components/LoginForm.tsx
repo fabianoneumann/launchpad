@@ -16,6 +16,7 @@ import {
   Users,
 } from 'lucide-react'
 import { router } from '@/app/router'
+import { Route } from '@/app/routes/login'
 import { useAuthStore } from '@/features/auth/store/auth-store'
 import { loginAdmin } from '../api/auth.api'
 import { Button } from '@/components/ui/button'
@@ -42,6 +43,7 @@ const decorativeIcons = [
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
+  const { redirect: redirectTo } = Route.useSearch()
 
   const {
     register,
@@ -55,7 +57,11 @@ export function LoginForm() {
     try {
       const { token, user } = await loginAdmin(email, password)
       useAuthStore.getState().setSession(user, token)
-      router.navigate({ to: '/dashboard' })
+      if (redirectTo?.startsWith('/')) {
+        router.navigate({ href: redirectTo })
+      } else {
+        router.navigate({ to: '/dashboard' })
+      }
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 401) {
         toast.error('Credenciais inválidas')

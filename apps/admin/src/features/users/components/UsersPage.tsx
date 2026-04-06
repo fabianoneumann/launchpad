@@ -121,6 +121,7 @@ export function UsersPage() {
                       size="icon"
                       className="h-8 w-8 text-destructive hover:text-destructive"
                       disabled={currentUser?.id === user.id}
+                      aria-label="Excluir"
                       onClick={() => setDeleteId(user.id)}
                     >
                       <Trash2 className="h-4 w-4" />

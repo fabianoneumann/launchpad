@@ -8,6 +8,7 @@ import { env } from '@/env'
 export function makeCreateUserService() {
   const usersRepository = new PrismaUsersRepository()
   const passwordResetTokensRepository = new PrismaPasswordResetTokensRepository()
-  const mailProvider = env.NODE_ENV === 'test' ? new FakeMailProvider() : new ResendMailProvider()
+  const mailProvider =
+    env.NODE_ENV === 'production' ? new ResendMailProvider() : new FakeMailProvider()
   return new CreateUserService(usersRepository, passwordResetTokensRepository, mailProvider)
 }

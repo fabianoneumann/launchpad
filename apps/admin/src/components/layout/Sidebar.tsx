@@ -46,8 +46,8 @@ const linkBase =
 function SidebarContent() {
   const [confirmOpen, setConfirmOpen] = useState(false)
 
-  function handleLogout() {
-    logoutAdmin().catch(() => {})
+  async function handleLogout() {
+    await logoutAdmin().catch(() => {})
     useAuthStore.getState().clearSession()
     router.navigate({ to: '/login' })
   }

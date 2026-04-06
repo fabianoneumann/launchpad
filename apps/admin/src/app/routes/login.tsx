@@ -1,11 +1,22 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, redirect, isRedirect } from '@tanstack/react-router'
 import { useAuthStore } from '@/features/auth/store/auth-store'
 import { LoginForm } from '@/features/auth/components/LoginForm'
+import { api } from '@/lib/api/client'
+import type { AuthUser } from '@/features/auth/types'
 
 export const Route = createFileRoute('/login')({
-  beforeLoad: () => {
+  beforeLoad: async () => {
     if (useAuthStore.getState().isAuthenticated) {
       throw redirect({ to: '/dashboard' })
+    }
+
+    try {
+      const { data: tokenData } = await api.patch<{ token: string; user: AuthUser }>('/auth/token/refresh')
+      useAuthStore.getState().setSession(tokenData.user, tokenData.token)
+      throw redirect({ to: '/dashboard' })
+    } catch (err) {
+      if (isRedirect(err)) throw err
+      // Refresh failed — show login form
     }
   },
   component: LoginForm,

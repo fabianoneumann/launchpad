@@ -49,12 +49,35 @@ test.describe('User detail page', () => {
     await loginAsAdmin(page)
     await page.goto(`/users/${user.id}`)
 
+    await page.getByRole('button', { name: 'Editar' }).click()
     await page.getByLabel('Nome').fill('Nome Atualizado')
     await page.getByRole('button', { name: 'Salvar' }).click()
 
     await expect(page.getByText('Usuário atualizado com sucesso')).toBeVisible()
     await page.reload()
+    await page.getByRole('button', { name: 'Editar' }).click()
     await expect(page.getByLabel('Nome')).toHaveValue('Nome Atualizado')
+
+    await request.delete(`${API_BASE}/users/${user.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+  })
+
+  test('alterar role: badge atualizado após confirmar', async ({ page, request }) => {
+    const token = await getAdminToken(request)
+    const user = await createIsolatedUser(request, token)
+
+    await loginAsAdmin(page)
+    await page.goto(`/users/${user.id}`)
+
+    await page.getByRole('button', { name: /alterar perfil/i }).click()
+    await page.getByRole('combobox').click()
+    await page.getByRole('option', { name: 'Member' }).click()
+    await page.getByRole('button', { name: 'Confirmar' }).click()
+
+    await expect(page.getByText('Perfil alterado com sucesso')).toBeVisible()
+    await page.getByRole('dialog').waitFor({ state: 'hidden' })
+    await expect(page.getByText('Member')).toBeVisible()
 
     await request.delete(`${API_BASE}/users/${user.id}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -68,9 +91,9 @@ test.describe('User detail page', () => {
     await loginAsAdmin(page)
     await page.goto(`/users/${user.id}`)
 
-    await page.getByRole('button', { name: /excluir usuário/i }).click()
-    await page.getByRole('button', { name: /^excluir$/i }).click()
+    await page.getByRole('button', { name: 'Excluir' }).click()
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Excluir' }).click()
 
-    await expect(page).toHaveURL('/users')
+    await expect(page).toHaveURL(/\/users/)
   })
 })

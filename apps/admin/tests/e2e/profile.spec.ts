@@ -10,7 +10,7 @@ test('alterar senha encerra sessão e impede acesso ao dashboard', async ({ page
   await page.goto('/profile')
 
   await page.getByLabel('Senha atual').fill(ORIGINAL_PASSWORD)
-  await page.getByLabel('Nova senha').fill(NEW_PASSWORD)
+  await page.getByLabel('Nova senha', { exact: true }).fill(NEW_PASSWORD)
   await page.getByLabel('Confirmar nova senha').fill(NEW_PASSWORD)
   await page.getByRole('button', { name: 'Alterar senha' }).click()
 

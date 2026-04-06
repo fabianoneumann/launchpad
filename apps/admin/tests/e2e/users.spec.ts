@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test'
-import { loginAsAdmin, API_BASE, ADMIN_EMAIL, ADMIN_PASSWORD } from './helpers/auth'
+import { loginAsAdmin, API_BASE, API_ADMIN_EMAIL, API_ADMIN_PASSWORD } from './helpers/auth'
 
 test.describe('Users page', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page)
     await page.goto('/users')
+    await expect(page).toHaveURL(/\/users/)
   })
 
   test('filtro "Somente deletados" exibe deleted@test.com', async ({ page }) => {
@@ -15,7 +16,7 @@ test.describe('Users page', () => {
 
   test('excluir usuário: confirmar remove da lista', async ({ page, request }) => {
     const loginRes = await request.post(`${API_BASE}/auth/admin/login`, {
-      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+      data: { email: API_ADMIN_EMAIL, password: API_ADMIN_PASSWORD },
     })
     const { token } = await loginRes.json()
 
@@ -30,7 +31,8 @@ test.describe('Users page', () => {
     })
     const { user } = await createRes.json()
 
-    await page.reload()
+    await page.goto('/users')
+    await expect(page).toHaveURL(/\/users/)
     await page.getByRole('row', { name: new RegExp(user.email) })
       .getByRole('button', { name: 'Excluir' })
       .click()
@@ -58,7 +60,7 @@ test.describe('Users page', () => {
 
     // Limpeza via API
     const loginRes = await request.post(`${API_BASE}/auth/admin/login`, {
-      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+      data: { email: API_ADMIN_EMAIL, password: API_ADMIN_PASSWORD },
     })
     const { token } = await loginRes.json()
     const listRes = await request.get(

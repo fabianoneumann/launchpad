@@ -6,7 +6,7 @@ export const Route = createRootRoute({
   component: () => (
     <Providers>
       <Outlet />
-      {import.meta.env.DEV && <TanStackRouterDevtools />}
+      {import.meta.env.DEV && <TanStackRouterDevtools position="bottom-right" />}
     </Providers>
   ),
 })

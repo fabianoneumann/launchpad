@@ -66,6 +66,30 @@ async function main() {
     },
   })
 
+  await prisma.user.upsert({
+    where: { email: 'logout@test.com' },
+    update: {},
+    create: {
+      name: 'Logout Test',
+      email: 'logout@test.com',
+      password_hash: await bcrypt.hash('123456', 6),
+      role: 'ADMIN',
+      validated_at: new Date(),
+    },
+  })
+
+  await prisma.user.upsert({
+    where: { email: 'api-admin@test.com' },
+    update: {},
+    create: {
+      name: 'API Admin',
+      email: 'api-admin@test.com',
+      password_hash: await bcrypt.hash('123456', 6),
+      role: 'ADMIN',
+      validated_at: new Date(),
+    },
+  })
+
   console.log('Seed concluído.')
 }
 

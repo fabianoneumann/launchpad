@@ -10,7 +10,7 @@ test.describe('Login page', () => {
   test('credenciais inválidas exibem toast de erro', async ({ page }) => {
     await page.goto('/login')
     await page.getByLabel('E-mail').fill(ADMIN_EMAIL)
-    await page.getByLabel('Senha').fill('senha-errada')
+    await page.locator('input[name="password"]').fill('senha-errada')
     await page.getByRole('button', { name: /entrar/i }).click()
     await expect(page.getByText('Credenciais inválidas')).toBeVisible()
   })

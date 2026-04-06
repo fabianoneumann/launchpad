@@ -221,6 +221,18 @@ Os endpoints de API existem para serem chamados via fetch/axios pelo frontend �
 
 ---
 
+## Testes E2E — aviso importante
+
+Os testes E2E executam `prisma migrate reset --force --skip-generate` via `globalSetup` antes de cada run. Isso **apaga e recria o banco de dados completo** (incluindo dados de desenvolvimento) e reaplica o seed com os usuários de teste.
+
+**Impacto:** não execute `pnpm --filter admin test:e2e` se houver dados de desenvolvimento importantes no banco — eles serão perdidos.
+
+### Ponto de melhoria — banco dedicado para testes
+
+O projeto usa atualmente o mesmo banco de desenvolvimento (`DATABASE_URL`) para os testes E2E. A melhoria planejada é criar um banco separado (`eco_iguassu_test`) e configurar uma variável `DATABASE_URL_E2E` no `apps/api/.env`. O `global-setup.ts` passaria essa variável ao rodar o reset, isolando completamente os dados de desenvolvimento dos testes.
+
+---
+
 ## Fluxo de kickoff
 
 1. ~~Usar Lovable para prototipar as telas do admin — anotar rotas, entidades, componentes por tela~~ ✓ **Concluído** — protótipo em [fabianoneumann/admin-compass](https://github.com/fabianoneumann/admin-compass), plano de issues em `issues-plan.txt`

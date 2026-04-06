@@ -454,6 +454,25 @@ beforeEach(() => {
 })
 ```
 
+### beforeEach vs afterEach
+
+O padrão do projeto usa `beforeEach` para definir o estado inicial de cada teste. `afterEach` tem casos de uso complementares que `beforeEach` sozinho não cobre:
+
+| Hook | Quando usar |
+|---|---|
+| `beforeEach` | Definir estado inicial conhecido (store, mocks configurados) |
+| `afterEach` | Garantir limpeza de efeitos colaterais independente de sucesso ou falha do teste |
+
+**Casos onde `afterEach` faz sentido:**
+- Restaurar timers: `afterEach(() => vi.useRealTimers())` após `vi.useFakeTimers()` dentro de um teste
+- Restaurar spies: `afterEach(() => vi.restoreAllMocks())` quando `vi.spyOn` substitui implementações reais
+- Limpar DOM/portais: componentes que fazem append em `document.body` (portais Radix) podem deixar resíduos
+- Combinar com `beforeEach`: quando o teste muta estado compartilhado como efeito colateral e a limpeza precisa ser garantida mesmo em falha
+
+`beforeEach` e `afterEach` são **complementares, não excludentes**. O padrão padrão é `beforeEach` para setup; `afterEach` é adicionado apenas quando há efeito colateral que precisa de limpeza garantida.
+
+---
+
 ### Comandos de teste
 ```bash
 pnpm --filter admin test          # roda todos os testes unitários

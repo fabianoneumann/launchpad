@@ -28,6 +28,7 @@ vi.mock('@/lib/api/client', () => ({ api: {} }))
 const { AppShell } = await import('./AppShell')
 
 beforeEach(() => {
+  vi.clearAllMocks()
   useAuthStore.setState({ user: null, token: null, isAuthenticated: false })
 })
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { useAuthStore } from '@/features/auth/store/auth-store'
 import { TopBar } from './TopBar'
@@ -9,7 +9,7 @@ vi.mock('next-themes', () => ({
 
 const defaultProps = { onMenuClick: vi.fn() }
 
-afterEach(() => {
+beforeEach(() => {
   useAuthStore.setState({ user: null, token: null, isAuthenticated: false })
 })
 

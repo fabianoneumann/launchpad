@@ -335,6 +335,16 @@ afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
 ```
 
+### clearMocks global
+
+O projeto usa `clearMocks: true` no `vitest.config.ts`, o que faz o Vitest chamar `vi.clearAllMocks()` automaticamente antes de cada teste. Isso zera o histórico de chamadas de todos os mocks (`.mock.calls`, `.mock.results`) sem afetar implementações.
+
+Por isso, **não é necessário chamar `vi.clearAllMocks()` manualmente nos arquivos de teste**. Se um mock precisa de uma implementação específica por teste, ela deve ser definida no `beforeEach` — não dependa de implementações configuradas em outros testes.
+
+> `clearMocks` ≠ `resetMocks`. O `clearMocks` limpa apenas o histórico; o `resetMocks` também remove implementações e quebraria os mocks de módulo. Não habilitar `resetMocks`.
+
+---
+
 ### Wrapper QueryClient — obrigatório em todo teste de componente
 ```typescript
 function createWrapper() {

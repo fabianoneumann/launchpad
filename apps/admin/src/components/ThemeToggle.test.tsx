@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
@@ -10,10 +10,6 @@ vi.mock('next-themes', () => ({
 
 import { useTheme } from 'next-themes'
 const { ThemeToggle } = await import('./ThemeToggle')
-
-beforeEach(() => {
-  vi.clearAllMocks()
-})
 
 describe('ThemeToggle', () => {
   it('clique quando tema é "light" chama setTheme("dark")', async () => {

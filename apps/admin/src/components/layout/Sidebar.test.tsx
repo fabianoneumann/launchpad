@@ -37,7 +37,6 @@ const defaultProps = { mobileOpen: false, onClose: vi.fn() }
 
 beforeEach(() => {
   useAuthStore.setState({ user: mockUser, token: 'tok', isAuthenticated: true })
-  vi.clearAllMocks()
 })
 
 describe('Sidebar — logout', () => {

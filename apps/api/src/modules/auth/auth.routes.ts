@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { SUPPORTED_LOCALES } from '@eco-iguassu/shared-types'
+import { userResponseSchema } from '@/shared/schemas/user-response-schema'
 import { verifyJWT } from '@/shared/middlewares/verify-jwt'
 import { registerController } from './register.controller'
 import { authenticateController } from './authenticate.controller'
@@ -15,17 +16,6 @@ import { changePasswordController } from './change-password.controller'
 import { deleteOwnAccountController } from './delete-own-account.controller'
 import { verifyEmailController } from './verify-email.controller'
 import { resendVerificationEmailController } from './resend-verification-email.controller'
-
-const userResponseSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  email: z.string(),
-  role: z.enum(['ADMIN', 'MEMBER', 'USER']),
-  locale: z.string(),
-  validated_at: z.date().nullable(),
-  created_at: z.date(),
-  updated_at: z.date(),
-})
 
 export const authRoutes: FastifyPluginAsyncZod = async (app) => {
   app.route({
@@ -64,7 +54,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     url: '/auth/token/refresh',
     schema: {
       response: {
-        200: z.object({ token: z.string() }),
+        200: z.object({ token: z.string(), user: userResponseSchema }),
       },
     },
     handler: refreshTokenController,

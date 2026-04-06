@@ -32,7 +32,7 @@ describe('Refresh Token E2E', () => {
     const response = await request(app.server).patch('/auth/token/refresh').set('Cookie', cookies)
 
     expect(response.statusCode).toBe(200)
-    expect(response.body).toMatchObject({ token: expect.any(String) })
+    expect(response.body).toMatchObject({ token: expect.any(String), user: expect.any(Object) })
     expect(response.headers['set-cookie']).toBeDefined()
   })
 
@@ -70,7 +70,7 @@ describe('Refresh Token E2E', () => {
     const response = await request(app.server).patch('/auth/token/refresh').set('Cookie', cookies)
 
     expect(response.statusCode).toBe(200)
-    expect(response.body).toMatchObject({ token: expect.any(String) })
+    expect(response.body).toMatchObject({ token: expect.any(String), user: expect.any(Object) })
     expect(response.headers['set-cookie']).toBeDefined()
   })
 })

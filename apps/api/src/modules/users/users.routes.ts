@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import { adminUserResponseSchema } from '@/shared/schemas/user-response-schema'
 import { verifyJWT } from '@/shared/middlewares/verify-jwt'
 import { verifyUserRole } from '@/shared/middlewares/verify-user-role'
 import { listUsersController } from './list-users.controller'
@@ -9,18 +10,6 @@ import { getUserController } from './get-user.controller'
 import { updateUserController } from './update-user.controller'
 import { changeUserRoleController } from './change-user-role.controller'
 import { deleteUserController } from './delete-user.controller'
-
-const userResponseSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  email: z.string(),
-  role: z.enum(['ADMIN', 'MEMBER', 'USER']),
-  locale: z.string(),
-  validated_at: z.date().nullable(),
-  deleted_at: z.date().nullable(),
-  created_at: z.date(),
-  updated_at: z.date(),
-})
 
 export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
   app.addHook('onRequest', verifyJWT)
@@ -40,7 +29,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
       }),
       response: {
         200: z.object({
-          users: z.array(userResponseSchema),
+          users: z.array(adminUserResponseSchema),
           total: z.number(),
         }),
       },
@@ -59,7 +48,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
         locale: z.string().optional(),
       }),
       response: {
-        201: z.object({ user: userResponseSchema }),
+        201: z.object({ user: adminUserResponseSchema }),
       },
     },
     handler: createUserController,
@@ -91,7 +80,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
     schema: {
       params: z.object({ id: z.string().uuid() }),
       response: {
-        200: z.object({ user: userResponseSchema }),
+        200: z.object({ user: adminUserResponseSchema }),
       },
     },
     handler: getUserController,
@@ -107,7 +96,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
         email: z.email(),
       }),
       response: {
-        200: z.object({ user: userResponseSchema }),
+        200: z.object({ user: adminUserResponseSchema }),
       },
     },
     handler: updateUserController,
@@ -122,7 +111,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
         role: z.enum(['ADMIN', 'MEMBER', 'USER']),
       }),
       response: {
-        200: z.object({ user: userResponseSchema }),
+        200: z.object({ user: adminUserResponseSchema }),
       },
     },
     handler: changeUserRoleController,

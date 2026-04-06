@@ -169,6 +169,31 @@ apps/admin/
 
 ---
 
+## Decisão: Persistência de sessão — silent refresh
+
+**Padrão adotado: silent refresh via cookie httpOnly.**
+
+Ao acessar qualquer rota protegida sem um token de acesso válido em memória, o `beforeLoad` de `_layout.tsx` tenta renovar a sessão automaticamente via `PATCH /auth/token/refresh`. O refresh token fica em um cookie httpOnly (enviado automaticamente pelo browser) — o frontend nunca o lê diretamente.
+
+```
+Usuário acessa /users (sessão expirada)
+  → _layout.tsx beforeLoad: isAuthenticated = false
+  → PATCH /auth/token/refresh (cookie httpOnly enviado automaticamente)
+    ├── sucesso: setSession(user, token) → isAuthenticated = true → renderiza /users
+    └── falha (401): redirect para /login?redirect=%2Fusers
+```
+
+**Por que não redirecionar diretamente para `/login` sem tentar o refresh:**
+O token de acesso (JWT) expira rápido (ex: 15 min). O refresh token dura muito mais (ex: 7 dias). Redirecionar para login sem tentar o refresh forçaria o usuário a fazer login manualmente toda vez que o access token expira — mesmo que o refresh token ainda seja válido. O silent refresh torna a expiração do access token transparente para o usuário.
+
+**Preservação da URL original:** quando o silent refresh falha, o redirect inclui a URL que o usuário estava tentando acessar como parâmetro `?redirect=`. Após o login, o usuário é enviado de volta àquela URL, não para `/dashboard`.
+
+### Por que `to` e não `href` nas navegações pós-login
+
+`router.navigate({ to: '/dashboard' })` é uma SPA navigation — o Zustand não é resetado. `router.navigate({ href: '/dashboard' })` pode causar um full page reload, zerando o estado em memória e forçando um novo ciclo de silent refresh desnecessário. Ver a seção sobre TanStack Router nas [regras do projeto](.cursor/rules/admin.mdc) para a regra completa de `to` vs `href`.
+
+---
+
 ## Sobre o `packages/ui` e os componentes shadcn
 
 O monorepo tem um `packages/ui` para componentes compartilhados entre apps. A questão é: o shadcn/ui do admin vai para lá ou fica local?
@@ -223,9 +248,20 @@ Os endpoints de API existem para serem chamados via fetch/axios pelo frontend �
 
 ## Testes E2E — aviso importante
 
-Os testes E2E executam `prisma migrate reset --force --skip-generate` via `globalSetup` antes de cada run. Isso **apaga e recria o banco de dados completo** (incluindo dados de desenvolvimento) e reaplica o seed com os usuários de teste.
+Os testes E2E executam dois comandos via `globalSetup` antes de cada run:
+
+```bash
+pnpm exec prisma migrate reset --force   # apaga e recria o banco
+pnpm exec prisma db seed                 # recria os usuários de teste
+```
+
+Isso **apaga e recria o banco de dados completo** (incluindo dados de desenvolvimento) e reaplica o seed com os usuários de teste.
 
 **Impacto:** não execute `pnpm --filter admin test:e2e` se houver dados de desenvolvimento importantes no banco — eles serão perdidos.
+
+> **Por que `prisma db seed` é chamado explicitamente:** no Prisma 7, `migrate reset` não executa o seed automaticamente. O campo `seed` do `prisma.config.ts` não é honrado pelo `migrate reset` — o `db seed` deve sempre ser chamado em seguida.
+
+> **Por que `pnpm exec prisma` em vez de `npx prisma`:** usar `npx` em ambiente pnpm gera warnings `npm warn Unknown env config` porque o npm lê configurações do pnpm que não reconhece. `pnpm exec` executa o binário diretamente do `node_modules/.bin`.
 
 ### Ponto de melhoria — banco dedicado para testes
 

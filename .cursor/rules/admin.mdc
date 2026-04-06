@@ -106,14 +106,44 @@ apps/admin/src/
 - Valida e expõe search params via `validateSearch` quando necessário
 
 ```typescript
-// _layout.tsx — único ponto de auth guard
+// _layout.tsx — auth guard com silent refresh
+// Se isAuthenticated = true, retorna sem fazer nada (SPA navigation preserva Zustand)
+// Se isAuthenticated = false, tenta silent refresh via cookie httpOnly
+// Se o refresh falhar, redireciona para /login preservando a URL original em ?redirect=
 export const Route = createFileRoute('/_layout')({
-  beforeLoad: () => {
-    if (!useAuthStore.getState().isAuthenticated) {
-      throw redirect({ to: '/login' })
+  beforeLoad: async ({ location }) => {
+    if (useAuthStore.getState().isAuthenticated) return
+    try {
+      const { data: tokenData } = await api.patch<{ token: string; user: AuthUser }>('/auth/token/refresh')
+      useAuthStore.getState().setSession(tokenData.user, tokenData.token)
+    } catch {
+      throw redirect({ to: '/login', search: { redirect: location.href } })
     }
   },
   component: AppShell,
+})
+
+// login.tsx — recuperação de sessão + redirect URL preservation
+export const Route = createFileRoute('/login')({
+  validateSearch: z.object({ redirect: z.string().optional() }),
+  beforeLoad: async ({ search }) => {
+    if (useAuthStore.getState().isAuthenticated) {
+      throw redirect({ to: '/dashboard' })
+    }
+    try {
+      const { data: tokenData } = await api.patch<{ token: string; user: AuthUser }>('/auth/token/refresh')
+      useAuthStore.getState().setSession(tokenData.user, tokenData.token)
+      // Redireciona para a URL original se presente, senão para /dashboard
+      if (search.redirect?.startsWith('/')) {
+        throw redirect({ href: search.redirect })  // caminho dinâmico — href necessário
+      } else {
+        throw redirect({ to: '/dashboard' })        // rota estática — to é o correto
+      }
+    } catch (err) {
+      if (isRedirect(err)) throw err
+    }
+  },
+  component: LoginForm,
 })
 ```
 
@@ -217,6 +247,40 @@ const { page, perPage, role, search } = Route.useSearch()
 import { router } from '@/app/router'
 
 router.navigate({ to: '/users', search: (prev) => ({ ...prev, page: 1, role: 'ADMIN' }) })
+```
+
+### `to` vs `href` — regra crítica
+
+`to` e `href` têm comportamentos fundamentalmente diferentes no TanStack Router:
+
+| | `to` | `href` |
+|---|---|---|
+| Type-safety | ✅ Rotas do projeto validadas em compile time | ❌ String opaca — sem validação |
+| Navegação | SPA (client-side) — Zustand **preservado** | Pode fazer full page reload — Zustand **resetado** |
+| Uso correto | Rotas estáticas conhecidas: `'/dashboard'`, `'/users'` | Caminhos dinâmicos que não podem ser tipados |
+
+**Regra:** usar `to` para rotas estáticas e `href` apenas quando o caminho é dinâmico ou não está no route tree:
+
+```typescript
+// ✅ to — rota estática (SPA navigation, Zustand preservado)
+router.navigate({ to: '/dashboard' })
+throw redirect({ to: '/dashboard' })
+
+// ✅ href — caminho dinâmico recebido em runtime (ex: parâmetro ?redirect=)
+router.navigate({ href: redirectTo })   // redirectTo = '/users/abc123?foo=bar'
+throw redirect({ href: search.redirect })
+
+// ❌ href para rota estática — pode causar full page reload, quebrando sessão
+router.navigate({ href: '/dashboard' })
+```
+
+**Por que `href` pode fazer full page reload:** quando o TanStack Router não consegue resolver o `href` via route tree (ex: URL com query params não registrada), ele pode cair no mecanismo de navegação do histórico do browser, que em alguns casos provoca reload. No reload, o Zustand (estado em memória) é zerado — `isAuthenticated = false` — e o `_layout.tsx` tenta um silent refresh. Se outro processo (como um teste E2E paralelo) já incrementou o `token_version` do usuário, o refresh falha e o usuário é enviado para `/login`.
+
+**Proteção obrigatória contra open redirect** ao usar `href` com valor externo:
+```typescript
+// Antes de router.navigate({ href: ... }) ou redirect({ href: ... })
+const safePath = redirectTo?.startsWith('/') ? redirectTo : '/dashboard'
+// Garante que ?redirect=https://evil.com seja ignorado
 ```
 
 ### Links ativos — `activeProps`
@@ -507,17 +571,34 @@ Cria `tests/e2e/global-setup.ts` para truncar e re-seed o banco antes de cada su
 
 ```typescript
 import { execSync } from 'child_process'
+import * as path from 'path'
+
+const apiDir = path.resolve(__dirname, '../../../apps/api')
+const env = { ...process.env, DATABASE_URL: process.env.DATABASE_URL ?? '' }
 
 export default async function globalSetup() {
-  execSync('pnpm --filter api exec prisma migrate reset --force --skip-generate', {
-    stdio: 'inherit',
-  })
+  // Prisma 7: migrate reset NÃO executa seed automaticamente — db seed é obrigatório
+  execSync('pnpm exec prisma migrate reset --force', { stdio: 'inherit', cwd: apiDir, env })
+  execSync('pnpm exec prisma db seed', { stdio: 'inherit', cwd: apiDir, env })
 }
 ```
+
+> **Prisma 7 — atenção:** `migrate reset` não usa o campo `seed` do `prisma.config.ts` para executar o seed automaticamente. O `prisma db seed` deve ser chamado explicitamente após o reset.
+
+> **`pnpm exec` em vez de `npx`:** usar `npx prisma` em ambiente pnpm gera warnings `npm warn Unknown env config` porque o npm lê configurações específicas do pnpm e não as reconhece. `pnpm exec prisma` executa diretamente do `node_modules/.bin` sem envolver o npm.
 
 Referenciado em `playwright.config.ts`:
 ```typescript
 globalSetup: './tests/e2e/global-setup.ts',
+```
+
+### `NO_COLOR` vs `FORCE_COLOR` — configuração obrigatória
+
+O pnpm define `FORCE_COLOR` e o Playwright define `NO_COLOR`, gerando um warning de conflito em todos os workers. Resolver no topo do `playwright.config.ts`:
+
+```typescript
+// playwright.config.ts — antes do defineConfig
+delete process.env.NO_COLOR  // deixa FORCE_COLOR do pnpm funcionar sem conflito
 ```
 
 ### Helpers reutilizáveis (`tests/e2e/helpers/auth.ts`)
@@ -551,6 +632,24 @@ test.beforeEach(async () => {
 ```
 
 O usuário `password-change@test.com` é reservado para o teste de troca de senha. Após a troca, a senha `123456` deixa de funcionar — o `globalSetup` restaura na próxima execução.
+
+### Isolamento de `token_version` — usuários separados para browser e API
+
+Com `fullyParallel: true`, testes do mesmo arquivo rodam em paralelo. Se um teste faz login via browser (UI) **e** via chamada direta à API usando o mesmo usuário, os dois incrementam `token_version` concorrentemente:
+
+- Teste A faz login via browser: `token_version` 1 → 2, cookie tem versão 2
+- Teste B faz login via API com o mesmo usuário: `token_version` 2 → 3
+- Teste A tenta navegar com reload (ex: `href` em vez de `to`): `_layout.tsx` faz silent refresh com cookie versão 2, mas o banco agora tem versão 3 → **401 → redirect para /login → timeout**
+
+**Solução:** o seed deve ter um usuário dedicado para chamadas diretas à API (`api-admin@test.com`), separado do usuário usado no browser (`admin-login@test.com`):
+
+```typescript
+// helpers/auth.ts
+export const ADMIN_EMAIL = 'admin-login@test.com'      // usado no browser (loginAsAdmin)
+export const API_ADMIN_EMAIL = 'api-admin@test.com'    // usado em request() direto à API
+```
+
+Nunca usar `ADMIN_EMAIL` em chamadas `request.post('/auth/admin/login')` dentro de um teste que também usa `loginAsAdmin` ou `loginAs` com o mesmo usuário.
 
 ### Estrutura dos arquivos E2E
 ```
@@ -599,3 +698,5 @@ const baseURL = import.meta.env.VITE_API_URL
 - ❌ Usar MSW em testes E2E (Playwright) — MSW é exclusivo dos testes Vitest; E2E usam API real
 - ❌ Colocar `tanstackRouter()` depois de `react()` nos plugins do Vite — deve vir antes
 - ❌ Depender de dados do seed global em testes E2E mutantes (exclusão, troca de role, troca de senha) — criar dados isolados no `beforeEach`
+- ❌ Usar `router.navigate({ href: '/rota-estatica' })` ou `redirect({ href: '/rota-estatica' })` para rotas conhecidas do projeto — usar `to`; `href` pode causar full page reload e resetar Zustand
+- ❌ Usar `router.navigate({ href: valor_externo })` sem antes validar `startsWith('/')` — sempre checar para prevenir open redirect

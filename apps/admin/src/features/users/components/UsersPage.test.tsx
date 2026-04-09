@@ -7,6 +7,7 @@ import { createRoute } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { server } from '@/mocks/node'
 import { renderWithRouter, rootRoute } from '@/tests/router-test-utils'
+import { useUIPreferencesStore } from '@/lib/stores/ui-preferences-store'
 
 vi.mock('@/app/router', () => ({ router: { navigate: vi.fn() } }))
 vi.mock('@/app/routes/_layout/users/', () => ({
@@ -22,7 +23,7 @@ const API_BASE = 'http://localhost:3333'
 
 const defaultSearch = {
   page: 1,
-  perPage: 10,
+  perPage: 20,
   role: undefined,
   search: undefined,
   status: 'active' as const,
@@ -67,6 +68,8 @@ function renderPage() {
 beforeEach(() => {
   vi.mocked(Route.useSearch).mockReturnValue(defaultSearch)
   vi.clearAllMocks()
+  localStorage.removeItem('admin-ui-preferences')
+  useUIPreferencesStore.setState({ usersPerPage: 20 })
 })
 
 describe('UsersPage — renderização', () => {
@@ -129,6 +132,35 @@ describe('UsersPage — filtros', () => {
       }),
     )
   })
+
+  it('alterar itens por página chama router.navigate com page 1 e atualiza a store', async () => {
+    server.use(
+      http.get(`${API_BASE}/users`, () =>
+        HttpResponse.json({
+          users: [
+            mockUser,
+            { ...mockUser, id: 'user-2', name: 'Bob', email: 'bob@test.com' },
+          ],
+          total: 2,
+        }),
+      ),
+    )
+
+    renderPage()
+
+    await waitFor(() => expect(screen.getByText('Alice Silva')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('combobox', { name: 'Itens por página' }))
+    await waitFor(() => screen.getByRole('option', { name: '50 por página' }))
+    fireEvent.click(screen.getByRole('option', { name: '50 por página' }))
+
+    expect(vi.mocked(router.navigate)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        search: expect.objectContaining({ page: 1, perPage: 50 }),
+      }),
+    )
+    expect(useUIPreferencesStore.getState().usersPerPage).toBe(50)
+  })
 })
 
 describe('UsersPage — exclusão', () => {
@@ -138,7 +170,13 @@ describe('UsersPage — exclusão', () => {
     )
 
     useAuthStore.setState({
-      user: { id: 'user-1', name: 'Alice Silva', email: 'alice@test.com', role: 'ADMIN' },
+      user: {
+        id: 'user-1',
+        name: 'Alice Silva',
+        email: 'alice@test.com',
+        role: 'ADMIN',
+        locale: 'pt-BR',
+      },
       token: 'tok',
       isAuthenticated: true,
     })

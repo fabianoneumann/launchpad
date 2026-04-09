@@ -8,9 +8,9 @@ test.describe('Users page', () => {
     await expect(page).toHaveURL(/\/users/)
   })
 
-  test('filtro "Somente deletados" exibe deleted@test.com', async ({ page }) => {
+  test('filtro "Deletados" exibe deleted@test.com', async ({ page }) => {
     await page.getByRole('combobox').filter({ hasText: 'Ativos' }).click()
-    await page.getByRole('option', { name: 'Somente deletados' }).click()
+    await page.getByRole('option', { name: 'Deletados' }).click()
     await expect(page.getByText('deleted@test.com')).toBeVisible()
   })
 

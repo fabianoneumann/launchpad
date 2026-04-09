@@ -6,6 +6,9 @@ import { server } from '@/mocks/node'
 import { useAuthStore } from '@/features/auth/store/auth-store'
 
 vi.mock('@/app/router', () => ({ router: { navigate: vi.fn() } }))
+vi.mock('@/app/routes/login', () => ({
+  Route: { useSearch: vi.fn(() => ({ redirect: undefined })) },
+}))
 vi.mock('sonner', () => ({ toast: { error: vi.fn() } }))
 
 const { router } = await import('@/app/router')

@@ -1,6 +1,7 @@
 'use no memo'
 
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -11,7 +12,18 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/shared/LoadingSkeleton'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type { ReactNode } from 'react'
+
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const
+
+const DEFAULT_PAGE_SIZE = 20
 
 interface DataTableProps<T> {
   columns: ColumnDef<T>[]
@@ -22,9 +34,14 @@ interface DataTableProps<T> {
     page: number
     pageSize: number
     onPageChange: (page: number) => void
+    onPageSizeChange?: (size: number) => void
   }
   rowClassName?: (row: T) => string
   emptyState?: ReactNode
+}
+
+function formatResultCount(total: number): string {
+  return total === 1 ? '1 resultado' : `${total} resultados`
 }
 
 export function DataTable<T>({
@@ -36,6 +53,8 @@ export function DataTable<T>({
   rowClassName,
   emptyState,
 }: DataTableProps<T>) {
+  const pageSize = pagination?.pageSize ?? DEFAULT_PAGE_SIZE
+
   const table = useReactTable({
     data,
     columns,
@@ -45,7 +64,7 @@ export function DataTable<T>({
     state: {
       pagination: {
         pageIndex: (pagination?.page ?? 1) - 1,
-        pageSize: pagination?.pageSize ?? 10,
+        pageSize,
       },
     },
     onPaginationChange: (updater) => {
@@ -53,14 +72,15 @@ export function DataTable<T>({
         typeof updater === 'function'
           ? updater({
               pageIndex: (pagination?.page ?? 1) - 1,
-              pageSize: pagination?.pageSize ?? 10,
+              pageSize,
             })
           : updater
       pagination?.onPageChange(next.pageIndex + 1)
     },
   })
 
-  const showPagination = pagination && rowCount !== undefined && rowCount > pagination.pageSize
+  const showPagination =
+    pagination !== undefined && rowCount !== undefined && rowCount > 0
 
   return (
     <div>
@@ -111,29 +131,65 @@ export function DataTable<T>({
         </Table>
       </div>
 
-      {showPagination && (
-        <div className="flex items-center justify-between mt-4 px-1">
-          <p className="text-sm text-muted-foreground">
-            Página {pagination.page} de {table.getPageCount()}
-          </p>
-          <div className="flex gap-2">
+      {showPagination && pagination && (
+        <div className="mt-4 grid grid-cols-3 items-center gap-2 px-1">
+          <div className="flex justify-start min-w-0">
+            {pagination.onPageSizeChange ? (
+              <Select
+                value={String(pagination.pageSize)}
+                onValueChange={(v) => pagination.onPageSizeChange?.(Number(v))}
+              >
+                <SelectTrigger
+                  size="sm"
+                  className="w-auto min-w-12 justify-between"
+                  aria-label="Itens por página"
+                >
+                  <SelectValue>
+                    <span className="tabular-nums">{pagination.pageSize}</span>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n} por página
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : null}
+          </div>
+
+          <div className="flex items-center justify-center gap-1">
             <Button
+              type="button"
               variant="outline"
-              size="sm"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              aria-label="Página anterior"
               onClick={() => pagination.onPageChange(pagination.page - 1)}
               disabled={!table.getCanPreviousPage()}
             >
-              Anterior
+              <ChevronLeft className="h-4 w-4" />
             </Button>
+            <span className="min-w-14 text-center text-sm text-muted-foreground tabular-nums">
+              {pagination.page} / {table.getPageCount()}
+            </span>
             <Button
+              type="button"
               variant="outline"
-              size="sm"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              aria-label="Próxima página"
               onClick={() => pagination.onPageChange(pagination.page + 1)}
               disabled={!table.getCanNextPage()}
             >
-              Próxima
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+
+          <p className="text-right text-sm text-muted-foreground">
+            {formatResultCount(rowCount)}
+          </p>
         </div>
       )}
     </div>

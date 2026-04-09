@@ -6,6 +6,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { Link } from '@tanstack/react-router'
 import { router } from '@/app/router'
 import { Route } from '@/app/routes/_layout/users/'
+import { useUIPreferencesStore } from '@/lib/stores/ui-preferences-store'
 import { useAuthStore } from '@/features/auth/store/auth-store'
 import { useUsers } from '../hooks/useUsers'
 import { deleteUser } from '../api/users.api'
@@ -46,6 +47,9 @@ export function UsersPage() {
       status: 'active' | 'deleted' | 'all'
     }>,
   ) {
+    if (patch.perPage !== undefined) {
+      useUIPreferencesStore.getState().setUsersPerPage(patch.perPage)
+    }
     router.navigate({
       to: '/users',
       search: { page, perPage, role, search, status, ...patch },
@@ -187,7 +191,7 @@ export function UsersPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="active">Ativos</SelectItem>
-            <SelectItem value="deleted">Somente deletados</SelectItem>
+            <SelectItem value="deleted">Deletados</SelectItem>
             <SelectItem value="all">Todos</SelectItem>
           </SelectContent>
         </Select>
@@ -198,7 +202,12 @@ export function UsersPage() {
         data={data?.users ?? []}
         isLoading={isLoading}
         rowCount={data?.total}
-        pagination={{ page, pageSize: perPage, onPageChange: (p) => navigate({ page: p }) }}
+        pagination={{
+          page,
+          pageSize: perPage,
+          onPageChange: (p) => navigate({ page: p }),
+          onPageSizeChange: (size) => navigate({ perPage: size, page: 1 }),
+        }}
         rowClassName={(row) => (row.deleted_at ? 'opacity-50' : '')}
         emptyState={
           <EmptyState title="Nenhum usuário encontrado" description="Tente ajustar os filtros." />

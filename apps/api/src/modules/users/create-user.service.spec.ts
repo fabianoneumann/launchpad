@@ -4,6 +4,7 @@ const { hash } = bcrypt
 import { InMemoryUsersRepository } from '@/repositories/in-memory/in-memory-users-repository'
 import { InMemoryPasswordResetTokensRepository } from '@/repositories/in-memory/in-memory-password-reset-tokens-repository'
 import { FakeMailProvider } from '@/lib/mail/fake-mail-provider'
+import { getInviteContent } from '@/lib/mail/content/invite-content'
 import { UserAlreadyExistsError } from '@/shared/errors/user-already-exists-error'
 import { CreateUserService } from './create-user.service'
 
@@ -32,7 +33,7 @@ describe('CreateUserService', () => {
     expect(passwordResetTokensRepository.items).toHaveLength(1)
     expect(mailProvider.sent).toHaveLength(1)
     expect(mailProvider.sent[0].to).toBe('john@example.com')
-    expect(mailProvider.sent[0].subject).toBe('Seu acesso ao Eco Iguassu foi criado')
+    expect(mailProvider.sent[0].subject).toBe(getInviteContent('pt-BR').subject)
   })
 
   it('should set validated_at to current date on creation', async () => {

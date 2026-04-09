@@ -1,10 +1,14 @@
 import { createHash, randomBytes } from 'node:crypto'
+import { render } from '@react-email/render'
 import bcrypt from 'bcryptjs'
 const { hash } = bcrypt
+import type { Locale } from '@eco-iguassu/shared-types'
 import type { User } from '@/generated/prisma/client'
 import type { UsersRepository } from '@/repositories/users-repository'
 import type { PasswordResetTokensRepository } from '@/repositories/password-reset-tokens-repository'
 import type { MailProvider } from '@/lib/mail/mail-provider'
+import { InviteEmail } from '@/lib/mail/emails/invite'
+import { getInviteContent } from '@/lib/mail/content/invite-content'
 import { env } from '@/env'
 import { UserAlreadyExistsError } from '@/shared/errors/user-already-exists-error'
 
@@ -57,15 +61,13 @@ export class CreateUserService {
 
     const inviteLink = `${env.APP_URL ?? 'http://localhost:5173'}/auth/reset-password?token=${token}`
 
+    const content = getInviteContent(locale as Locale)
+    const html = await render(InviteEmail({ name: user.name, inviteLink, content }))
+
     await this.mailProvider.send({
       to: user.email,
-      subject: 'Seu acesso ao Eco Iguassu foi criado',
-      html: `
-        <p>Olá, ${user.name}!</p>
-        <p>Um administrador criou uma conta para você no Eco Iguassu.</p>
-        <p><a href="${inviteLink}">Clique aqui para definir sua senha e acessar o painel</a></p>
-        <p>O link expira em 72 horas.</p>
-      `,
+      subject: content.subject,
+      html,
     })
 
     return { user }

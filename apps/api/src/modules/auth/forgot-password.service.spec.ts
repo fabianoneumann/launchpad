@@ -4,6 +4,7 @@ const { hash } = bcrypt
 import { InMemoryUsersRepository } from '@/repositories/in-memory/in-memory-users-repository'
 import { InMemoryPasswordResetTokensRepository } from '@/repositories/in-memory/in-memory-password-reset-tokens-repository'
 import { FakeMailProvider } from '@/lib/mail/fake-mail-provider'
+import { getForgotPasswordContent } from '@/lib/mail/content/forgot-password-content'
 import { ForgotPasswordService } from './forgot-password.service'
 
 describe('ForgotPasswordService', () => {
@@ -31,7 +32,7 @@ describe('ForgotPasswordService', () => {
     expect(passwordResetTokensRepository.items).toHaveLength(1)
     expect(mailProvider.sent).toHaveLength(1)
     expect(mailProvider.sent[0].to).toBe('john@example.com')
-    expect(mailProvider.sent[0].subject).toBe('Redefinição de senha — Eco Iguassu')
+    expect(mailProvider.sent[0].subject).toBe(getForgotPasswordContent('pt-BR').subject)
   })
 
   it('should do nothing when user does not exist', async () => {

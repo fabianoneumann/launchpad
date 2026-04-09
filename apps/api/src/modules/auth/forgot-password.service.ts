@@ -1,7 +1,11 @@
 import { createHash, randomBytes } from 'node:crypto'
+import { render } from '@react-email/render'
+import type { Locale } from '@eco-iguassu/shared-types'
 import type { UsersRepository } from '@/repositories/users-repository'
 import type { PasswordResetTokensRepository } from '@/repositories/password-reset-tokens-repository'
 import type { MailProvider } from '@/lib/mail/mail-provider'
+import { ForgotPasswordEmail } from '@/lib/mail/emails/forgot-password'
+import { getForgotPasswordContent } from '@/lib/mail/content/forgot-password-content'
 import { env } from '@/env'
 
 interface ForgotPasswordServiceRequest {
@@ -30,16 +34,13 @@ export class ForgotPasswordService {
 
     const resetLink = `${env.APP_URL ?? 'http://localhost:5173'}/auth/reset-password?token=${token}`
 
+    const content = getForgotPasswordContent(user.locale as Locale)
+    const html = await render(ForgotPasswordEmail({ name: user.name, resetLink, content }))
+
     await this.mailProvider.send({
       to: user.email,
-      subject: 'Redefinição de senha — Eco Iguassu',
-      html: `
-        <p>Olá, ${user.name}!</p>
-        <p>Recebemos uma solicitação para redefinir a senha da sua conta.</p>
-        <p><a href="${resetLink}">Clique aqui para redefinir sua senha</a></p>
-        <p>O link expira em 2 horas.</p>
-        <p>Se você não solicitou a redefinição, ignore este e-mail.</p>
-      `,
+      subject: content.subject,
+      html,
     })
   }
 }

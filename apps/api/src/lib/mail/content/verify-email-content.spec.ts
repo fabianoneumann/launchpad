@@ -5,7 +5,7 @@ import { getVerifyEmailContent } from './verify-email-content'
 describe('getVerifyEmailContent', () => {
   it('should return pt-BR content when no locale is provided', () => {
     const content = getVerifyEmailContent()
-    expect(content.subject).toBe('Confirme seu e-mail — Eco Iguaçu')
+    expect(content.subject).toBe('Confirme seu e-mail — Eco Iguassu Adventure')
   })
 
   it.each(SUPPORTED_LOCALES)(

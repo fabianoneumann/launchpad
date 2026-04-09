@@ -74,6 +74,8 @@ apps/admin/src/
 │   │   └── client.ts             ← instância axios com interceptors
 │   ├── react-query/
 │   │   └── query-client.ts       ← configuração do QueryClient
+│   ├── stores/
+│   │   └── ui-preferences-store.ts ← preferências de UI com persist (localStorage)
 │   └── utils.ts                  ← cn() e utilitários gerais
 │
 └── mocks/
@@ -182,9 +184,48 @@ export function useUsers(params: UseUsersParams) {
 - Confirmações destrutivas: `ConfirmDialog` de `components/shared/`
 
 ### Zustand Store (`features/*/store/*.ts`)
-- Apenas para estado global persistente entre rotas (ex: sessão autenticada)
+- Usado para estado global de sessão (ex: usuário autenticado, token)
 - **Não usar** para estado do servidor — isso é responsabilidade do React Query
-- Sem `persist` middleware por padrão — state é em memória
+- Sem `persist` middleware — state de sessão é em memória (renovado via silent refresh)
+
+### Preferências de UI (`lib/stores/ui-preferences-store.ts`)
+- Preferências do usuário no navegador (ex: itens por página, layout, tema) pertencem a uma store dedicada em `lib/stores/`, **separada** das stores de feature
+- Esta store **usa** `persist` middleware com `localStorage` — é o único lugar do projeto onde `persist` é permitido
+- Chave do storage: `'admin-ui-preferences'`
+- Leitura fora do React via `getState()` — útil no `catch` do `validateSearch` da rota
+- Escrita via `getState().setXxx()` dentro da função `navigate()` do componente, junto ao `router.navigate()`
+
+```typescript
+// lib/stores/ui-preferences-store.ts
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+interface UIPreferencesState {
+  usersPerPage: number
+  setUsersPerPage: (n: number) => void
+}
+
+export const useUIPreferencesStore = create<UIPreferencesState>()(
+  persist(
+    (set) => ({
+      usersPerPage: 10,
+      setUsersPerPage: (n) => set({ usersPerPage: n }),
+    }),
+    { name: 'admin-ui-preferences' },
+  ),
+)
+
+// Leitura no catch do validateSearch da rota (fora do React — funciona via getState)
+perPage: z.number().int().positive().catch(
+  () => useUIPreferencesStore.getState().usersPerPage
+)
+
+// Escrita no navigate() do componente
+function navigate(patch) {
+  if (patch.perPage) useUIPreferencesStore.getState().setUsersPerPage(patch.perPage)
+  router.navigate({ to: '/users', search: { page, perPage, role, search, status, ...patch } })
+}
+```
 
 ---
 
@@ -691,6 +732,8 @@ const baseURL = import.meta.env.VITE_API_URL
 - ❌ Usar `vi.mock` em hooks de feature — usar MSW para controlar respostas
 - ❌ `new QueryClient()` sem `retry: false` em testes — causa lentidão e flakiness
 - ❌ Usar Zustand para estado do servidor — isso é responsabilidade do React Query
+- ❌ Usar `persist` middleware em stores de feature (`features/*/store/`) — `persist` é exclusivo de `lib/stores/ui-preferences-store.ts`
+- ❌ Usar `localStorage` diretamente para preferências de UI — centralizar em `lib/stores/ui-preferences-store.ts`
 - ❌ `console.log` em código de produção
 - ❌ Usar `z.string().email()` ou `z.string().url()` — usar `z.email()` e `z.url()` do Zod v4
 - ❌ Importar componentes de `@/components/ui/` diretamente em testes sem o `createWrapper` de QueryClient quando o componente usa `useQuery`/`useMutation`

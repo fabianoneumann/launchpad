@@ -71,6 +71,64 @@ TanStack Query cuida de todo o estado do servidor. Zustand cobre apenas o estado
 
 ---
 
+## Decisão: Persistência de preferências de UI
+
+**Estratégia adotada: Zustand `persist` middleware com `localStorage`.**
+
+Preferências do usuário no navegador — como quantidade de itens por página, opções de layout ou tema — precisam sobreviver ao reload da página e entre sessões, mas não precisam ser salvas no banco de dados.
+
+A store fica em `lib/stores/ui-preferences-store.ts`, separada das stores de feature (como `auth-store`), que são exclusivamente em memória.
+
+```ts
+// lib/stores/ui-preferences-store.ts
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+interface UIPreferencesState {
+  usersPerPage: number
+  setUsersPerPage: (n: number) => void
+}
+
+export const useUIPreferencesStore = create<UIPreferencesState>()(
+  persist(
+    (set) => ({
+      usersPerPage: 10,
+      setUsersPerPage: (n) => set({ usersPerPage: n }),
+    }),
+    { name: 'admin-ui-preferences' },
+  ),
+)
+```
+
+**Chave do `localStorage`:** `admin-ui-preferences` — sem prefixo de projeto para facilitar eventual renomeação.
+
+**Por que não `localStorage` direto:** a lógica de leitura e escrita ficaria espalhada (no `catch` da rota e no `navigate()` do componente), sem tipagem centralizada. À medida que novas preferências forem adicionadas, vira um problema de manutenção.
+
+**Por que não cookies:** cookies fazem sentido quando o servidor precisa ler a preferência antes de renderizar (SSR) ou quando se quer controle de expiração. Para um SPA admin puro, `localStorage` é suficiente e mais simples.
+
+**Padrão de uso com TanStack Router:** como `getState()` do Zustand funciona fora de componentes React, a preferência pode ser lida de forma síncrona no `catch` do `validateSearch` da rota, garantindo que a URL seja inicializada com o valor salvo quando o usuário navega sem parâmetros explícitos:
+
+```ts
+// app/routes/_layout/users/index.tsx
+validateSearch: z.object({
+  perPage: z.number().int().positive().catch(
+    () => useUIPreferencesStore.getState().usersPerPage
+  ),
+  // ...
+})
+```
+
+A escrita acontece junto ao `router.navigate()` no componente, garantindo que URL e preferência salva fiquem sempre em sincronia:
+
+```ts
+function navigate(patch) {
+  if (patch.perPage) useUIPreferencesStore.getState().setUsersPerPage(patch.perPage)
+  router.navigate({ to: '/users', search: { page, perPage, ...patch } })
+}
+```
+
+---
+
 ## Decisão: Axios para requisições HTTP
 
 **Cliente HTTP escolhido: Axios.**

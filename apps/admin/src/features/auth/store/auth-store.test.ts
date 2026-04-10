@@ -7,6 +7,7 @@ const mockUser: AuthUser = {
   name: 'Alice',
   email: 'alice@test.com',
   role: 'ADMIN',
+  locale: 'pt-BR',
 }
 
 beforeEach(() => {

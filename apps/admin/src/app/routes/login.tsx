@@ -15,7 +15,9 @@ export const Route = createFileRoute('/login')({
     }
 
     try {
-      const { data: tokenData } = await api.patch<{ token: string; user: AuthUser }>('/auth/token/refresh')
+      const { data: tokenData } = await api.patch<{ token: string; user: AuthUser }>(
+        '/auth/token/refresh',
+      )
       useAuthStore.getState().setSession(tokenData.user, tokenData.token)
       if (search.redirect?.startsWith('/')) {
         throw redirect({ href: search.redirect })

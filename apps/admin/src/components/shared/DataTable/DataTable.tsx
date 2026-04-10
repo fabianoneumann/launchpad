@@ -79,8 +79,7 @@ export function DataTable<T>({
     },
   })
 
-  const showPagination =
-    pagination !== undefined && rowCount !== undefined && rowCount > 0
+  const showPagination = pagination !== undefined && rowCount !== undefined && rowCount > 0
 
   return (
     <div>
@@ -187,9 +186,7 @@ export function DataTable<T>({
             </Button>
           </div>
 
-          <p className="text-right text-sm text-muted-foreground">
-            {formatResultCount(rowCount)}
-          </p>
+          <p className="text-right text-sm text-muted-foreground">{formatResultCount(rowCount)}</p>
         </div>
       )}
     </div>

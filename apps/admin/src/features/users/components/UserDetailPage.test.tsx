@@ -126,7 +126,7 @@ describe('UserDetailPage — exclusão', () => {
     await userEvent.click(screen.getByRole('button', { name: /^excluir$/i }))
 
     await waitFor(() => expect(deleteCalled).toBe(true))
-    expect(vi.mocked(router.navigate)).toHaveBeenCalledWith({ to: '/users' })
+    expect(vi.mocked(router.navigate)).toHaveBeenCalledWith({ to: '/users', search: { page: 1, perPage: 10, status: 'active' } })
   })
 })
 
@@ -160,7 +160,13 @@ describe('UserDetailPage — alterar perfil', () => {
 describe('UserDetailPage — self (próprio admin)', () => {
   beforeEach(() => {
     useAuthStore.setState({
-      user: { id: 'user-1', name: 'Alice Silva', email: 'alice@test.com', role: 'ADMIN' },
+      user: {
+        id: 'user-1',
+        name: 'Alice Silva',
+        email: 'alice@test.com',
+        role: 'ADMIN',
+        locale: 'pt-BR',
+      },
       token: 'tok',
       isAuthenticated: true,
     })

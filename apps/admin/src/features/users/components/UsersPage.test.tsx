@@ -137,10 +137,7 @@ describe('UsersPage — filtros', () => {
     server.use(
       http.get(`${API_BASE}/users`, () =>
         HttpResponse.json({
-          users: [
-            mockUser,
-            { ...mockUser, id: 'user-2', name: 'Bob', email: 'bob@test.com' },
-          ],
+          users: [mockUser, { ...mockUser, id: 'user-2', name: 'Bob', email: 'bob@test.com' }],
           total: 2,
         }),
       ),

@@ -16,7 +16,13 @@ beforeEach(() => {
 describe('TopBar', () => {
   it('exibe o nome do usuário autenticado', () => {
     useAuthStore.setState({
-      user: { id: '1', name: 'Alice Silva', email: 'alice@test.com', role: 'ADMIN' },
+      user: {
+        id: '1',
+        name: 'Alice Silva',
+        email: 'alice@test.com',
+        role: 'ADMIN',
+        locale: 'pt-BR',
+      },
       token: 'tok',
       isAuthenticated: true,
     })
@@ -26,7 +32,13 @@ describe('TopBar', () => {
 
   it('exibe as iniciais corretas no avatar', () => {
     useAuthStore.setState({
-      user: { id: '1', name: 'Alice Silva', email: 'alice@test.com', role: 'ADMIN' },
+      user: {
+        id: '1',
+        name: 'Alice Silva',
+        email: 'alice@test.com',
+        role: 'ADMIN',
+        locale: 'pt-BR',
+      },
       token: 'tok',
       isAuthenticated: true,
     })

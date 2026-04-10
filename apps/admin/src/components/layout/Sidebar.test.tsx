@@ -31,6 +31,7 @@ const mockUser: AuthUser = {
   name: 'Admin User',
   email: 'admin@test.com',
   role: 'ADMIN',
+  locale: 'pt-BR',
 }
 
 const defaultProps = { mobileOpen: false, onClose: vi.fn() }

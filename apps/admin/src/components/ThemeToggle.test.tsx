@@ -13,18 +13,22 @@ const { ThemeToggle } = await import('./ThemeToggle')
 
 describe('ThemeToggle', () => {
   it('clique quando tema é "light" chama setTheme("dark")', async () => {
-    vi.mocked(useTheme).mockReturnValue({ theme: 'light', setTheme: mockSetTheme } as ReturnType<
-      typeof useTheme
-    >)
+    vi.mocked(useTheme).mockReturnValue({
+      theme: 'light',
+      setTheme: mockSetTheme,
+      themes: ['light', 'dark'],
+    } as ReturnType<typeof useTheme>)
     render(<ThemeToggle />)
     await userEvent.click(screen.getByRole('button'))
     expect(mockSetTheme).toHaveBeenCalledWith('dark')
   })
 
   it('clique quando tema é "dark" chama setTheme("light")', async () => {
-    vi.mocked(useTheme).mockReturnValue({ theme: 'dark', setTheme: mockSetTheme } as ReturnType<
-      typeof useTheme
-    >)
+    vi.mocked(useTheme).mockReturnValue({
+      theme: 'dark',
+      setTheme: mockSetTheme,
+      themes: ['light', 'dark'],
+    } as ReturnType<typeof useTheme>)
     render(<ThemeToggle />)
     await userEvent.click(screen.getByRole('button'))
     expect(mockSetTheme).toHaveBeenCalledWith('light')

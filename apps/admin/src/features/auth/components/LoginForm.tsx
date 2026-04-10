@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 const schema = z.object({
-  email: z.string().email({ message: 'E-mail inválido' }),
+  email: z.email({ message: 'E-mail inválido' }),
   password: z.string().min(6, { message: 'Mínimo 6 caracteres' }),
 })
 

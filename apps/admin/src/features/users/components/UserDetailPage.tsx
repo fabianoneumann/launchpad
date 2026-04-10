@@ -98,7 +98,9 @@ export function UserDetailPage() {
       breadcrumbs={[{ label: 'Usuários', href: '/users' }, { label: user?.name ?? '...' }]}
       actions={
         <Button variant="outline" size="sm" asChild>
-          <Link to="/users">Voltar</Link>
+          <Link to="/users" search={{ page: 1, perPage: 10, status: 'active' }}>
+            Voltar
+          </Link>
         </Button>
       }
     >

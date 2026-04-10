@@ -14,7 +14,13 @@ const { api } = await import('./client')
 
 const API_BASE = 'http://localhost:3333'
 
-const mockUser: AuthUser = { id: 'u1', name: 'Alice', email: 'alice@test.com', role: 'ADMIN' }
+const mockUser: AuthUser = {
+  id: 'u1',
+  name: 'Alice',
+  email: 'alice@test.com',
+  role: 'ADMIN',
+  locale: 'pt-BR',
+}
 
 beforeEach(() => {
   useAuthStore.setState({ user: null, token: null, isAuthenticated: false })

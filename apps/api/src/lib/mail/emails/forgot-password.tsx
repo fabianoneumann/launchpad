@@ -42,7 +42,9 @@ export function ForgotPasswordEmail({ name, resetLink, content }: ForgotPassword
           <Text style={{ fontSize: '13px', color: '#999', marginTop: '16px' }}>
             {content.expiry}
           </Text>
-          <Text style={{ fontSize: '13px', color: '#999', marginTop: '12px' }}>{content.ignore}</Text>
+          <Text style={{ fontSize: '13px', color: '#999', marginTop: '12px' }}>
+            {content.ignore}
+          </Text>
           <Hr style={{ borderColor: '#eee', margin: '24px 0' }} />
           <Text style={{ fontSize: '13px', color: '#999' }}>{content.footer}</Text>
         </Container>

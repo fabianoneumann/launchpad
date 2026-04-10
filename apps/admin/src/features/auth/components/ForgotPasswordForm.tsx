@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 const schema = z.object({
-  email: z.string().email({ message: 'E-mail inválido' }),
+  email: z.email({ message: 'E-mail inválido' }),
 })
 
 type FormData = z.infer<typeof schema>

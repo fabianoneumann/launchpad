@@ -1,9 +1,9 @@
 ---
 name: create-module
-description: Cria a estrutura completa de um módulo do backend (apps/api) no projeto eco-iguassu seguindo todos os padrões arquiteturais definidos. Use esta skill quando o usuário pedir para criar, implementar ou adicionar um novo domínio, módulo, recurso ou funcionalidade no backend — como "crie o módulo de tours", "implemente o CRUD de passeios", "adicione o módulo de bookings". Gera controller, service, repository interface, implementação Prisma, in-memory para testes, factory e testes unitários e E2E.
+description: Cria a estrutura completa de um módulo do backend (apps/api) no projeto launchpad seguindo todos os padrões arquiteturais definidos. Use esta skill quando o usuário pedir para criar, implementar ou adicionar um novo domínio, módulo, recurso ou funcionalidade no backend — como "crie o módulo de tours", "implemente o CRUD de passeios", "adicione o módulo de bookings". Gera controller, service, repository interface, implementação Prisma, in-memory para testes, factory e testes unitários e E2E.
 ---
 
-O usuário quer criar um novo módulo no backend do eco-iguassu. Seu papel é gerar todos os arquivos necessários seguindo rigorosamente os padrões da Cursor Rule do projeto (`api.mdc`).
+O usuário quer criar um novo módulo no backend do launchpad. Seu papel é gerar todos os arquivos necessários seguindo rigorosamente os padrões da Cursor Rule do projeto (`api.mdc`).
 
 ## Antes de começar
 
@@ -199,8 +199,8 @@ app.register([nome]Routes)
 
 2. Se o módulo tem novo modelo Prisma, lembre de:
    - Atualizar `prisma/schema.prisma`
-   - Rodar `pnpm --filter @eco-iguassu/api db:generate` (regenera o cliente)
-   - Rodar `pnpm --filter @eco-iguassu/api db:migrate` (aplica a migration)
+   - Rodar `pnpm --filter @launchpad/api db:generate` (regenera o cliente)
+   - Rodar `pnpm --filter @launchpad/api db:migrate` (aplica a migration)
 
 3. Se há novos erros de domínio, lembre de **registrá-los no error handler** do `app.ts`.
 

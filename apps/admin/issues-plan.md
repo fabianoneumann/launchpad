@@ -8,7 +8,7 @@
 ---
 
 ### Issue #1 — [admin] Project scaffold via CLI commands
-# GitHub: eco-iguassu#12 ✅ CONCLUÍDA
+# GitHub: launchpad#12 ✅ CONCLUÍDA
 **Labels:** admin, frontend, chore
 
 **O que foi feito (resumo):**
@@ -25,7 +25,7 @@
 ---
 
 ### Issue #2 — [admin] Post-scaffold configuration
-# GitHub: eco-iguassu#17 ✅ CONCLUÍDA
+# GitHub: launchpad#17 ✅ CONCLUÍDA
 
 **O que foi feito (resumo):**
 - `.env.example` criado com `VITE_API_URL=http://localhost:3333`
@@ -39,7 +39,7 @@
 ---
 
 ### Issue #3 — [admin] TanStack Router setup with file-based routing
-# GitHub: eco-iguassu#18 ✅ CONCLUÍDA
+# GitHub: launchpad#18 ✅ CONCLUÍDA
 
 **O que foi feito (resumo):**
 - `@tanstack/react-router`, `@tanstack/react-query` instalados como deps; `@tanstack/router-plugin`, `@tanstack/react-router-devtools` como devDeps
@@ -175,7 +175,7 @@ createRoot(document.getElementById('root')!).render(
 ---
 
 ### Issue #4 — [admin] Vitest + React Testing Library + Playwright setup
-# GitHub: eco-iguassu#19 ✅ CONCLUÍDA
+# GitHub: launchpad#19 ✅ CONCLUÍDA
 
 **O que foi feito (resumo):**
 - `vitest`, `@vitest/coverage-v8`, `jsdom`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`, `msw`, `@playwright/test` instalados como devDeps
@@ -244,7 +244,7 @@ createRoot(document.getElementById('root')!).render(
 ---
 
 ### Issue #5 — [admin] Auth store + HTTP client
-# GitHub: eco-iguassu#20
+# GitHub: launchpad#20
 **Labels:** admin, frontend, chore
 
 **Goal:** Client-side session state + centralized API client — foundation for all feature development.
@@ -317,7 +317,7 @@ Atualizar `src/app/providers.tsx`: substituir `new QueryClient()` inline (placeh
 ---
 
 ### Issue #6 — [admin] Login page
-# GitHub: eco-iguassu#21
+# GitHub: launchpad#21
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**
@@ -406,7 +406,7 @@ const decorativeIcons = [
 ---
 
 ### Issue #7 — [admin] Route guards and protected layout
-# GitHub: eco-iguassu#22
+# GitHub: launchpad#22
 **Labels:** admin, frontend, auth, chore
 
 **Goal:** Unauthenticated users are redirected to /login. Authenticated users see the app shell.
@@ -484,7 +484,7 @@ const decorativeIcons = [
 ---
 
 ### Issue #8 — [admin] Logout
-# GitHub: eco-iguassu#23
+# GitHub: launchpad#23
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**
@@ -525,7 +525,7 @@ logoutAdmin().catch(() => {}) // fire-and-forget; falha silenciosa
 ---
 
 ### Issue #9 — [admin] Forgot password page
-# GitHub: eco-iguassu#24
+# GitHub: launchpad#24
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**
@@ -566,7 +566,7 @@ logoutAdmin().catch(() => {}) // fire-and-forget; falha silenciosa
 ---
 
 ### Issue #10 — [admin] Reset password page
-# GitHub: eco-iguassu#25
+# GitHub: launchpad#25
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**
@@ -610,7 +610,7 @@ logoutAdmin().catch(() => {}) // fire-and-forget; falha silenciosa
 ---
 
 ### Issue #11 — [admin] Shared DataTable component
-# GitHub: eco-iguassu#26
+# GitHub: launchpad#26
 **Labels:** admin, frontend, chore
 
 **Goal:** Generic, reusable paginated table using TanStack Table.
@@ -740,7 +740,7 @@ const roleConfig = {
 ---
 
 ### Issue #12 — [admin] Users list page
-# GitHub: eco-iguassu#28
+# GitHub: launchpad#28
 **Labels:** admin, frontend, users, feature
 
 **User stories:**
@@ -754,7 +754,7 @@ const roleConfig = {
 - Create `src/app/routes/_layout/users/index.tsx`
 - Create `src/features/users/api/users.api.ts`:
   - `listUsers({ page, perPage, role?, search?, showDeleted?, onlyDeleted? })` → `GET /users`
-  > `onlyDeleted` adicionado pela eco-iguassu#27 (implementada antes desta issue)
+  > `onlyDeleted` adicionado pela launchpad#27 (implementada antes desta issue)
 - Create `src/features/users/hooks/useUsers.ts`:
   - TanStack Query `useQuery` wrapping `listUsers`
   - Manage `page`, `perPage`, `role`, `search`, `status` as URL search params
@@ -789,7 +789,7 @@ const roleConfig = {
   - `criado em`: `accessorKey: 'created_at'`, cell formata a data
   - `ações`: sem `accessorKey`, cell renderiza botões Ver / Editar / Excluir
 - Filters: search input (name/email), role select, status select (Ativos / Somente deletados / Todos)
-  > Requer eco-iguassu#27 (`onlyDeleted`) — implementado antes desta issue
+  > Requer launchpad#27 (`onlyDeleted`) — implementado antes desta issue
 - Deleted rows: opacity-50
 - Action button "+ Novo Usuário" → opens Create User modal (Issue #13)
 - Row actions: Ver → `/users/:id`, Editar → `/users/:id` (mesma rota — edição inline no card da Issue #14), Excluir → ConfirmDialog
@@ -824,7 +824,7 @@ const roleConfig = {
 
 **Goal:** Admin can create a new user directly from the users list.
 
-**Depends on:** eco-iguassu#29 (`POST /users` — implementar antes desta issue)
+**Depends on:** launchpad#29 (`POST /users` — implementar antes desta issue)
 
 **Tasks:**
 - Add `createUser({ name, email, password, role })` to `src/features/users/api/users.api.ts` → `POST /users`
@@ -849,7 +849,7 @@ const roleConfig = {
 ---
 
 ### Issue #14 — [admin] User detail page
-# GitHub: eco-iguassu#30
+# GitHub: launchpad#30
 **Labels:** admin, frontend, users, feature
 
 **User stories:**
@@ -911,7 +911,7 @@ const roleConfig = {
 ---
 
 ### Issue #15 — [admin] Dashboard page
-# GitHub: eco-iguassu#32
+# GitHub: launchpad#32
 **Labels:** admin, frontend, feature
 
 **User stories:**
@@ -921,7 +921,7 @@ const roleConfig = {
 
 **Referência de implementação:** `src/pages/Dashboard.tsx` em fabianoneumann/admin-compass
 
-**Depends on:** eco-iguassu#31 (`GET /users/stats` — implementar antes desta issue)
+**Depends on:** launchpad#31 (`GET /users/stats` — implementar antes desta issue)
 
 **Tasks:**
 - Create `src/app/routes/_layout/dashboard/index.tsx`
@@ -974,7 +974,7 @@ const roleConfig = {
 ---
 
 ### Issue #16 — [admin] Profile page
-# GitHub: eco-iguassu#33
+# GitHub: launchpad#33
 **Labels:** admin, frontend, auth, feature
 
 **User stories:**
@@ -1029,7 +1029,7 @@ const roleConfig = {
 ---
 
 ### Issue #17 — [admin] Error pages (404 and 403)
-# GitHub: eco-iguassu#34
+# GitHub: launchpad#34
 **Labels:** admin, frontend, chore
 
 **Goal:** Consistent error pages for not found and forbidden routes.

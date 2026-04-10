@@ -435,10 +435,22 @@ global.ResizeObserver = class ResizeObserver {
 // Polyfill para Radix UI Select (chama scrollIntoView no mount)
 Element.prototype.scrollIntoView = () => {}
 
+// TanStack Router chama window.scrollTo na navegação, não implementado no jsdom
+window.scrollTo = () => {}
+
 beforeAll(() => server.listen())
 afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
 ```
+
+> **Requisito de tsconfig:** `tests/setup.ts` e `tests/e2e/global-setup.ts` usam APIs do Node (`global`, `process`, `child_process`, `path`, `url`). O `tsconfig.app.json` cobre a pasta `tests/` e precisa incluir `"node"` no array `types`:
+>
+> ```json
+> // tsconfig.app.json
+> "types": ["vite/client", "vitest/globals", "vitest/jsdom", "node"]
+> ```
+>
+> `@types/node` deve estar nos `devDependencies`. Quando `types` é explícito, o TypeScript **não** auto-inclui `@types/node` — mesmo que o pacote esteja instalado.
 
 ### clearMocks global
 
@@ -562,12 +574,14 @@ import { useAuthStore } from '@/features/auth/store/auth-store'
 
 beforeEach(() => {
   useAuthStore.setState({
-    user: { id: '1', name: 'Admin', email: 'admin@test.com', role: 'ADMIN', ... },
+    user: { id: '1', name: 'Admin', email: 'admin@test.com', role: 'ADMIN', locale: 'pt-BR' },
     token: 'fake-token',
     isAuthenticated: true,
   })
 })
 ```
+
+> **Atenção:** `AuthUser` exige todos os campos tipados — incluindo `locale`. Omitir qualquer campo causa erro de TypeScript no build. Se o tipo evoluir (ex: novo campo obrigatório), atualizar todos os mocks de teste.
 
 ### beforeEach vs afterEach
 
@@ -743,3 +757,4 @@ const baseURL = import.meta.env.VITE_API_URL
 - ❌ Depender de dados do seed global em testes E2E mutantes (exclusão, troca de role, troca de senha) — criar dados isolados no `beforeEach`
 - ❌ Usar `router.navigate({ href: '/rota-estatica' })` ou `redirect({ href: '/rota-estatica' })` para rotas conhecidas do projeto — usar `to`; `href` pode causar full page reload e resetar Zustand
 - ❌ Usar `router.navigate({ href: valor_externo })` sem antes validar `startsWith('/')` — sempre checar para prevenir open redirect
+- ❌ Usar `<Link to="/rota">` ou `navigate({ to: '/rota' })` sem a prop `search` em rotas com `validateSearch` — o TanStack Router exige `search` explícito; omiti-lo causa erro de TypeScript em build (`Property 'search' is missing`). Usar `search: {}` para reset aos defaults do schema ou `search: (prev) => ({ ...prev })` para preservar o estado atual

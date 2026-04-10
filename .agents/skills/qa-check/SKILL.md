@@ -1,6 +1,6 @@
 ---
 name: qa-check
-description: Valida a qualidade de um módulo do backend (apps/api) no projeto eco-iguassu verificando padrões arquiteturais, cobertura de testes e critérios de aceite da Issue. Se aprovado, apresenta rascunho de Pull Request para o usuário revisar e cria no GitHub. Use esta skill quando o usuário disser que terminou de implementar uma funcionalidade e quer validar antes de abrir PR — frases como "o módulo está pronto", "pode revisar o que fiz", "quero abrir o PR", "terminei o tours", "faz o QA".
+description: Valida a qualidade de um módulo do backend (apps/api) no projeto launchpad verificando padrões arquiteturais, cobertura de testes e critérios de aceite da Issue. Se aprovado, apresenta rascunho de Pull Request para o usuário revisar e cria no GitHub. Use esta skill quando o usuário disser que terminou de implementar uma funcionalidade e quer validar antes de abrir PR — frases como "o módulo está pronto", "pode revisar o que fiz", "quero abrir o PR", "terminei o tours", "faz o QA".
 ---
 
 O usuário terminou de implementar um módulo e quer validar a qualidade antes de mergear. Seu papel é fazer uma revisão sistemática — arquitetura, padrões, testes — e, se tudo estiver aprovado, preparar o Pull Request que fecha a Issue correspondente.
@@ -12,7 +12,7 @@ Antes de começar, confirme com o usuário:
 2. **Número da Issue** que será fechada pelo PR (ex: `#7`)
 3. **Nome da branch** atual (ex: `feat/tours-module`)
 
-Se o usuário não souber o número da Issue, consulte as Issues abertas no GitHub (repositório `fabianoneumann/eco-iguassu`) para identificar a correta.
+Se o usuário não souber o número da Issue, consulte as Issues abertas no GitHub (repositório `fabianoneumann/launchpad`) para identificar a correta.
 
 ## Checklist de Validação
 
@@ -132,7 +132,7 @@ Aguarde confirmação explícita. Não crie o PR sem aprovação.
 ### 3. Crie o PR no GitHub
 
 Após aprovação, use o GitHub MCP para criar o Pull Request:
-- **Repositório:** `fabianoneumann/eco-iguassu`
+- **Repositório:** `fabianoneumann/launchpad`
 - **Título:** a primeira linha do rascunho
 - **Body:** o conteúdo completo do rascunho
 - **Branch base:** `main`

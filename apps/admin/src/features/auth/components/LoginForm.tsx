@@ -87,7 +87,7 @@ export function LoginForm() {
           <Icon key={i} className={`absolute text-white/[0.07] ${className}`} />
         ))}
         <div className="relative z-10">
-          <p className="text-2xl font-bold text-white/90">eco-iguassu</p>
+          <p className="text-2xl font-bold text-white/90">launchpad</p>
           <p className="text-sm text-white/50 mt-1">Painel de administração</p>
         </div>
       </div>
@@ -96,7 +96,7 @@ export function LoginForm() {
       <div className="flex-1 flex items-center justify-center p-6 lg:p-10 bg-background">
         <div className="w-full max-w-sm space-y-8">
           <div className="space-y-2">
-            <p className="text-lg font-bold text-foreground">eco-iguassu</p>
+            <p className="text-lg font-bold text-foreground">launchpad</p>
             <h1 className="text-2xl font-bold tracking-tight">Entrar no painel</h1>
             <p className="text-sm text-muted-foreground">
               Acesse com suas credenciais de administrador

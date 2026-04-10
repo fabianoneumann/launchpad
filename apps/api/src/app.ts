@@ -35,8 +35,8 @@ app.setSerializerCompiler(serializerCompiler)
 app.register(fastifySwagger, {
   openapi: {
     info: {
-      title: 'Eco Iguassu API',
-      description: 'API do sistema Eco Iguassu',
+      title: 'Launchpad API',
+      description: 'API do sistema Launchpad',
       version: '1.0.0',
     },
   },

@@ -1,5 +1,5 @@
 import { defineConfig } from 'eslint/config'
-import baseConfig from '@eco-iguassu/eslint-config'
+import baseConfig from '@launchpad/eslint-config'
 
 export default defineConfig(
   { ignores: ['dist/**', 'build/**', 'src/generated/**'] },

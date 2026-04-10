@@ -1,4 +1,4 @@
-import type { Locale } from '@eco-iguassu/shared-types'
+import type { Locale } from '@launchpad/shared-types'
 
 export interface WelcomeEmailContent {
   subject: string
@@ -9,22 +9,22 @@ export interface WelcomeEmailContent {
 
 const translations: Record<Locale, WelcomeEmailContent> = {
   'pt-BR': {
-    subject: 'Bem-vindo ao Eco Iguassu Adventure!',
+    subject: 'Bem-vindo ao Launchpad!',
     greeting: 'Olá, {{name}}!',
     body: 'Sua conta foi criada com sucesso. Estamos felizes em tê-lo conosco.',
-    footer: 'Equipe Eco Iguassu Adventure',
+    footer: 'Equipe Launchpad',
   },
   en: {
-    subject: 'Welcome to Eco Iguassu Adventure!',
+    subject: 'Welcome to Launchpad!',
     greeting: 'Hello, {{name}}!',
     body: 'Your account has been created successfully. We are happy to have you with us.',
-    footer: 'Eco Iguassu Adventure Team',
+    footer: 'Launchpad Team',
   },
   es: {
-    subject: '¡Bienvenido a Eco Iguassu Adventure!',
+    subject: '¡Bienvenido a Launchpad!',
     greeting: '¡Hola, {{name}}!',
     body: 'Tu cuenta ha sido creada con éxito. Estamos felices de tenerte con nosotros.',
-    footer: 'Equipo Eco Iguassu Adventure',
+    footer: 'Equipo Launchpad',
   },
 }
 

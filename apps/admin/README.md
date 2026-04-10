@@ -1,12 +1,12 @@
-# eco-iguassu — Admin App
+# launchpad — Admin App
 
-Aplicação de administração do projeto eco-iguassu. Este README documenta decisões de arquitetura, estrutura de pastas planejada e pontos em aberto para quando o desenvolvimento for iniciado.
+Aplicação de administração do projeto launchpad. Este README documenta decisões de arquitetura, estrutura de pastas planejada e pontos em aberto para quando o desenvolvimento for iniciado.
 
 ---
 
 ## Contexto
 
-- App ainda não iniciado — scaffold pendente (Issue eco-iguassu#12).
+- App ainda não iniciado — scaffold pendente (Issue launchpad#12).
 - O projeto é um monorepo (Turborepo + pnpm). A stack da API é Fastify + Prisma + Zod.
 - O **Lovable** foi usado como ferramenta de design/prototipação — não como fonte de código. O output serve como referência visual e de escopo de features. O código é gerado aqui, no monorepo, conectado à API real.
 
@@ -323,13 +323,13 @@ Isso **apaga e recria o banco de dados completo** (incluindo dados de desenvolvi
 
 ### Ponto de melhoria — banco dedicado para testes
 
-O projeto usa atualmente o mesmo banco de desenvolvimento (`DATABASE_URL`) para os testes E2E. A melhoria planejada é criar um banco separado (`eco_iguassu_test`) e configurar uma variável `DATABASE_URL_E2E` no `apps/api/.env`. O `global-setup.ts` passaria essa variável ao rodar o reset, isolando completamente os dados de desenvolvimento dos testes.
+O projeto usa atualmente o mesmo banco de desenvolvimento (`DATABASE_URL`) para os testes E2E. A melhoria planejada é criar um banco separado (`launchpad_test`) e configurar uma variável `DATABASE_URL_E2E` no `apps/api/.env`. O `global-setup.ts` passaria essa variável ao rodar o reset, isolando completamente os dados de desenvolvimento dos testes.
 
 ---
 
 ## Fluxo de kickoff
 
 1. ~~Usar Lovable para prototipar as telas do admin — anotar rotas, entidades, componentes por tela~~ ✓ **Concluído** — protótipo em [fabianoneumann/admin-compass](https://github.com/fabianoneumann/admin-compass), plano de issues em `issues-plan.txt`
-2. Gerar scaffold do app no monorepo com estrutura acima já configurada (Issue eco-iguassu#12)
+2. Gerar scaffold do app no monorepo com estrutura acima já configurada (Issue launchpad#12)
 3. Configurar Vitest e Playwright antes de escrever a primeira feature
 4. Implementar features uma a uma, partindo da autenticação

@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { SUPPORTED_LOCALES } from '@eco-iguassu/shared-types'
+import { SUPPORTED_LOCALES } from '@launchpad/shared-types'
 import { getForgotPasswordContent } from './forgot-password-content'
 
 describe('getForgotPasswordContent', () => {
   it('should return pt-BR content when no locale is provided', () => {
     const content = getForgotPasswordContent()
-    expect(content.subject).toBe('Redefinição de senha — Eco Iguassu')
+    expect(content.subject).toBe('Redefinição de senha — Launchpad')
   })
 
   it.each(SUPPORTED_LOCALES)(

@@ -8,7 +8,7 @@ const envSchema = z.object({
   DATABASE_URL: z.url(),
   CORS_ORIGIN: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
-  MAIL_FROM: z.string().default('Eco Iguassu <onboarding@resend.dev>'),
+  MAIL_FROM: z.string().default('Launchpad <onboarding@resend.dev>'),
   APP_URL: z.string().optional(),
 })
 

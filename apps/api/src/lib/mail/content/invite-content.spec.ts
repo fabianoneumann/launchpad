@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { SUPPORTED_LOCALES } from '@eco-iguassu/shared-types'
+import { SUPPORTED_LOCALES } from '@launchpad/shared-types'
 import { getInviteContent } from './invite-content'
 
 describe('getInviteContent', () => {
   it('should return pt-BR content when no locale is provided', () => {
     const content = getInviteContent()
-    expect(content.subject).toBe('Seu acesso ao Eco Iguassu foi criado')
+    expect(content.subject).toBe('Seu acesso ao Launchpad foi criado')
   })
 
   it.each(SUPPORTED_LOCALES)(

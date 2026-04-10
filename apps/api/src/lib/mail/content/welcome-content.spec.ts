@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { SUPPORTED_LOCALES } from '@eco-iguassu/shared-types'
+import { SUPPORTED_LOCALES } from '@launchpad/shared-types'
 import { getWelcomeEmailContent } from './welcome-content'
 
 describe('getWelcomeEmailContent', () => {
   it('should return pt-BR content when no locale is provided', () => {
     const content = getWelcomeEmailContent()
-    expect(content.subject).toBe('Bem-vindo ao Eco Iguassu Adventure!')
+    expect(content.subject).toBe('Bem-vindo ao Launchpad!')
   })
 
   it.each(SUPPORTED_LOCALES)(

@@ -1,5 +1,5 @@
-import type { Locale } from '@eco-iguassu/shared-types'
-import { SUPPORTED_LOCALES } from '@eco-iguassu/shared-types'
+import type { Locale } from '@launchpad/shared-types'
+import { SUPPORTED_LOCALES } from '@launchpad/shared-types'
 
 const FALLBACK: Locale = 'pt-BR'
 

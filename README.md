@@ -1,11 +1,11 @@
-# Eco Iguassu
+# Launchpad
 
 SaaS de vendas de passeios turísticos.
 
 ## Estrutura
 
 ```
-eco-iguassu/
+launchpad/
 ├── apps/
 │   ├── api/        ← Backend Node.js + Fastify + Prisma
 │   ├── web/        ← Frontend React + Vite (clientes)

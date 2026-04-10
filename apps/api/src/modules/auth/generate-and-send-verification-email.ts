@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { render } from '@react-email/render'
 import type { User } from '@/generated/prisma/client'
-import type { Locale } from '@eco-iguassu/shared-types'
+import type { Locale } from '@launchpad/shared-types'
 import type { EmailVerificationTokensRepository } from '@/repositories/email-verification-tokens-repository'
 import type { MailProvider } from '@/lib/mail/mail-provider'
 import { VerifyEmail } from '@/lib/mail/emails/verify-email'

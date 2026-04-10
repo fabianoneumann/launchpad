@@ -449,6 +449,132 @@ return reply.status(204).send()
 
 > **Padrão futuro:** para garantia de entrega em e-mails críticos, o padrão da indústria é o **Transactional Outbox** — operação principal e entrada na tabela `outbox_emails` gravadas na mesma transação; worker separado processa com retry. Adotar quando confiabilidade de entrega virar requisito explícito.
 
+### Estrutura de e-mails internacionalizáveis — padrão obrigatório
+
+Todo e-mail enviado pelo sistema segue uma arquitetura de três camadas. **Nunca** colocar HTML ou strings de texto inline nos services.
+
+#### Camada 1 — Conteúdo (`lib/mail/content/{email-type}-content.ts`)
+
+Define textos traduzidos. Cada arquivo exporta uma interface tipada, um `Record<Locale, Content>` e uma função getter com fallback para `'pt-BR'`:
+
+```typescript
+import type { Locale } from '@launchpad/shared-types'
+
+export interface ExampleEmailContent {
+  subject: string
+  greeting: string   // pode usar {{name}} como placeholder
+  body: string
+  ctaLabel: string   // omitir se não houver botão CTA
+  expiry: string     // omitir se não houver prazo de expiração
+  footer: string
+}
+
+const translations: Record<Locale, ExampleEmailContent> = {
+  'pt-BR': { subject: '...', greeting: 'Olá, {{name}}!', body: '...', ctaLabel: '...', expiry: '...', footer: '...' },
+  en:      { subject: '...', greeting: 'Hello, {{name}}!', body: '...', ctaLabel: '...', expiry: '...', footer: '...' },
+  es:      { subject: '...', greeting: '¡Hola, {{name}}!', body: '...', ctaLabel: '...', expiry: '...', footer: '...' },
+}
+
+export function getExampleEmailContent(locale: Locale = 'pt-BR'): ExampleEmailContent {
+  return translations[locale] ?? translations['pt-BR']
+}
+```
+
+**Regras do arquivo de conteúdo:**
+- Os três locales (`pt-BR`, `en`, `es`) são obrigatórios — nunca deixar locale parcial
+- O placeholder `{{name}}` no `greeting` é interpolado no template React (não no content)
+- Campos opcionais (ex: `ctaLabel`, `expiry`) devem ser omitidos da interface se o e-mail não os usa
+
+#### Camada 2 — Template React (`lib/mail/emails/{email-type}.tsx`)
+
+Componente React que recebe o `content` tipado mais dados dinâmicos (nome, link). Renderizado para HTML via `@react-email/render`:
+
+```typescript
+import { Html, Head, Body, Container, Text, Button, Hr } from '@react-email/components'
+import type { ExampleEmailContent } from '@/lib/mail/content/example-content'
+
+interface ExampleEmailProps {
+  name: string
+  actionLink: string   // apenas se houver CTA
+  content: ExampleEmailContent
+}
+
+export function ExampleEmail({ name, actionLink, content }: ExampleEmailProps) {
+  const greeting = content.greeting.replace('{{name}}', name)
+
+  return (
+    <Html>
+      <Head />
+      <Body style={{ fontFamily: 'sans-serif', backgroundColor: '#f9f9f9', padding: '24px' }}>
+        <Container style={{ backgroundColor: '#ffffff', padding: '32px', borderRadius: '8px', maxWidth: '520px' }}>
+          <Text style={{ fontSize: '18px', fontWeight: 'bold', color: '#111' }}>{greeting}</Text>
+          <Text style={{ fontSize: '15px', color: '#444' }}>{content.body}</Text>
+          <Button href={actionLink} style={{ backgroundColor: '#16a34a', color: '#ffffff', padding: '12px 24px', borderRadius: '6px', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', display: 'inline-block' }}>
+            {content.ctaLabel}
+          </Button>
+          <Text style={{ fontSize: '13px', color: '#999', marginTop: '16px' }}>{content.expiry}</Text>
+          <Hr style={{ borderColor: '#eee', margin: '24px 0' }} />
+          <Text style={{ fontSize: '13px', color: '#999' }}>{content.footer}</Text>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
+```
+
+#### Camada 3 — Orquestração (service ou função auxiliar)
+
+```typescript
+import { render } from '@react-email/render'
+import type { Locale } from '@launchpad/shared-types'
+import { getExampleEmailContent } from '@/lib/mail/content/example-content'
+import { ExampleEmail } from '@/lib/mail/emails/example'
+
+// Dentro do service ou função auxiliar:
+const content = getExampleEmailContent(user.locale as Locale)
+const html = await render(ExampleEmail({ name: user.name, actionLink, content }))
+await mailProvider.send({ to: user.email, subject: content.subject, html })
+```
+
+**Fonte do locale:**
+- Usuários existentes: `user.locale` (campo persistido no banco)
+- Novos usuários convidados: locale passado como parâmetro pelo admin no momento da criação
+
+#### Teste obrigatório para o arquivo de conteúdo (`{email-type}-content.spec.ts`)
+
+```typescript
+import { describe, it, expect } from 'vitest'
+import { SUPPORTED_LOCALES } from '@launchpad/shared-types'
+import { getExampleEmailContent } from './example-content'
+
+describe('getExampleEmailContent', () => {
+  it('should return pt-BR content when no locale is provided', () => {
+    const content = getExampleEmailContent()
+    expect(content.subject).toBe('...') // valor exato do pt-BR
+  })
+
+  it.each(SUPPORTED_LOCALES)(
+    'should return complete content with all required fields for locale %s',
+    (locale) => {
+      const content = getExampleEmailContent(locale)
+      expect(content.subject).toBeTruthy()
+      expect(content.greeting).toBeTruthy()
+      expect(content.body).toBeTruthy()
+      // ... todos os campos da interface
+    },
+  )
+
+  it('should return different subjects for different locales', () => {
+    const ptBR = getExampleEmailContent('pt-BR')
+    const en = getExampleEmailContent('en')
+    const es = getExampleEmailContent('es')
+    expect(ptBR.subject).not.toBe(en.subject)
+    expect(ptBR.subject).not.toBe(es.subject)
+    expect(en.subject).not.toBe(es.subject)
+  })
+})
+```
+
 ### Logging em middlewares
 
 Middlewares também têm acesso a `request.log` e devem logar eventos de segurança antes de retornar a resposta:
@@ -511,6 +637,9 @@ const service = makeProcessBookingService(request.log)
 - ❌ `.catch(() => {})` em e-mails ou side effects — sempre logar a falha com `event` estruturado
 - ❌ Logs de negócio em services — pertencem ao controller via `request.log`
 - ❌ Tratar todos os e-mails como fire-and-forget — e-mails funcionais (ex: convite com link de acesso) devem usar fail-fast; e-mails com contrato de segurança (ex: forgot-password) devem absorver + log
+- ❌ HTML inline em services para montar e-mails — usar sempre o padrão `lib/mail/content/` + `lib/mail/emails/`
+- ❌ Strings de texto de e-mail hardcoded nos services — subject, greeting, body e footer pertencem ao arquivo de conteúdo em `lib/mail/content/`
+- ❌ Criar arquivo de conteúdo de e-mail sem as três traduções completas (`pt-BR`, `en`, `es`) — locales parciais quebram o `Record<Locale, Content>`
 - ❌ Arquivos de log (`.log`) ou `.env` commitados no Git
 - ❌ Commitar a pasta `src/generated/` (é gerada pelo `prisma generate`)
 - ❌ Usar `z.string().email()` ou `z.string().url()` — use `z.email()` e `z.url()` do Zod v4

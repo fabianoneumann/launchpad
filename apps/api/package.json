@@ -1,5 +1,5 @@
 {
-  "name": "@eco-iguassu/api",
+  "name": "@launchpad/api",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -20,7 +20,7 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
-    "@eco-iguassu/shared-types": "workspace:*",
+    "@launchpad/shared-types": "workspace:*",
     "@fastify/cookie": "^11.0.0",
     "@fastify/cors": "^10.0.0",
     "@fastify/helmet": "^13.0.0",
@@ -43,7 +43,7 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@eco-iguassu/eslint-config": "workspace:^",
+    "@launchpad/eslint-config": "workspace:^",
     "@types/bcryptjs": "^2.4.2",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.0.0",

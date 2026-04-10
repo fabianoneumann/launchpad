@@ -1,5 +1,5 @@
 import { render } from '@react-email/render'
-import type { Locale } from '@eco-iguassu/shared-types'
+import type { Locale } from '@launchpad/shared-types'
 import type { UsersRepository } from '@/repositories/users-repository'
 import type { MailProvider } from '@/lib/mail/mail-provider'
 import { WelcomeEmail } from '@/lib/mail/emails/welcome'

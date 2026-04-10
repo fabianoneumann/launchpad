@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import { SUPPORTED_LOCALES } from '@eco-iguassu/shared-types'
+import { SUPPORTED_LOCALES } from '@launchpad/shared-types'
 import { userResponseSchema } from '@/shared/schemas/user-response-schema'
 import { verifyJWT } from '@/shared/middlewares/verify-jwt'
 import { registerController } from './register.controller'

@@ -1,9 +1,9 @@
 ---
 name: user-story
-description: Cria histórias de usuário bem estruturadas e abre Issues no GitHub para o projeto eco-iguassu. Use esta skill quando o usuário descrever uma nova funcionalidade, requisito ou comportamento esperado do sistema — mesmo que use linguagem informal como "quero que o sistema faça X", "preciso de uma tela para Y", "o cliente deve poder Z". Sempre apresenta o rascunho da Issue para aprovação antes de criar no GitHub.
+description: Cria histórias de usuário bem estruturadas e abre Issues no GitHub para o projeto launchpad. Use esta skill quando o usuário descrever uma nova funcionalidade, requisito ou comportamento esperado do sistema — mesmo que use linguagem informal como "quero que o sistema faça X", "preciso de uma tela para Y", "o cliente deve poder Z". Sempre apresenta o rascunho da Issue para aprovação antes de criar no GitHub.
 ---
 
-O usuário quer documentar uma nova funcionalidade como uma história de usuário e registrá-la como Issue no GitHub do projeto eco-iguassu.
+O usuário quer documentar uma nova funcionalidade como uma história de usuário e registrá-la como Issue no GitHub do projeto launchpad.
 
 ## Seu papel
 
@@ -91,7 +91,7 @@ Aguarde a confirmação explícita. Não crie a Issue sem aprovação.
 ### 5. Crie a Issue no GitHub
 
 Após aprovação, use o GitHub MCP para criar a Issue:
-- **Repositório:** `fabianoneumann/eco-iguassu`
+- **Repositório:** `fabianoneumann/launchpad`
 - **Título:** o título do rascunho (sem o prefixo `[Módulo]`)
 - **Body:** o conteúdo completo do rascunho
 - **Labels:** as sugeridas no rascunho (crie labels se não existirem)

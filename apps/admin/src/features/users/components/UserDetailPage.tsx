@@ -6,6 +6,7 @@ import { isAxiosError } from 'axios'
 import { Loader2, Pencil, ShieldCheck, Trash2 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Route } from '@/app/routes/_layout/users/$id'
+import { router } from '@/app/router'
 import { useAuthStore } from '@/features/auth/store/auth-store'
 import type { User } from '../types'
 import { useUser } from '../hooks/useUser'
@@ -293,7 +294,12 @@ export function UserDetailPage() {
         confirmLabel="Excluir"
         variant="destructive"
         isPending={deleteUser.isPending}
-        onConfirm={() => deleteUser.mutate(id)}
+        onConfirm={() =>
+          deleteUser.mutate(id, {
+            onSuccess: () =>
+              router.navigate({ to: '/users', search: { page: 1, perPage: 10, status: 'active' } }),
+          })
+        }
       />
     </PageLayout>
   )

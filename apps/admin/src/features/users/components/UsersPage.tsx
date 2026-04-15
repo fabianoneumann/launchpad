@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Eye, Plus, Trash2, XCircle } from 'lucide-react'
-import { toast } from 'sonner'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Link } from '@tanstack/react-router'
 import { router } from '@/app/router'
@@ -9,7 +7,7 @@ import { Route } from '@/app/routes/_layout/users/'
 import { useUIPreferencesStore } from '@/lib/stores/ui-preferences-store'
 import { useAuthStore } from '@/features/auth/store/auth-store'
 import { useUsers } from '../hooks/useUsers'
-import { deleteUser } from '../api/users.api'
+import { useDeleteUser } from '../hooks/useDeleteUser'
 import type { User } from '../types'
 import { CreateUserDialog } from './CreateUserDialog'
 import { PageLayout } from '@/components/layout/PageLayout'
@@ -31,11 +29,10 @@ import {
 
 export function UsersPage() {
   const { page, perPage, role, search, status } = Route.useSearch()
-  const queryClient = useQueryClient()
   const { data, isLoading } = useUsers({ page, perPage, role, search, status })
+  const deleteUser = useDeleteUser()
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
   const currentUser = useAuthStore((s) => s.user)
 
   function navigate(
@@ -54,21 +51,6 @@ export function UsersPage() {
       to: '/users',
       search: { page, perPage, role, search, status, ...patch },
     })
-  }
-
-  const handleDelete = async () => {
-    if (!deleteId) return
-    setIsDeleting(true)
-    try {
-      await deleteUser(deleteId)
-      queryClient.invalidateQueries({ queryKey: ['users'] })
-      toast.success('Usuário excluído com sucesso')
-    } catch {
-      toast.error('Erro ao excluir usuário')
-    } finally {
-      setIsDeleting(false)
-      setDeleteId(null)
-    }
   }
 
   const columns: ColumnDef<User>[] = [
@@ -221,8 +203,8 @@ export function UsersPage() {
         description="Tem certeza que deseja excluir este usuário?"
         confirmLabel="Excluir"
         variant="destructive"
-        isPending={isDeleting}
-        onConfirm={handleDelete}
+        isPending={deleteUser.isPending}
+        onConfirm={() => deleteUser.mutate(deleteId!, { onSettled: () => setDeleteId(null) })}
       />
 
       <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} />

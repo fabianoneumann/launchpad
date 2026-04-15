@@ -71,6 +71,59 @@ TanStack Query cuida de todo o estado do servidor. Zustand cobre apenas o estado
 
 ---
 
+## Decisão: Onde colocar navegação em mutations (useMutation)
+
+**Regra adotada:** navegação fica no `onSuccess` do hook apenas quando o destino é invariável independente de contexto. Quando a navegação varia por componente, ela vai para o `mutate()` do componente como *component-specific callback*.
+
+O React Query distingue dois níveis de callbacks em mutations:
+
+| Nível | Onde fica | Quando usar |
+|---|---|---|
+| `useMutation({ onSuccess })` | No hook | Efeitos que acontecem **sempre**, independente de onde o hook é usado (ex: invalidar cache, exibir toast, navegar para destino fixo) |
+| `mutate(id, { onSuccess })` | No componente | Efeitos que **variam por contexto** — a documentação oficial os chama de *"component-specific callbacks"* |
+
+A documentação do React Query descreve os callbacks do `mutate()` como *"component-specific"* e explicita que eles não executam se o componente desmontar antes da mutation completar — o que reforça que são inerentemente ligados ao ciclo de vida do componente.
+
+**Exemplo concreto no projeto:**
+
+```ts
+// useChangePassword — navegação invariável: sempre /login após trocar senha
+// ✅ navegação no hook
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: changePassword,
+    onSuccess: () => {
+      useAuthStore.getState().clearSession()
+      router.navigate({ to: '/login' })
+    },
+  })
+}
+
+// useDeleteUser — navegação varia: UserDetailPage navega, UsersPage não
+// ✅ hook sem navegação
+export function useDeleteUser() {
+  return useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      toast.success('Usuário excluído com sucesso')
+    },
+  })
+}
+
+// UserDetailPage — passa navegação como component-specific callback
+deleteUser.mutate(id, {
+  onSuccess: () => router.navigate({ to: '/users', search: { page: 1, perPage: 10, status: 'active' } }),
+})
+
+// UsersPage — sem callback, não precisa navegar
+deleteUser.mutate(id)
+```
+
+**Por que não usar um parâmetro no hook** (`useDeleteUser({ redirectAfter?: boolean })`)**:** introduziria um padrão novo não suportado pela documentação do React Query e inconsistente com a forma como `useUpdateUser` e `useChangeUserRole` já lidam com comportamentos component-specific (via callbacks no `mutate()`).
+
+---
+
 ## Decisão: Persistência de preferências de UI
 
 **Estratégia adotada: Zustand `persist` middleware com `localStorage`.**

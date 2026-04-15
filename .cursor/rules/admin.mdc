@@ -167,6 +167,7 @@ export async function listUsers(params: ListUsersParams): Promise<ListUsersRespo
 - Define a `queryKey` com todos os parâmetros que afetam o resultado
 - Não contém lógica de transformação — isso pertence ao componente ou à API function
 - Invalidação de queries em `onSuccess` de mutations quando necessário
+- **Navegação em mutations:** navegação fica no `onSuccess` do hook **apenas quando o destino é invariável independente de contexto** (ex: `useChangePassword` sempre navega para `/login`). Quando a navegação varia por componente, ela é um *component-specific callback* e pertence ao `mutate()` do componente — nunca ao hook
 
 ```typescript
 export function useUsers(params: UseUsersParams) {

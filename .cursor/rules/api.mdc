@@ -207,16 +207,28 @@ O controller sempre chama a factory — nunca instancia o service diretamente.
 
 ## Validação de Rotas com Zod v4
 
-**Toda rota** (pública ou autenticada) deve ter schema Zod para body, params e/ou query quando aplicável:
+**Toda rota** (pública ou autenticada) deve ter schema Zod para body, params e/ou query quando aplicável. Os schemas são declarados **na rota** (`*.routes.ts`) e a validação ocorre automaticamente via `fastify-type-provider-zod`. No controller, usar cast tipado — nunca `parse()` manual.
 
+**Na rota (`*.routes.ts`):**
 ```typescript
-const bodySchema = z.object({
-  email: z.email(),         // Zod v4: z.email() em vez de z.string().email()
-  password: z.string().min(6),
+app.route({
+  method: 'POST',
+  url: '/example',
+  schema: {
+    body: z.object({
+      email: z.email(),         // Zod v4: z.email() em vez de z.string().email()
+      password: z.string().min(6),
+    }),
+  },
+  handler: exampleController,
 })
+```
 
-// No controller:
-const { email, password } = bodySchema.parse(request.body)
+**No controller — cast tipado após validação automática da rota:**
+```typescript
+const { email, password } = request.body as { email: string; password: string }
+// ou: request.params as { id: string }
+// ou: request.query as { page: number; perPage: number }
 ```
 
 **APIs Zod v4 preferidas (top-level format validators):**

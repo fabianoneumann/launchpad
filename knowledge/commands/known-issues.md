@@ -71,12 +71,10 @@ node -e "const b=require('fs').readFileSync('public/logo.png'); console.log(b.re
 
 ---
 
-## `shadcn add <componente>` — prompts interativos bloqueiam quando executado via pipe ou tool
-**Sintoma:** CLI trava aguardando resposta nos prompts "The file X already exists. Would you like to overwrite?" mesmo com stdin redirecionado (`printf "N\n" | ...`)  
-**Causa:** O CLI usa prompt interativo que detecta ausência de TTY e ainda assim bloqueia em alguns ambientes Windows  
-**Solução:** Criar o componente manualmente copiando o conteúdo que o shadcn geraria. Para `form.tsx`,
-usar `Slot` de `'radix-ui'` (não `@radix-ui/react-slot`) e `Label` de `'radix-ui'` — seguir o
-padrão de imports dos demais componentes ui do projeto (`button.tsx`, `label.tsx`)
+## `shadcn add <componente>` — trava quando dependências do componente já existem
+**Sintoma:** CLI aguarda resposta ao prompt "The file X already exists. Would you like to overwrite?" e não avança mesmo com stdin redirecionado  
+**Causa:** O componente solicitado depende de outros (ex: `form` depende de `button` e `label`) que já estão instalados — o CLI pergunta se deve sobrescrevê-los. Para componentes novos sem dependências preexistentes, o comando funciona sem prompts.  
+**Solução:** Rodar o comando em um terminal interativo (não via tool/pipe) e responder `N` nos prompts de sobrescrita. Se não for possível, criar o arquivo do componente manualmente — usar `Slot` e `Label` de `'radix-ui'` (não `@radix-ui/react-slot`) seguindo o padrão de imports dos demais componentes ui do projeto
 
 ---
 

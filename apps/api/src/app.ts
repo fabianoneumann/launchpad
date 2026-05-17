@@ -52,10 +52,12 @@ app.register(fastifyCors, {
   credentials: true,
 })
 
-app.register(fastifyRateLimit, {
-  max: 100,
-  timeWindow: '1 minute',
-})
+if (env.NODE_ENV === 'production') {
+  app.register(fastifyRateLimit, {
+    max: 500,
+    timeWindow: '1 minute',
+  })
+}
 
 app.register(fastifyJwt, {
   secret: env.JWT_SECRET,

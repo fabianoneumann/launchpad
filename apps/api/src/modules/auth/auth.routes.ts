@@ -37,6 +37,9 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
   app.route({
     method: 'POST',
     url: '/auth/login',
+    config: {
+      rateLimit: { max: 10, timeWindow: '15 minutes' },
+    },
     schema: {
       body: z.object({
         email: z.email(),
@@ -188,6 +191,9 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
   app.route({
     method: 'POST',
     url: '/auth/admin/login',
+    config: {
+      rateLimit: { max: 10, timeWindow: '15 minutes' },
+    },
     schema: {
       body: z.object({
         email: z.email(),

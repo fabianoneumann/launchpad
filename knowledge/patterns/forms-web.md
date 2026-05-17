@@ -30,7 +30,7 @@ import { Button } from '@/components/ui/button'
 
 // 1. Schema Zod — única fonte de verdade da validação
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(6),
 })
 type LoginData = z.infer<typeof loginSchema>

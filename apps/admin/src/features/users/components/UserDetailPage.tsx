@@ -40,7 +40,7 @@ import {
 
 const editSchema = z.object({
   name: z.string().min(1, 'Campo obrigatório'),
-  email: z.string().email('Email inválido'),
+  email: z.email('Email inválido'),
 })
 
 type EditFormData = z.infer<typeof editSchema>

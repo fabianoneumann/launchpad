@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { makeAuthenticateService } from '@/shared/factories/make-authenticate-service'
+import { makeEnsureVerificationLinkValidService } from '@/shared/factories/make-ensure-verification-link-valid-service'
 import { InvalidCredentialsError } from '@/shared/errors/invalid-credentials-error'
 
 export async function authenticateController(request: FastifyRequest, reply: FastifyReply) {
@@ -21,6 +22,18 @@ export async function authenticateController(request: FastifyRequest, reply: Fas
     )
 
     request.log.info({ event: 'user.login_success', userId: user.id, role: user.role })
+
+    if (!user.validated_at) {
+      makeEnsureVerificationLinkValidService()
+        .execute({ userId: user.id })
+        .catch((err) =>
+          request.log.error({
+            event: 'email.verify_ensure_failed',
+            userId: user.id,
+            error: err.message,
+          }),
+        )
+    }
 
     return reply
       .setCookie('refreshToken', refreshToken, {

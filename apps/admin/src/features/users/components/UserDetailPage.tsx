@@ -25,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -254,6 +255,9 @@ export function UserDetailPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Alterar Perfil</DialogTitle>
+            <DialogDescription>
+              Selecione o novo perfil de acesso para este usuário.
+            </DialogDescription>
           </DialogHeader>
           <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as User['role'])}>
             <SelectTrigger>

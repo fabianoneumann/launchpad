@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -77,6 +78,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Novo Usuário</DialogTitle>
+          <DialogDescription>Preencha os dados para criar um novo usuário.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={onSubmit} className="space-y-4" noValidate>

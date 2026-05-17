@@ -38,6 +38,7 @@ export function ResetPasswordForm() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: { newPassword: '', confirmPassword: '' },
   })
 
   const onSubmit = async ({ newPassword }: FormData) => {

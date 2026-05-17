@@ -28,6 +28,7 @@ export function ForgotPasswordForm() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: { email: '' },
   })
 
   const onSubmit = async ({ email }: FormData) => {

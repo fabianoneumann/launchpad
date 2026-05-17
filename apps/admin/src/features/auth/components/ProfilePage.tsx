@@ -12,6 +12,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 
 const nameSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -80,25 +88,31 @@ export function ProfilePage() {
             <CardDescription>Atualize seu nome de exibição.</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={onSubmitProfile} className="space-y-4" noValidate>
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome</Label>
-                <Input id="name" {...profileForm.register('name')} />
-                {profileForm.formState.errors.name && (
-                  <p className="text-xs text-destructive">
-                    {profileForm.formState.errors.name.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" value={user?.email ?? ''} disabled />
-              </div>
-              <Button type="submit" disabled={updateProfile.isPending}>
-                {updateProfile.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                Salvar alterações
-              </Button>
-            </form>
+            <Form {...profileForm}>
+              <form onSubmit={onSubmitProfile} className="space-y-4" noValidate>
+                <FormField
+                  control={profileForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" value={user?.email ?? ''} disabled />
+                </div>
+                <Button type="submit" disabled={updateProfile.isPending}>
+                  {updateProfile.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  Salvar alterações
+                </Button>
+              </form>
+            </Form>
           </CardContent>
         </Card>
 
@@ -108,54 +122,53 @@ export function ProfilePage() {
             <CardDescription>Após salvar, você será redirecionado para o login.</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={onSubmitPassword} className="space-y-4" noValidate>
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Senha atual</Label>
-                <Input
-                  id="currentPassword"
-                  type="password"
-                  autoComplete="current-password"
-                  {...passwordForm.register('currentPassword')}
+            <Form {...passwordForm}>
+              <form onSubmit={onSubmitPassword} className="space-y-4" noValidate>
+                <FormField
+                  control={passwordForm.control}
+                  name="currentPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Senha atual</FormLabel>
+                      <FormControl>
+                        <Input type="password" autoComplete="current-password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {passwordForm.formState.errors.currentPassword && (
-                  <p className="text-xs text-destructive">
-                    {passwordForm.formState.errors.currentPassword.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Nova senha</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  {...passwordForm.register('newPassword')}
+                <FormField
+                  control={passwordForm.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nova senha</FormLabel>
+                      <FormControl>
+                        <Input type="password" autoComplete="new-password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {passwordForm.formState.errors.newPassword && (
-                  <p className="text-xs text-destructive">
-                    {passwordForm.formState.errors.newPassword.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  {...passwordForm.register('confirmPassword')}
+                <FormField
+                  control={passwordForm.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirmar nova senha</FormLabel>
+                      <FormControl>
+                        <Input type="password" autoComplete="new-password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {passwordForm.formState.errors.confirmPassword && (
-                  <p className="text-xs text-destructive">
-                    {passwordForm.formState.errors.confirmPassword.message}
-                  </p>
-                )}
-              </div>
-              <Button type="submit" disabled={changePassword.isPending}>
-                {changePassword.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                Alterar senha
-              </Button>
-            </form>
+                <Button type="submit" disabled={changePassword.isPending}>
+                  {changePassword.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  Alterar senha
+                </Button>
+              </form>
+            </Form>
           </CardContent>
         </Card>
       </div>

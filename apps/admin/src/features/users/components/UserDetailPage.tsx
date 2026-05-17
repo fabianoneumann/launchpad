@@ -19,8 +19,15 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Dialog,
@@ -163,38 +170,50 @@ export function UserDetailPage() {
           </CardHeader>
           <CardContent>
             {isEditing ? (
-              <form onSubmit={onSubmit} className="space-y-4" noValidate>
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
-                  <Input id="name" {...form.register('name')} />
-                  {form.formState.errors.name && (
-                    <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" {...form.register('email')} />
-                  {form.formState.errors.email && (
-                    <p className="text-xs text-destructive">
-                      {form.formState.errors.email.message}
-                    </p>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button type="submit" size="sm" disabled={updateUser.isPending}>
-                    {updateUser.isPending && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
-                    Salvar
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsEditing(false)}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </form>
+              <Form {...form}>
+                <form onSubmit={onSubmit} className="space-y-4" noValidate>
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex gap-2">
+                    <Button type="submit" size="sm" disabled={updateUser.isPending}>
+                      {updateUser.isPending && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
+                      Salvar
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditing(false)}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </form>
+              </Form>
             ) : (
               <dl className="space-y-3">
                 <div className="flex justify-between">

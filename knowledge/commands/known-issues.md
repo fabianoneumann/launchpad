@@ -71,6 +71,15 @@ node -e "const b=require('fs').readFileSync('public/logo.png'); console.log(b.re
 
 ---
 
+## `shadcn add <componente>` — prompts interativos bloqueiam quando executado via pipe ou tool
+**Sintoma:** CLI trava aguardando resposta nos prompts "The file X already exists. Would you like to overwrite?" mesmo com stdin redirecionado (`printf "N\n" | ...`)  
+**Causa:** O CLI usa prompt interativo que detecta ausência de TTY e ainda assim bloqueia em alguns ambientes Windows  
+**Solução:** Criar o componente manualmente copiando o conteúdo que o shadcn geraria. Para `form.tsx`,
+usar `Slot` de `'radix-ui'` (não `@radix-ui/react-slot`) e `Label` de `'radix-ui'` — seguir o
+padrão de imports dos demais componentes ui do projeto (`button.tsx`, `label.tsx`)
+
+---
+
 ## `vi.stubGlobal('location', { href: '' })` quebra MSW no Vitest (jsdom)
 **Sintoma:** `TypeError: Invalid URL` em todos os testes que fazem requests via Axios + MSW,
 mesmo quando a URL passada ao Axios é absoluta (`http://localhost:3333/...`)  

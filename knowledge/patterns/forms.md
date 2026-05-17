@@ -5,19 +5,99 @@
 | App | Padrão | Arquivo de referência |
 |---|---|---|
 | **web** | `@base-ui/react Field` + Zod + `useMutation` | [`forms-web.md`](forms-web.md) |
-| **admin** | RHF direto + erros manuais | abaixo |
+| **admin** (forms simples) | shadcn `Form / FormField / FormMessage` + `zodResolver` | abaixo |
+| **admin** (campos dinâmicos) | RHF direto + `useFieldArray` | abaixo |
 
 Ver `decisions/003-form-pattern.md` para o histórico e justificativa por app.
 
 ---
 
-## Padrão admin — RHF direto (legado, sem migração imediata)
+## Padrão admin — forms simples (shadcn form.tsx)
 
-Usar no `apps/admin` enquanto a migração para shadcn `form.tsx` não ocorre.
-Aplicar também para qualquer form com `useFieldArray` (campos dinâmicos), em qualquer app.
+Usar para qualquer form sem `useFieldArray`. Sempre declarar `defaultValues` no `useForm`
+para evitar o warning "uncontrolled input to be controlled" do React.
 
 ```tsx
-import { useForm, useFieldArray, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+
+export function ExampleForm() {
+  const form = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: '', name: '' },
+  })
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>E-mail</FormLabel>
+              <FormControl>
+                <Input type="email" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" disabled={form.formState.isSubmitting}>Enviar</Button>
+      </form>
+    </Form>
+  )
+}
+```
+
+Para campos com Select ou outros componentes controlados, o `render` prop do `FormField`
+substitui diretamente o `Controller` do RHF — `field.value` e `field.onChange` passam para
+o componente:
+
+```tsx
+<FormField control={form.control} name="role" render={({ field }) => (
+  <FormItem>
+    <FormLabel>Perfil</FormLabel>
+    <Select value={field.value} onValueChange={field.onChange}>
+      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+      <SelectContent>...</SelectContent>
+    </Select>
+  </FormItem>
+)} />
+```
+
+Para campo com botão sobreposto (ex: toggle de visibilidade de senha), o botão fica fora do
+`FormControl` mas dentro de um `div relative` que envolve `FormControl` + botão:
+
+```tsx
+<FormField control={form.control} name="password" render={({ field }) => (
+  <FormItem>
+    <FormLabel>Senha</FormLabel>
+    <div className="relative">
+      <FormControl>
+        <Input type={showPassword ? 'text' : 'password'} {...field} />
+      </FormControl>
+      <Button type="button" variant="ghost" size="icon-sm"
+        className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
+        onClick={() => setShowPassword(p => !p)}>
+        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </Button>
+    </div>
+    <FormMessage />
+  </FormItem>
+)} />
+```
+
+---
+
+## Padrão admin — campos dinâmicos (useFieldArray)
+
+Usar quando o form tem arrays de campos. RHF direto — o wrapper `FormField` não adiciona
+valor nesses casos e dificulta o controle granular do array.
+
+```tsx
+import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 export function TourForm() {

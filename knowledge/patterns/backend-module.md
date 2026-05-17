@@ -142,3 +142,4 @@ describe('CreateTourService', () => {
 ## Ver também
 
 - [`patterns/testing.md`](testing.md) — padrões de teste unitário e E2E para módulos
+- [`patterns/backend-controllers.md`](backend-controllers.md) — fire-and-forget, rate limiting por rota

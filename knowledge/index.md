@@ -16,7 +16,8 @@ Antes de implementar qualquer feature, leia os arquivos relevantes para a tarefa
 | Arquivo | Descrição | Ler quando |
 |---|---|---|
 | [patterns/backend-module.md](patterns/backend-module.md) | Factory, repository, service, controller, rotas, testes | Criar módulo ou service no backend |
-| [patterns/forms.md](patterns/forms.md) | Tabela de decisão web vs admin; padrão admin (RHF + FileDropzone) | Criar formulário no admin ou decidir qual padrão usar |
+| [patterns/backend-controllers.md](patterns/backend-controllers.md) | Fire-and-forget, rate limiting por rota | Implementar operação secundária não-bloqueante ou configurar rate limit |
+| [patterns/forms.md](patterns/forms.md) | Tabela de decisão web vs admin; padrão admin simples (shadcn form.tsx) e dinâmico (useFieldArray) | Criar formulário no admin ou decidir qual padrão usar |
 | [patterns/routing-admin.md](patterns/routing-admin.md) | TanStack Router file-based, auth guard, `to` vs `href` | Criar ou modificar rotas no admin |
 | [patterns/shadcn-components.md](patterns/shadcn-components.md) | Primitivos por app: admin=radix-ui, web=@base-ui/react; regra de isolamento cross-app | Adicionar componente ou importar primitivo shadcn/ui |
 | [patterns/data-fetching.md](patterns/data-fetching.md) | Axios + interceptors, TanStack Query (admin SPA) | Implementar chamadas HTTP no admin |
@@ -57,7 +58,7 @@ Antes de implementar qualquer feature, leia os arquivos relevantes para a tarefa
 |---|---|
 | [decisions/001-soft-delete.md](decisions/001-soft-delete.md) | Por que usar soft delete em entidades com referências em histórico financeiro/operacional |
 | [decisions/002-i18n-strategy.md](decisions/002-i18n-strategy.md) | i18n frouxa (locales parciais) vs estrita (todos obrigatórios) — critério de decisão |
-| [decisions/003-form-pattern.md](decisions/003-form-pattern.md) | Web: Field+Zod+useMutation (sem RHF). Admin: RHF direto (migração pendente) |
+| [decisions/003-form-pattern.md](decisions/003-form-pattern.md) | Web: Field+Zod+useMutation (sem RHF). Admin simples: shadcn form.tsx. Admin dinâmico: useFieldArray |
 | [decisions/004-rendering-strategy.md](decisions/004-rendering-strategy.md) | Server Components (conteúdo público + ISR) vs Client Components (páginas do usuário) |
 
 ## Analysis

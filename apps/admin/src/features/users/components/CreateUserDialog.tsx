@@ -1,4 +1,4 @@
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { Loader2 } from 'lucide-react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -6,7 +6,6 @@ import { isAxiosError } from 'axios'
 import { useCreateUser } from '../hooks/useCreateUser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -21,6 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 
 const schema = z.object({
   name: z.string().min(2, 'Nome deve ter ao menos 2 caracteres'),
@@ -71,50 +78,66 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
         <DialogHeader>
           <DialogTitle>Novo Usuário</DialogTitle>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4" noValidate>
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome</Label>
-            <Input id="name" {...form.register('name')} />
-            {form.formState.errors.name && (
-              <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" {...form.register('email')} />
-            {form.formState.errors.email && (
-              <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="role">Perfil</Label>
-            <Controller
+        <Form {...form}>
+          <form onSubmit={onSubmit} className="space-y-4" noValidate>
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
               control={form.control}
               name="role"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="role">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
-                    <SelectItem value="MEMBER">Member</SelectItem>
-                    <SelectItem value="USER">User</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>Perfil</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                      <SelectItem value="MEMBER">Member</SelectItem>
+                      <SelectItem value="USER">User</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
               )}
             />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={createUser.isPending}>
-              {createUser.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              Criar
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={createUser.isPending}>
+                {createUser.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                Criar
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )

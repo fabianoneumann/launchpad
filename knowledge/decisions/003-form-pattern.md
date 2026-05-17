@@ -2,7 +2,7 @@
 
 ## Status
 
-Ativo. Admin: RHF direto (migração pendente — issue #59). Web: padrão recomendado para quando apps/web for implementado.
+Ativo. Admin: migração para shadcn `form.tsx` concluída (issue #59). Web: padrão recomendado para quando apps/web for implementado.
 
 ## Contexto e histórico
 
@@ -12,7 +12,7 @@ o `zodResolver` não formatava erros corretamente, quebrando `FormMessage`. A sa
 RHF diretamente, acessando `form.formState.errors.field` manualmente.
 
 `@hookform/resolvers` foi atualizado para v5, suportando Zod v4. O bloqueio técnico sumiu.
-Issue de migração do admin: [#59](https://github.com/fabianoneumann/launchpad/issues/59).
+A migração dos forms simples do admin foi concluída na issue [#59](https://github.com/fabianoneumann/launchpad/issues/59).
 
 ## Por que o web não usa React Hook Form
 
@@ -28,14 +28,14 @@ que o `@base-ui/react` já resolve. A única dependência nova no web é `zod`.
 | App | Padrão | Dependências |
 |---|---|---|
 | **web** | `@base-ui/react Field` + Zod + `useMutation` | `zod` (única nova dep) |
-| **admin** (forms simples) | RHF direto com `form.formState.errors` | já instalado |
+| **admin** (forms simples) | `Form / FormField / FormMessage` (shadcn `form.tsx`) + `zodResolver` | já instalado |
 | **admin** (campos dinâmicos) | RHF direto + `useFieldArray` | já instalado |
 
 **Não instalar `react-hook-form` nem `@hookform/resolvers` no apps/web.**
 
 ## Consequências
 
-- Admin mantém RHF direto até a migração incremental dos forms simples ser concluída
+- Admin usa `Form / FormField / FormControl / FormLabel / FormMessage` (shadcn `form.tsx`) nos forms simples; `useFieldArray` permanece com RHF direto nos forms dinâmicos (`TourFormPage`, `ExtraFormPage`)
 - Web usa `Field` de `@base-ui/react/field` diretamente (sem wrapper shadcn necessário)
 - Validação no web acontece no `handleSubmit` via `schema.safeParse(new FormData(...))`
 - Erros de API são mapeados para estado local (`useState<FieldErrors>`) via `onError` do `useMutation`

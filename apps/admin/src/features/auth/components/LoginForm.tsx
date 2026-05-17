@@ -21,7 +21,14 @@ import { useAuthStore } from '@/features/auth/store/auth-store'
 import { loginAdmin } from '../api/auth.api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 
 const schema = z.object({
   email: z.email({ message: 'E-mail inválido' }),
@@ -45,11 +52,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const { redirect: redirectTo } = Route.useSearch()
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
+  const form = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
@@ -103,50 +106,68 @@ export function LoginForm() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="admin@exemplo.com"
-                autoComplete="email"
-                {...register('email')}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-mail</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="admin@exemplo.com"
+                        autoComplete="email"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••"
-                  autoComplete="current-password"
-                  {...register('password')}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </Button>
-              </div>
-              {errors.password && (
-                <p className="text-xs text-destructive">{errors.password.message}</p>
-              )}
-            </div>
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Senha</FormLabel>
+                    <div className="relative">
+                      <FormControl>
+                        <Input
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="••••••"
+                          autoComplete="current-password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
+                        aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              Entrar
-            </Button>
-          </form>
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                Entrar
+              </Button>
+            </form>
+          </Form>
 
           <div className="text-center">
             <a

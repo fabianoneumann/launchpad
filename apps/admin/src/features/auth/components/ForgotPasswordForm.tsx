@@ -7,8 +7,15 @@ import { Link } from '@tanstack/react-router'
 import { forgotPassword } from '../api/auth.api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 
 const schema = z.object({
   email: z.email({ message: 'E-mail inválido' }),
@@ -19,11 +26,7 @@ type FormData = z.infer<typeof schema>
 export function ForgotPasswordForm() {
   const [submitted, setSubmitted] = useState(false)
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
+  const form = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
@@ -56,31 +59,40 @@ export function ForgotPasswordForm() {
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  autoComplete="email"
-                  {...register('email')}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>E-mail</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="seu@email.com"
+                          autoComplete="email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-              </div>
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                Enviar instruções
-              </Button>
-              <div className="text-center">
-                <Link
-                  to="/login"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Voltar ao login
-                </Link>
-              </div>
-            </form>
+                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  Enviar instruções
+                </Button>
+                <div className="text-center">
+                  <Link
+                    to="/login"
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    Voltar ao login
+                  </Link>
+                </div>
+              </form>
+            </Form>
           )}
         </CardContent>
       </Card>

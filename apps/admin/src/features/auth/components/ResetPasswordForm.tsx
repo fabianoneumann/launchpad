@@ -8,8 +8,15 @@ import { resetPassword } from '../api/auth.api'
 import { Route } from '@/app/routes/reset-password'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 
 const schema = z
   .object({
@@ -29,11 +36,7 @@ export function ResetPasswordForm() {
     !token ? 'error' : 'form',
   )
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
+  const form = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
@@ -81,36 +84,40 @@ export function ResetPasswordForm() {
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Nova senha</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  {...register('newPassword')}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+                <FormField
+                  control={form.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nova senha</FormLabel>
+                      <FormControl>
+                        <Input type="password" autoComplete="new-password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {errors.newPassword && (
-                  <p className="text-xs text-destructive">{errors.newPassword.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar senha</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  {...register('confirmPassword')}
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirmar senha</FormLabel>
+                      <FormControl>
+                        <Input type="password" autoComplete="new-password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {errors.confirmPassword && (
-                  <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
-                )}
-              </div>
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                Redefinir senha
-              </Button>
-            </form>
+                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  Redefinir senha
+                </Button>
+              </form>
+            </Form>
           )}
         </CardContent>
       </Card>

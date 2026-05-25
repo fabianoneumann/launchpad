@@ -178,3 +178,32 @@ pnpm build
 # Build de app específico
 pnpm --filter api build
 ```
+
+## GitHub CLI
+
+O [GitHub CLI](https://cli.github.com) (`gh`) permite que agentes de IA interajam com o GitHub (issues, pull requests, releases) diretamente pelo terminal, de forma mais eficiente do que via MCP server.
+
+Verifique se está instalado:
+
+```bash
+gh --version
+```
+
+Se não estiver, instale:
+
+```bash
+# macOS
+brew install gh
+
+# Windows
+winget install --id GitHub.cli
+
+# Linux (Debian/Ubuntu)
+sudo apt install gh
+```
+
+Após instalar, autentique:
+
+```bash
+gh auth login
+```

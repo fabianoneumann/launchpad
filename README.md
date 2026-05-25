@@ -137,26 +137,6 @@ git fetch upstream
 git merge upstream/main
 ```
 
-## Configuração do MCP server (Resend)
-
-Para usar o Resend via agente de IA (Claude Code, Cursor, etc.), configure o MCP server do Resend no seu editor. Exemplo para Claude Code (`~/.claude/settings.json`):
-
-```json
-{
-  "mcpServers": {
-    "resend": {
-      "command": "npx",
-      "args": ["-y", "@resend/mcp-server"],
-      "env": {
-        "RESEND_API_KEY": "re_xxxxxxxxxxxxxxxxxxxx"
-      }
-    }
-  }
-}
-```
-
-Substitua o valor de `RESEND_API_KEY` pela mesma chave gerada no setup.
-
 ## Testes
 
 > O banco de dados (Docker) deve estar rodando antes de executar os testes E2E.

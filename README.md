@@ -34,14 +34,17 @@ Siga esta sequência para ter o projeto rodando na sua máquina:
 **Pré-requisitos manuais (antes de tudo):**
 - Crie uma conta no [GitHub](https://github.com) caso não tenha
 - Instale o [Git](https://git-scm.com) caso não tenha
+- Instale o [Docker Desktop](https://www.docker.com/products/docker-desktop) e certifique-se de que está rodando
+- Instale o [Claude Code](https://claude.ai/code) caso não tenha
 - Crie uma conta no [Resend](https://resend.com) e gere uma API key em **API Keys**
+
+> Node.js e pnpm não precisam ser instalados manualmente — o agente instala automaticamente como parte do setup.
 
 **Fluxo de setup:**
 
 1. Crie seu repositório a partir deste template no GitHub (botão **"Use this template"**)
-2. Instale os pré-requisitos técnicos: Node.js, pnpm e Docker (detalhes abaixo)
-3. Clone seu repositório e abra a pasta no Claude Code (ou outro editor com agente de IA)
-4. Peça ao agente: _"Leia o README e configure o projeto"_ — ele executa a instalação de dependências, cria os arquivos `.env`, sobe o banco, roda as migrations e configura o upstream do template
+2. Clone seu repositório e abra a pasta no Claude Code
+3. Peça ao agente: _"Leia o README e configure o projeto"_ — ele instala Node.js, pnpm e dependências, cria os arquivos `.env`, sobe o banco, roda as migrations e configura o upstream do template
 5. Preencha manualmente as variáveis que só você conhece em `apps/api/.env`:
    - `RESEND_API_KEY` — sua API key gerada no Resend
    - `JWT_SECRET` — qualquer string longa e aleatória (ex: resultado de `openssl rand -hex 32`)
@@ -61,9 +64,10 @@ Este repositório está marcado como **GitHub Template**. Para criar um novo pro
 
 ## Pré-requisitos
 
-- **Node.js** ≥ 20
-- **pnpm** ≥ 9 — `npm install -g pnpm`
-- **Docker** — para o banco de dados PostgreSQL em desenvolvimento
+- **Git** — para clonar o repositório
+- **Docker Desktop** — para o banco de dados PostgreSQL em desenvolvimento (deve estar rodando)
+- **Node.js** ≥ 20 — instalado automaticamente pelo agente se não estiver presente
+- **pnpm** ≥ 9 — instalado automaticamente pelo agente (`npm install -g pnpm`)
 - **Conta no Resend** — serviço de e-mail transacional usado no cadastro ([resend.com](https://resend.com))
 
 ## Setup inicial
